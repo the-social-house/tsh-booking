@@ -17,8 +17,6 @@
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { stdin as input, stdout as output } from "node:process";
-import readline from "node:readline/promises";
 import url from "node:url";
 
 const __filename = url.fileURLToPath(import.meta.url);
@@ -125,23 +123,39 @@ function bumpVersion(current: string, bumpType: BumpType): string {
   return `${major}.${minor}.${patch}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Select } = require("enquirer") as {
+  // Keep types minimal to avoid depending on @types/enquirer.
+  Select: new (options: {
+    name: string;
+    message: string;
+    choices: Array<{ name: string; message: string }>;
+    initial?: number;
+  }) => { run: () => Promise<string> };
+};
+
 async function promptBumpType(currentVersion: string): Promise<BumpType> {
-  const rl = readline.createInterface({ input, output });
-  const answer = await rl.question(
-    `Current version is ${currentVersion}. Select version bump type (major/minor/patch) [patch]: `
-  );
-  rl.close();
+  const prompt = new Select({
+    name: "bump",
+    message: `Current version: v${currentVersion}\nSelect version bump type`,
+    choices: [
+      { name: "major", message: "major - breaking changes" },
+      { name: "minor", message: "minor - new features, backwards compatible" },
+      {
+        name: "patch",
+        message: "patch - bug fixes and small improvements (default)",
+      },
+    ],
+    initial: 2, // default to "patch"
+  });
 
-  const normalized = answer.trim().toLowerCase();
+  const answer = (await prompt.run()) as string;
 
-  if (
-    normalized === "major" ||
-    normalized === "minor" ||
-    normalized === "patch"
-  ) {
-    return normalized;
+  if (answer === "major" || answer === "minor" || answer === "patch") {
+    return answer;
   }
 
+  // Fallback to patch if something unexpected happens
   return "patch";
 }
 
@@ -199,24 +213,30 @@ async function main(): Promise<void> {
 
     setPackageVersion(version);
 
-    // Commit and tag the version bump
+    // Commit and tag the version bump on develop
     run("git add package.json");
     run(`git commit -m "chore: bump version to v${version}"`);
     run(`git tag -a v${version} -m "release v${version}"`);
     run("git push origin develop");
     run(`git push origin v${version}`);
 
+    const releaseBranch = `release/v${version}`;
+
+    // Create and push a dedicated release branch from develop
+    run(`git branch ${releaseBranch} develop`);
+    run(`git push origin ${releaseBranch}`);
+
     const repoSlug = getRepositorySlug();
 
     const title = `release: v${version}`;
-    const compareUrl = `https://github.com/${repoSlug}/compare/main...develop`;
+    const compareUrl = `https://github.com/${repoSlug}/compare/main...${releaseBranch}`;
 
     const bodyLines = [
       `Release PR for version **v${version}**`,
       "",
       "### Summary",
       "- Ensure version in `package.json` is correct for this release.",
-      "- Review the changes from `develop` to `main`.",
+      `- Review the changes from \`${releaseBranch}\` to \`main\`.`,
       "",
       "### Links",
       `- Changes: ${compareUrl}`,
@@ -227,7 +247,7 @@ async function main(): Promise<void> {
     // Check if a release PR already exists for this head/base combo
     try {
       const existing = run(
-        "gh pr list --state open --base main --head develop --json number,title"
+        `gh pr list --state open --base main --head ${releaseBranch} --json number,title`
       );
       const existingPrs = JSON.parse(existing) as
         | Array<{ number: number; title: string }>
@@ -236,7 +256,7 @@ async function main(): Promise<void> {
         const [first] = existingPrs;
 
         console.log(
-          `An open PR from 'develop' to 'main' already exists: #${first.number} - ${first.title}`
+          `An open PR from '${releaseBranch}' to 'main' already exists: #${first.number} - ${first.title}`
         );
         process.exit(0);
       }
@@ -247,7 +267,7 @@ async function main(): Promise<void> {
     const createArgs = [
       "gh pr create",
       "--base main",
-      "--head develop",
+      `--head ${releaseBranch}`,
       `--title "${title.replace(/"/g, '\\"')}"`,
       `--body "${body.replace(/"/g, '\\"')}"`,
     ].join(" ");
