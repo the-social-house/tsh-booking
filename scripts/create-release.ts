@@ -203,12 +203,10 @@ async function main(): Promise<void> {
 
     setPackageVersion(version);
 
-    // Commit and tag the version bump on develop
+    // Commit the version bump on develop
     run("git add package.json");
     run(`git commit -m "chore: bump version to v${version}"`);
-    run(`git tag -a v${version} -m "release v${version}"`);
     run("git push origin develop");
-    run(`git push origin v${version}`);
 
     const releaseBranch = `release/v${version}`;
 
