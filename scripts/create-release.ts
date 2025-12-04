@@ -54,14 +54,14 @@ function ensureCleanWorkingTree(): void {
   }
 }
 
-function ensureOnDevelopBranch(): void {
-  const branch = run("git rev-parse --abbrev-ref HEAD");
-  if (branch !== "develop") {
-    throw new Error(
-      `Releases must be created from the 'develop' branch. Current branch: '${branch}'.`
-    );
-  }
-}
+// function ensureOnDevelopBranch(): void {
+//   const branch = run("git rev-parse --abbrev-ref HEAD");
+//   if (branch !== "develop") {
+//     throw new Error(
+//       `Releases must be created from the 'develop' branch. Current branch: '${branch}'.`
+//     );
+//   }
+// }
 
 function updateDevelopFromOrigin(): void {
   console.log("Updating local 'develop' from 'origin/develop'...");
@@ -176,7 +176,7 @@ async function main(): Promise<void> {
   try {
     // Basic safety checks
     ensureCleanWorkingTree();
-    ensureOnDevelopBranch();
+    // ensureOnDevelopBranch();
     updateDevelopFromOrigin();
 
     // Ensure GitHub CLI is available
