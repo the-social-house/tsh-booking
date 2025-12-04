@@ -159,31 +159,21 @@ async function promptBumpType(currentVersion: string): Promise<BumpType> {
   return "patch";
 }
 
-function getRepositorySlug(): string {
-  // Prefer explicit env if present (useful for CI)
-  const envRepo = process.env.GITHUB_REPOSITORY;
-  if (envRepo?.includes("/")) {
-    return envRepo;
-  }
+// Fallback to git remote
+const remoteUrl = run("git remote get-url origin");
 
-  // Fallback to git remote
-  const remoteUrl = run("git remote get-url origin");
+// Handle SSH and HTTPS formats
+// git@github.com:owner/repo.git
+// https://github.com/owner/repo.git
+const slug = remoteUrl
+  .replace(GITHUB_SSH_REMOTE_REGEX, "")
+  .replace(GITHUB_HTTPS_REMOTE_REGEX, "")
+  .replace(GIT_SUFFIX_REGEX, "");
 
-  // Handle SSH and HTTPS formats
-  // git@github.com:owner/repo.git
-  // https://github.com/owner/repo.git
-  const slug = remoteUrl
-    .replace(GITHUB_SSH_REMOTE_REGEX, "")
-    .replace(GITHUB_HTTPS_REMOTE_REGEX, "")
-    .replace(GIT_SUFFIX_REGEX, "");
-
-  if (!slug.includes("/")) {
-    throw new Error(
-      `Unable to determine GitHub repository slug from remote URL: ${remoteUrl}`
-    );
-  }
-
-  return slug;
+if (!slug.includes("/")) {
+  throw new Error(
+    `Unable to determine GitHub repository slug from remote URL: ${remoteUrl}`
+  );
 }
 
 async function main(): Promise<void> {
@@ -226,21 +216,9 @@ async function main(): Promise<void> {
     run(`git branch ${releaseBranch} develop`);
     run(`git push origin ${releaseBranch}`);
 
-    const repoSlug = getRepositorySlug();
-
     const title = `release: v${version}`;
-    const compareUrl = `https://github.com/${repoSlug}/compare/main...${releaseBranch}`;
 
-    const bodyLines = [
-      `Release PR for version **v${version}**`,
-      "",
-      "### Summary",
-      "- Ensure version in `package.json` is correct for this release.",
-      `- Review the changes from \`${releaseBranch}\` to \`main\`.`,
-      "",
-      "### Links",
-      `- Changes: ${compareUrl}`,
-    ];
+    const bodyLines = [`Release PR for version **v${version}**`];
 
     const body = bodyLines.join("\n");
 
