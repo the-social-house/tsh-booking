@@ -203,10 +203,9 @@ async function main(): Promise<void> {
 
     setPackageVersion(version);
 
-    // Commit the version bump on develop
+    // Commit the version bump on local develop (no direct push to protected branch)
     run("git add package.json");
     run(`git commit -m "chore: bump version to v${version}"`);
-    run("git push origin develop");
 
     const releaseBranch = `release/v${version}`;
 
@@ -248,7 +247,9 @@ async function main(): Promise<void> {
       `--body "${body.replace(/"/g, '\\"')}"`,
     ].join(" ");
 
-    console.log("Creating GitHub pull request from 'develop' to 'main'...");
+    console.log(
+      `Creating GitHub pull request from '${releaseBranch}' to 'main'...`
+    );
     run(createArgs);
 
     console.log(`Release pull request created for v${version}.`);
