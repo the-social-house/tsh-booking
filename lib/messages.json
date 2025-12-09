@@ -1,0 +1,192 @@
+{
+  "amenities": {
+    "validation": {
+      "name": {
+        "required": "Amenity name is required",
+        "minLength": "Amenity name must be at least 2 characters",
+        "maxLength": "Amenity name cannot exceed 100 characters"
+      },
+      "price": {
+        "min": "Price cannot be negative",
+        "max": "Price cannot exceed 99,999.99",
+        "invalid": "Please enter a valid price"
+      },
+      "id": {
+        "required": "Amenity ID is required",
+        "integer": "Amenity ID must be a whole number",
+        "positive": "Amenity ID must be a positive number"
+      }
+    },
+    "ui": {
+      "create": {
+        "title": "Add New Amenity",
+        "nameLabel": "Amenity Name",
+        "namePlaceholder": "e.g., Wi-Fi, Projector, Coffee",
+        "priceLabel": "Price",
+        "pricePlaceholder": "0.00",
+        "priceHelper": "Leave empty if this amenity is free",
+        "submitButton": "Add Amenity",
+        "submitButtonLoading": "Adding..."
+      },
+      "update": {
+        "title": "Edit Amenity",
+        "nameLabel": "Amenity Name",
+        "namePlaceholder": "Enter amenity name",
+        "priceLabel": "Price",
+        "pricePlaceholder": "0.00",
+        "priceHelper": "Leave empty if this amenity is free",
+        "submitButton": "Save Changes",
+        "submitButtonLoading": "Saving..."
+      },
+      "delete": {
+        "button": "Delete",
+        "buttonLoading": "Deleting...",
+        "dialogTitle": "Delete Amenity",
+        "dialogDescription": "Are you sure you want to delete this amenity? This action cannot be undone and will remove this amenity from all associated bookings and meeting rooms.",
+        "dialogCancel": "Cancel",
+        "dialogConfirm": "Delete Amenity"
+      },
+      "list": {
+        "title": "Amenities",
+        "empty": "No amenities available",
+        "error": "Failed to load amenities"
+      }
+    },
+    "messages": {
+      "success": {
+        "create": "Amenity added successfully!",
+        "update": "Amenity updated successfully!",
+        "delete": "Amenity deleted successfully!"
+      },
+      "error": {
+        "create": {
+          "23505": "An amenity with this name already exists. Please choose a different name.",
+          "23503": "Unable to create amenity. Please check your input and try again.",
+          "23502": "Please fill in all required fields.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "unknown": "Something went wrong while creating the amenity. Please try again."
+        },
+        "update": {
+          "PGRST116": "The amenity you're trying to update doesn't exist or has been removed.",
+          "23505": "An amenity with this name already exists. Please choose a different name.",
+          "23503": "Unable to update amenity. Please check your input and try again.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "notFound": "The amenity you're trying to update doesn't exist or has been removed.",
+          "unknown": "Something went wrong while updating the amenity. Please try again."
+        },
+        "delete": {
+          "23503": "This amenity cannot be deleted because it's currently being used in bookings or meeting rooms.",
+          "23514": "Unable to delete this amenity. Please try again later.",
+          "unknown": "Something went wrong while deleting the amenity. Please try again."
+        },
+        "toast": {
+          "createFailed": "Failed to create amenity",
+          "updateFailed": "Failed to update amenity",
+          "deleteFailed": "Failed to delete amenity"
+        }
+      }
+    }
+  },
+  "bookings": {
+    "validation": {
+      "date": {
+        "required": "Booking date is required",
+        "invalid": "Please enter a valid date"
+      },
+      "startTime": {
+        "required": "Start time is required",
+        "invalid": "Please enter a valid start time"
+      },
+      "endTime": {
+        "required": "End time is required",
+        "invalid": "Please enter a valid end time",
+        "afterStart": "End time must be after start time"
+      },
+      "numberOfPeople": {
+        "required": "Number of people is required",
+        "min": "At least 1 person is required",
+        "max": "Number of people cannot exceed room capacity",
+        "integer": "Number of people must be a whole number"
+      },
+      "totalPrice": {
+        "required": "Total price is required",
+        "min": "Total price cannot be negative",
+        "max": "Total price cannot exceed 99,999.99"
+      },
+      "discount": {
+        "min": "Discount cannot be negative",
+        "max": "Discount cannot exceed 100%"
+      },
+      "paymentStatus": {
+        "required": "Payment status is required",
+        "invalid": "Please select a valid payment status"
+      },
+      "id": {
+        "required": "Booking ID is required",
+        "integer": "Booking ID must be a whole number",
+        "positive": "Booking ID must be a positive number"
+      }
+    },
+    "ui": {
+      "update": {
+        "title": "Edit Booking",
+        "dateLabel": "Booking Date",
+        "datePlaceholder": "Select date",
+        "startTimeLabel": "Start Time",
+        "startTimePlaceholder": "Select start time",
+        "endTimeLabel": "End Time",
+        "endTimePlaceholder": "Select end time",
+        "numberOfPeopleLabel": "Number of People",
+        "numberOfPeoplePlaceholder": "Enter number of people",
+        "totalPriceLabel": "Total Price",
+        "totalPricePlaceholder": "0.00",
+        "discountLabel": "Discount",
+        "discountPlaceholder": "0.00",
+        "discountHelper": "Enter discount amount",
+        "paymentStatusLabel": "Payment Status",
+        "submitButton": "Update Booking",
+        "submitButtonLoading": "Updating..."
+      },
+      "list": {
+        "title": "Bookings",
+        "empty": "No bookings available",
+        "error": "Failed to load bookings"
+      }
+    },
+    "messages": {
+      "success": {
+        "update": "Booking updated successfully!"
+      },
+      "error": {
+        "update": {
+          "PGRST116": "The booking you're trying to update doesn't exist or has been removed.",
+          "23505": "A booking with these details already exists. Please check your input.",
+          "23503": "Unable to update booking. Please check that the user and meeting room exist.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "notFound": "The booking you're trying to update doesn't exist or has been removed.",
+          "unknown": "Something went wrong while updating the booking. Please try again."
+        }
+      }
+    }
+  },
+  "common": {
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "update": "Update",
+      "close": "Close",
+      "confirm": "Confirm"
+    },
+    "messages": {
+      "loading": "Loading...",
+      "error": "An error occurred",
+      "success": "Operation completed successfully",
+      "notFound": "Item not found",
+      "unauthorized": "You don't have permission to perform this action",
+      "pickADate": "Pick a date"
+    }
+  }
+}
