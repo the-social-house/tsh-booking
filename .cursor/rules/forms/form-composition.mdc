@@ -1,0 +1,754 @@
+---
+globs: *.tsx
+alwaysApply: false
+---
+
+## Form Composition Guidelines
+
+These guidelines define the standard patterns for building forms with React 19.2's `useActionState`, Zod validation, and shadcn/ui Field components.
+
+## Basic Requirements
+
+* Always declare `"use client"` in the first line of form components.
+* Use React 19.2's `useActionState` hook for form state management.
+* Import all UI text from centralized `@/lib/messages.json`.
+* Use the generic `FormState<T>` type from `@/lib/form-errors`.
+* Follow shadcn Field component anatomy for accessible forms.
+* **Always check `@/components/ui/` folder for available shadcn components** and use them instead of native HTML inputs.
+
+## UI Component Guidelines
+
+### Available shadcn Components
+
+Always check the `@/components/ui/` folder for available components. Use shadcn components instead of native HTML elements for better UX and consistency.
+
+**Key components to use:**
+
+* **Date inputs**: Use `@/components/ui/datepicker.tsx` (DatePicker component) instead of `<input type="date">`
+* **Time inputs**: Use `@/components/ui/select.tsx` (Select component) for time selection instead of `<input type="time">` or `<input type="datetime-local">`
+* **Dropdowns/Select**: Use `@/components/ui/select.tsx` (Select, SelectContent, SelectItem, SelectTrigger, SelectValue)
+* **Text inputs**: Use `@/components/ui/input.tsx` (Input component)
+* **Checkboxes**: Use `@/components/ui/checkbox.tsx` (Checkbox component)
+* **Switches**: Use `@/components/ui/switch.tsx` (Switch component)
+* **Buttons**: Use `@/components/ui/button.tsx` (Button component)
+
+### DatePicker Usage
+
+For date selection, always use the DatePicker component:
+
+```typescript
+import { DatePicker } from "@/components/ui/datepicker";
+
+// In your form
+<Field>
+  <FieldLabel htmlFor="booking-date">Date</FieldLabel>
+  <DatePicker
+    date={selectedDate}
+    onDateChange={setSelectedDate}
+  />
+</Field>
+```
+
+### Select Usage (for Time Picking)
+
+For time selection or any dropdown, use the Select component:
+
+```typescript
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// In your form
+<Field>
+  <FieldLabel htmlFor="start-time">Start Time</FieldLabel>
+  <Select defaultValue={defaultTime} name="start_time">
+    <SelectTrigger id="start-time">
+      <SelectValue placeholder="Select time" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="09:00">9:00 AM</SelectItem>
+      <SelectItem value="10:00">10:00 AM</SelectItem>
+      <SelectItem value="11:00">11:00 AM</SelectItem>
+      {/* Add more time options */}
+    </SelectContent>
+  </Select>
+</Field>
+```
+
+## Form Structure
+
+### 1. Required Imports
+
+**Base imports (always needed):**
+```typescript
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { yourServerAction } from "@/app/features/<feature>/actions/<action>";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  type FormState,
+  formatErrorForToast,
+  parseFieldErrors,
+} from "@/lib/form-errors";
+import messages from "@/lib/messages.json";
+import { hasData, hasError } from "@/lib/supabase-response";
+import type { TablesInsert, TablesUpdate } from "@/supabase/types/database";
+```
+
+**Additional imports (add as needed):**
+```typescript
+// For date inputs
+import { DatePicker } from "@/components/ui/datepicker";
+
+// For select/dropdown inputs (including time selection)
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// For checkboxes
+import { Checkbox } from "@/components/ui/checkbox";
+
+// For switches
+import { Switch } from "@/components/ui/switch";
+```
+
+### 2. Type Definitions
+
+**Define field-specific errors:**
+```typescript
+type FieldErrors = {
+  field_name?: boolean;
+  another_field?: boolean;
+};
+
+type YourFormState = FormState<FieldErrors>;
+```
+
+**Define component props:**
+```typescript
+// For CREATE forms
+type CreateFormProps = {
+  onSuccess?: () => void;
+};
+
+// For UPDATE forms
+type UpdateFormProps = {
+  id: number;  // The record identifier (not part of TablesUpdate)
+  field_name?: string;  // Initial values (optional fields from TablesUpdate)
+  another_field?: number | null;
+  onSuccess?: () => void;
+};
+```
+
+### 3. Form Action with useActionState
+
+```typescript
+export default function YourForm({ onSuccess }: YourFormProps) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  async function formAction(
+    _previousState: YourFormState | null,
+    formData: FormData
+  ): Promise<YourFormState> {
+    // 1. Extract and type form data
+    const data: TablesInsert<"table_name"> = {
+      field_name: formData.get("field_name") as string,
+      numeric_field: formData.get("numeric_field")
+        ? Number(formData.get("numeric_field"))
+        : null,
+    };
+
+    // 2. Call server action
+    const result = await yourServerAction(data);
+
+    // 3. Handle errors
+    if (hasError(result)) {
+      toast.error(formatErrorForToast(result.error));
+      return {
+        error: result.error.message,
+        fieldErrors: parseFieldErrors<FieldErrors>(result.error.details),
+        success: false,
+      };
+    }
+
+    // 4. Handle success
+    if (hasData(result)) {
+      toast.success(messages.feature.messages.success.action);
+      router.refresh();
+      onSuccess?.();
+      return {
+        error: null,
+        success: true,
+      };
+    }
+
+    // 5. Fallback error
+    return {
+      error: messages.feature.messages.error.action.unknown,
+      success: false,
+    };
+  }
+
+  const [state, formActionHandler, isPending] = useActionState(
+    formAction,
+    null
+  );
+
+  // Reset form on success
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset();
+    }
+  }, [state?.success]);
+
+  return (
+    {/* Form JSX below */}
+  );
+}
+```
+
+### 4. Form JSX Structure
+
+**Basic form structure:**
+```typescript
+<div className="space-y-6">
+  <h2 className="font-semibold text-xl">
+    {messages.feature.ui.action.title}
+  </h2>
+  <form action={formActionHandler} className="space-y-4" ref={formRef}>
+    {/* Fields here */}
+  </form>
+</div>
+```
+
+**Note:** Card wrapper is optional and should be added by parent components if needed for layout.
+
+**Field anatomy (follow shadcn pattern):**
+
+**For text inputs:**
+```typescript
+<Field>
+  <FieldLabel htmlFor="field-id">
+    {messages.feature.ui.action.fieldLabel}
+  </FieldLabel>
+  <Input
+    defaultValue={initialValue}  // For UPDATE forms
+    disabled={isPending}
+    error={state?.fieldErrors?.field_name}
+    id="field-id"
+    name="field_name"
+    placeholder={messages.feature.ui.action.fieldPlaceholder}
+    type="text"
+  />
+  <FieldDescription>  {/* Optional helper text */}
+    {messages.feature.ui.action.fieldHelper}
+  </FieldDescription>
+</Field>
+```
+
+**For date inputs (use DatePicker):**
+```typescript
+<Field>
+  <FieldLabel htmlFor="field-id">
+    {messages.feature.ui.action.dateLabel}
+  </FieldLabel>
+  <DatePicker
+    date={selectedDate}
+    onDateChange={setSelectedDate}
+  />
+  <FieldDescription>
+    {messages.feature.ui.action.dateHelper}
+  </FieldDescription>
+</Field>
+```
+
+**For select/dropdowns (including time selection):**
+```typescript
+<Field>
+  <FieldLabel htmlFor="field-id">
+    {messages.feature.ui.action.selectLabel}
+  </FieldLabel>
+  <Select defaultValue={defaultValue} name="field_name">
+    <SelectTrigger id="field-id">
+      <SelectValue placeholder={messages.feature.ui.action.selectPlaceholder} />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="option1">Option 1</SelectItem>
+      <SelectItem value="option2">Option 2</SelectItem>
+    </SelectContent>
+  </Select>
+  <FieldDescription>
+    {messages.feature.ui.action.selectHelper}
+  </FieldDescription>
+</Field>
+```
+
+**Submit button:**
+```typescript
+<Button
+  className="w-full"
+  disabled={isPending}
+  loading={isPending}
+  loadingText={messages.feature.ui.action.submitButtonLoading}
+  type="submit"
+>
+  {messages.feature.ui.action.submitButton}
+</Button>
+```
+
+## Field Component Guidelines
+
+### Required Pattern
+```typescript
+<Field>
+  <FieldLabel htmlFor="input-id">Label</FieldLabel>
+  {/* Input, Select, Switch, etc. */}
+  <FieldDescription>Optional helper text.</FieldDescription>
+  {/* DO NOT USE FieldError - handled by toast and input border */}
+</Field>
+```
+
+### Key Points
+- `Field` is the core wrapper for a single field
+- `FieldLabel` must have `htmlFor` matching input `id`
+- `FieldDescription` is optional for helper text
+- **DO NOT use `FieldError`** - errors are shown via:
+  1. Toast notifications (via `formatErrorForToast`)
+  2. Destructive border on inputs (via `error` prop)
+- `Field` is the core wrapper for a single field.
+- `FieldContent` is a flex column that groups label and description. Not required if you have no description.
+- Wrap related fields with `FieldGroup`, and use `FieldSet` with `FieldLegend` for semantic grouping.
+
+## Error Handling Pattern
+
+### 1. Server Action Error Handling
+```typescript
+if (hasError(result)) {
+  // Toast shows user-friendly error message(s)
+  toast.error(formatErrorForToast(result.error));
+  
+  return {
+    error: result.error.message,
+    fieldErrors: parseFieldErrors<FieldErrors>(result.error.details),
+    success: false,
+  };
+}
+```
+
+### 2. Field-Specific Error Styling
+```typescript
+<Input
+  error={state?.fieldErrors?.field_name}  // Boolean flag
+  // ... other props
+/>
+```
+
+### 3. Toast Error Formatting
+- `formatErrorForToast()` automatically handles:
+  - Single error: Plain text
+  - Multiple errors: Bulleted list
+
+### 4. Not Found Handling (UPDATE/DELETE)
+```typescript
+if (!hasData(result)) {
+  toast.error(messages.feature.messages.error.action.notFound);
+  return {
+    error: messages.feature.messages.error.action.notFound,
+    success: false,
+  };
+}
+```
+
+## Success Handling Pattern
+
+```typescript
+toast.success(messages.feature.messages.success.action);
+router.refresh();  // Refresh server components
+onSuccess?.();     // Optional callback
+return {
+  error: null,
+  success: true,
+};
+```
+
+## Form Reset Pattern
+
+Use `useRef` + `useEffect` to reset form on success:
+
+```typescript
+const formRef = useRef<HTMLFormElement>(null);
+
+useEffect(() => {
+  if (state?.success) {
+    formRef.current?.reset();
+  }
+}, [state?.success]);
+
+// In JSX
+<form ref={formRef} {...otherProps}>
+```
+
+## Loading States
+
+The `isPending` state from `useActionState` should be used to:
+1. Disable form inputs: `disabled={isPending}`
+2. Disable submit button: `disabled={isPending}`
+3. Show loading spinner and screen-reader text: `loading={isPending}` and `loadingText="..."`
+
+**Button with loading state:**
+```typescript
+<Button
+  disabled={isPending}
+  loading={isPending}
+  loadingText={messages.feature.ui.action.submitButtonLoading}
+  type="submit"
+>
+  {messages.feature.ui.action.submitButton}
+</Button>
+```
+
+The Button component automatically handles:
+- Showing a spinning Loader2 icon when `loading={true}`
+- Hiding the button text and showing `loadingText` in a screen-reader only span
+- This provides visual feedback for sighted users and accessible feedback for screen readers
+
+## Messages Structure
+
+All text content must come from `@/lib/messages.json`:
+
+```json
+{
+  "feature": {
+    "ui": {
+      "action": {
+        "title": "Form Title",
+        "fieldLabel": "Field Label",
+        "fieldPlaceholder": "Enter value...",
+        "fieldHelper": "Optional helper text",
+        "submitButton": "Submit",
+        "submitButtonLoading": "Submitting..."
+      }
+    },
+    "messages": {
+      "success": {
+        "action": "Successfully performed action!"
+      },
+      "error": {
+        "action": {
+          "notFound": "Record not found",
+          "unknown": "Something went wrong"
+        }
+      }
+    }
+  }
+}
+```
+
+## Complete Examples
+
+### CREATE Form Example
+
+```typescript
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { createAmenity } from "@/app/features/amenities/actions/create-amenity";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  type FormState,
+  formatErrorForToast,
+  parseFieldErrors,
+} from "@/lib/form-errors";
+import messages from "@/lib/messages.json";
+import { hasData, hasError } from "@/lib/supabase-response";
+import type { TablesInsert } from "@/supabase/types/database";
+
+type FieldErrors = {
+  amenity_name?: boolean;
+  amenity_price?: boolean;
+};
+
+type CreateState = FormState<FieldErrors>;
+
+type CreateAmenityFormProps = {
+  onSuccess?: () => void;
+};
+
+export default function CreateAmenityForm({
+  onSuccess,
+}: CreateAmenityFormProps) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  async function createAction(
+    _previousState: CreateState | null,
+    formData: FormData
+  ): Promise<CreateState> {
+    const data: TablesInsert<"amenities"> = {
+      amenity_name: formData.get("name") as string,
+      amenity_price: formData.get("price")
+        ? Number(formData.get("price"))
+        : null,
+    };
+
+    const result = await createAmenity(data);
+
+    if (hasError(result)) {
+      toast.error(formatErrorForToast(result.error));
+      return {
+        error: result.error.message,
+        fieldErrors: parseFieldErrors<FieldErrors>(result.error.details),
+        success: false,
+      };
+    }
+
+    if (hasData(result)) {
+      toast.success(messages.amenities.messages.success.create);
+      router.refresh();
+      onSuccess?.();
+      return {
+        error: null,
+        success: true,
+      };
+    }
+
+    return {
+      error: messages.amenities.messages.error.create.unknown,
+      success: false,
+    };
+  }
+
+  const [state, formAction, isPending] = useActionState(createAction, null);
+
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset();
+    }
+  }, [state?.success]);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="font-semibold text-xl">
+        {messages.amenities.ui.create.title}
+      </h2>
+      <form action={formAction} className="space-y-4" ref={formRef}>
+        <Field>
+          <FieldLabel htmlFor="create-amenity-name">
+            {messages.amenities.ui.create.nameLabel}
+          </FieldLabel>
+          <Input
+            disabled={isPending}
+            error={state?.fieldErrors?.amenity_name}
+            id="create-amenity-name"
+            name="name"
+            placeholder={messages.amenities.ui.create.namePlaceholder}
+            required
+            type="text"
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="create-amenity-price">
+            {messages.amenities.ui.create.priceLabel}
+          </FieldLabel>
+          <Input
+            disabled={isPending}
+            error={state?.fieldErrors?.amenity_price}
+            id="create-amenity-price"
+            min="0"
+            name="price"
+            placeholder={messages.amenities.ui.create.pricePlaceholder}
+            step="0.01"
+            type="number"
+          />
+          <FieldDescription>
+            {messages.amenities.ui.create.priceHelper}
+          </FieldDescription>
+        </Field>
+        <Button
+          className="w-full"
+          disabled={isPending}
+          loading={isPending}
+          loadingText={messages.amenities.ui.create.submitButtonLoading}
+          type="submit"
+        >
+          {messages.amenities.ui.create.submitButton}
+        </Button>
+      </form>
+    </div>
+  );
+}
+```
+
+### UPDATE Form Example
+
+```typescript
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { updateAmenity } from "@/app/features/amenities/actions/update-amenity";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  type FormState,
+  formatErrorForToast,
+  parseFieldErrors,
+} from "@/lib/form-errors";
+import messages from "@/lib/messages.json";
+import { hasData, hasError } from "@/lib/supabase-response";
+import type { TablesUpdate } from "@/supabase/types/database";
+
+type FieldErrors = {
+  amenity_name?: boolean;
+  amenity_price?: boolean;
+};
+
+type UpdateState = FormState<FieldErrors>;
+
+type UpdateAmenityFormProps = {
+  amenity_id: number;
+  amenity_name?: string;
+  amenity_price?: number | null;
+  onSuccess?: () => void;
+};
+
+export default function UpdateAmenityForm({
+  amenity_id,
+  amenity_name,
+  amenity_price,
+  onSuccess,
+}: UpdateAmenityFormProps) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  async function updateAction(
+    _previousState: UpdateState | null,
+    formData: FormData
+  ): Promise<UpdateState> {
+    const data: TablesUpdate<"amenities"> = {
+      amenity_name: formData.get("name") as string,
+      amenity_price: formData.get("price")
+        ? Number(formData.get("price"))
+        : null,
+    };
+
+    const result = await updateAmenity(amenity_id, data);
+
+    if (hasError(result)) {
+      toast.error(formatErrorForToast(result.error));
+
+      return {
+        error: result.error.message,
+        fieldErrors: parseFieldErrors<FieldErrors>(result.error.details),
+        success: false,
+      };
+    }
+
+    if (!hasData(result)) {
+      toast.error(messages.amenities.messages.error.update.notFound);
+
+      return {
+        error: messages.amenities.messages.error.update.notFound,
+        success: false,
+      };
+    }
+
+    toast.success(messages.amenities.messages.success.update);
+    router.refresh();
+    onSuccess?.();
+    return {
+      error: null,
+      success: true,
+    };
+  }
+
+  const [state, formAction, isPending] = useActionState(updateAction, null);
+
+  // Reset form on success
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset();
+    }
+  }, [state?.success]);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="font-semibold text-xl">
+        {messages.amenities.ui.update.title}
+      </h2>
+      <form action={formAction} className="space-y-4" ref={formRef}>
+        <Field>
+          <FieldLabel htmlFor="update-amenity-name">
+            {messages.amenities.ui.update.nameLabel}
+          </FieldLabel>
+          <Input
+            defaultValue={amenity_name}
+            disabled={isPending}
+            error={state?.fieldErrors?.amenity_name}
+            id="update-amenity-name"
+            name="name"
+            placeholder={messages.amenities.ui.update.namePlaceholder}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="update-amenity-price">
+            {messages.amenities.ui.update.priceLabel}
+          </FieldLabel>
+          <Input
+            defaultValue={amenity_price ?? ""}
+            disabled={isPending}
+            error={state?.fieldErrors?.amenity_price}
+            id="update-amenity-price"
+            name="price"
+            placeholder={messages.amenities.ui.update.pricePlaceholder}
+            type="number"
+          />
+          <FieldDescription>
+            {messages.amenities.ui.update.priceHelper}
+          </FieldDescription>
+        </Field>
+        <div className="flex gap-3">
+          <Button
+            className="flex-1"
+            disabled={isPending}
+            loading={isPending}
+            loadingText={messages.amenities.ui.update.submitButtonLoading}
+            type="submit"
+          >
+            {messages.amenities.ui.update.submitButton}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
+```
+
+## Benefits
+
+* **Type-safe**: Full TypeScript support with Supabase types
+* **Accessible**: Semantic HTML with proper ARIA attributes
+* **User-friendly**: Clear error messages via toast and visual feedback
+* **Consistent**: Same pattern across all forms in the application
+* **Maintainable**: Centralized messages and reusable utilities
+* **Modern**: Uses React 19.2's latest form APIs

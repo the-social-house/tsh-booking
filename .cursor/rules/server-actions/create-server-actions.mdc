@@ -1,0 +1,384 @@
+---
+globs: *.ts
+alwaysApply: false
+---
+## CREATE Server Actions
+
+These guidelines are specifically for **CREATE/INSERT** server actions that create new records in Supabase.
+
+Whenever you are tasked with creating a new **CREATE** Server Action file, use the following guideline/principles
+
+## Basic Requirements
+
+* Always declare `"use server"` in the first line of every Server Action file.
+
+* Always create a separate file for each server action in the following directory structure: `app/features/<feature-name>/actions/create-<entity-name>.ts`
+
+* Always import the Supabase client from `@/lib/supabase` and use it for database operations.
+
+* **Always validate input with Zod** before performing database operations.
+
+## Zod Validation Protocol
+
+Server-side validation is **mandatory** for all CREATE operations. Follow these steps:
+
+### 1. Create a Schema File for the Feature
+
+Create schemas in the feature's lib folder: `app/features/<feature-name>/lib/<entity>.schema.ts`
+
+```typescript
+import { z } from "zod";
+import messages from "@/lib/messages.json";
+
+/**
+ * Schema for creating a new amenity
+ */
+export const createAmenitySchema = z.object({
+  amenity_name: z
+    .string()
+    .min(1, messages.amenities.validation.name.required)
+    .min(2, messages.amenities.validation.name.minLength)
+    .max(100, messages.amenities.validation.name.maxLength)
+    .trim(),
+  amenity_price: z
+    .number()
+    .min(0, messages.amenities.validation.price.min)
+    .max(99_999.99, messages.amenities.validation.price.max)
+    .nullable()
+    .optional(),
+});
+
+export type CreateAmenityInput = z.infer<typeof createAmenitySchema>;
+```
+
+**Key points for schemas:**
+- Import validation messages from `@/lib/messages.json` for user-friendly errors
+- Use `.trim()` on string fields to remove whitespace
+- Use `.nullable().optional()` for optional fields
+- Export both the schema and the inferred type
+- Match validation rules to database constraints
+
+### 2. Use the Shared Validation Helper
+
+The `@/lib/validation.ts` file provides reusable validation utilities:
+
+```typescript
+import type { z } from "zod";
+
+/**
+ * Format Zod validation errors into a user-friendly message
+ */
+export function formatZodErrors(error: z.ZodError): string {
+  return error.issues.map((issue) => issue.message).join(". ");
+}
+
+/**
+ * Create a validation error response compatible with PostgrestError
+ */
+export function createValidationError(error: z.ZodError) {
+  return {
+    code: "VALIDATION_ERROR",
+    message: formatZodErrors(error),
+    details: JSON.stringify(error.issues),
+    hint: "",
+    name: "ValidationError",
+  };
+}
+```
+
+### 3. Implement Validation in Server Action
+
+```typescript
+"use server";
+
+import { supabase } from "@/lib/supabase";
+import { toSupabaseMutationResponse } from "@/lib/supabase-response";
+import { createValidationError } from "@/lib/validation";
+import type { Tables } from "@/supabase/types/database";
+import {
+  type CreateAmenityInput,
+  createAmenitySchema,
+} from "../lib/amenity.schema";
+import { getCreateErrorMessage } from "../lib/error-messages";
+
+export async function createAmenity(data: CreateAmenityInput) {
+  // 1. Validate input with Zod (ALWAYS first)
+  const validationResult = createAmenitySchema.safeParse(data);
+
+  if (!validationResult.success) {
+    return {
+      data: null,
+      error: createValidationError(validationResult.error),
+    };
+  }
+
+  // 2. Use validated data for database operation
+  const validatedData = validationResult.data;
+
+  const result = await supabase
+    .from("amenities")
+    .insert(validatedData)
+    .select()
+    .single();
+
+  // 3. Handle database errors with user-friendly messages
+  if (result.error) {
+    const errorMessage = getCreateErrorMessage(result.error.code);
+    return {
+      data: null,
+      error: { ...result.error, message: errorMessage },
+    };
+  }
+
+  return toSupabaseMutationResponse<Tables<"amenities">>(result);
+}
+```
+
+## Supabase Response Pattern for CREATE Operations
+
+Supabase INSERT operations return `{ data, error, status, statusText }` where:
+- `data` contains the inserted record(s) **ONLY if** `.select()` is used
+- `data` is `null` if `.select()` is **NOT** used (even on successful insert)
+- `error` is `null` on success, or a `PostgrestError` on failure
+- `status` and `statusText` are HTTP response properties (e.g., `status: 201, statusText: "Created"`)
+
+**Choose based on your use case:**
+- **With `.select()`**: Returns the created record(s) - use when you need the data immediately (e.g., to display in UI, get generated IDs)
+- **Without `.select()`**: Returns success/failure only - use when you don't need the created data back (e.g., bulk operations, fire-and-forget)
+
+### Server Action Implementation
+
+1. **Import required utilities:**
+   ```typescript
+   import { supabase } from "@/lib/supabase";
+   import { toSupabaseMutationResponse } from "@/lib/supabase-response";
+   import { createValidationError } from "@/lib/validation";
+   import type { Tables } from "@/supabase/types/database";
+   import { type CreateAmenityInput, createAmenitySchema } from "../lib/amenity.schema";
+   ```
+
+2. **Option A: CREATE with `.select()` to return the created record:**
+   ```typescript
+   "use server";
+
+   import { supabase } from "@/lib/supabase";
+   import { toSupabaseMutationResponse } from "@/lib/supabase-response";
+   import { createValidationError } from "@/lib/validation";
+   import type { Tables } from "@/supabase/types/database";
+   import {
+     type CreateAmenityInput,
+     createAmenitySchema,
+   } from "../lib/amenity.schema";
+
+   export async function createAmenity(data: CreateAmenityInput) {
+     // Validate input
+     const validationResult = createAmenitySchema.safeParse(data);
+     if (!validationResult.success) {
+       return {
+         data: null,
+         error: createValidationError(validationResult.error),
+       };
+     }
+
+     const result = await supabase
+       .from("amenities")
+       .insert(validationResult.data)
+       .select()
+       .single();
+     
+     return toSupabaseMutationResponse<Tables<"amenities">>(result);
+   }
+   ```
+   **Use when:** You need the created record immediately (e.g., to display in UI, get generated IDs, update local state)
+
+3. **Option B: CREATE without `.select()` for success/failure only:**
+   ```typescript
+   "use server";
+
+   import { supabase } from "@/lib/supabase";
+   import { toSupabaseMutationResult } from "@/lib/supabase-response";
+   import { createValidationError } from "@/lib/validation";
+   import {
+     type CreateAmenityInput,
+     createAmenitySchema,
+   } from "../lib/amenity.schema";
+
+   export async function createAmenitySilent(data: CreateAmenityInput) {
+     // Validate input
+     const validationResult = createAmenitySchema.safeParse(data);
+     if (!validationResult.success) {
+       return {
+         success: false,
+         error: createValidationError(validationResult.error),
+       };
+     }
+
+     const result = await supabase.from("amenities").insert(validationResult.data);
+     return toSupabaseMutationResult(result);
+   }
+   ```
+   **Use when:** You don't need the created record back (e.g., bulk operations, fire-and-forget, when you'll refetch data separately)
+
+4. **For bulk inserts (multiple records):**
+   ```typescript
+   export async function createAmenities(data: CreateAmenityInput[]) {
+     // Validate all items
+     const validationResults = data.map((item) => createAmenitySchema.safeParse(item));
+     const firstError = validationResults.find((r) => !r.success);
+     
+     if (firstError && !firstError.success) {
+       return {
+         data: null,
+         error: createValidationError(firstError.error),
+       };
+     }
+
+     const validatedData = validationResults.map((r) => r.data);
+     const result = await supabase
+       .from("amenities")
+       .insert(validatedData)
+       .select();
+     
+     return toSupabaseMutationResponse<Tables<"amenities">[]>(result);
+   }
+   ```
+
+5. **Key points:**
+   - **Always validate input first** with Zod before any database operation
+   - Use the schema's inferred type (`CreateAmenityInput`) for the input parameter
+   - Use `safeParse()` not `parse()` - it returns a result object instead of throwing
+   - Use `createValidationError()` to format validation errors
+   - **Choose based on use case:**
+     - Use `.select()` + `toSupabaseMutationResponse<T>()` when you need the created record(s)
+     - Skip `.select()` + use `toSupabaseMutationResult()` when you only need success/failure
+   - Use `.single()` if you expect one record, or omit it for arrays
+
+### Using CREATE Server Actions in Components
+
+1. **With `.select()` - when you need the created record:**
+   ```typescript
+   "use client";
+
+   import { useState } from "react";
+   import { createAmenity } from "@/app/features/amenities/actions/create-amenity";
+   import { hasError, hasData } from "@/lib/supabase-response";
+   import { toast } from "sonner";
+   import type { CreateAmenityInput } from "@/app/features/amenities/lib/amenity.schema";
+
+   export default function CreateAmenityForm() {
+     const [loading, setLoading] = useState(false);
+
+     async function handleSubmit(formData: FormData) {
+       setLoading(true);
+       
+       const data: CreateAmenityInput = {
+         amenity_name: formData.get("name") as string,
+         amenity_price: formData.get("price") ? Number(formData.get("price")) : null,
+       };
+
+       const result = await createAmenity(data);
+
+       if (hasError(result)) {
+         // Handles both validation errors and database errors
+         toast.error(`Failed to create amenity: ${result.error.message}`);
+         setLoading(false);
+         return;
+       }
+
+       if (hasData(result)) {
+         toast.success("Amenity created successfully!");
+         console.log("Created:", result.data);
+       }
+       
+       setLoading(false);
+     }
+
+     return (
+       <form action={handleSubmit}>
+         {/* form fields */}
+       </form>
+     );
+   }
+   ```
+
+2. **Key points:**
+   - Use the schema's inferred type for building form data
+   - Error handling works the same for validation and database errors
+   - Validation errors have `code: "VALIDATION_ERROR"` if you need to distinguish
+
+### Error Handling
+
+1. **Custom error messages based on error codes (Best Practice):**
+   ```typescript
+   export async function createAmenity(data: CreateAmenityInput) {
+     // 1. Validate input first
+     const validationResult = createAmenitySchema.safeParse(data);
+     if (!validationResult.success) {
+       return {
+         data: null,
+         error: createValidationError(validationResult.error),
+       };
+     }
+
+     const result = await supabase
+       .from("amenities")
+       .insert(validationResult.data)
+       .select()
+       .single();
+
+     if (result.error) {
+       // 2. Handle database errors with user-friendly messages
+       // Best Practice: Always use error.code to identify errors
+       // Reference: https://supabase.com/docs/guides/auth/debugging/error-codes#error-types
+       const errorMessage = getCreateErrorMessage(result.error.code);
+       return {
+         data: null,
+         error: { ...result.error, message: errorMessage },
+       };
+     }
+
+     return toSupabaseMutationResponse<Tables<"amenities">>(result);
+   }
+   ```
+
+2. **Error message helper (in `lib/error-messages.ts`):**
+   ```typescript
+   import messages from "@/lib/messages.json";
+
+   export function getCreateErrorMessage(errorCode: string | undefined): string {
+     if (!errorCode) {
+       return messages.amenities.messages.error.create.unknown;
+     }
+
+     const errorMessages: Record<string, string> = {
+       "23505": messages.amenities.messages.error.create["23505"], // Duplicate
+       "23503": messages.amenities.messages.error.create["23503"], // FK violation
+       "23502": messages.amenities.messages.error.create["23502"], // Not null
+       "23514": messages.amenities.messages.error.create["23514"], // Check violation
+     };
+
+     return errorMessages[errorCode] || messages.amenities.messages.error.create.unknown;
+   }
+   ```
+
+3. **Common PostgreSQL error codes for CREATE operations:**
+   - `23505` - Unique violation (duplicate entry)
+   - `23503` - Foreign key violation (referenced record doesn't exist)
+   - `23502` - Not null violation (required field missing)
+   - `23514` - Check violation (constraint check failed)
+   - `VALIDATION_ERROR` - Zod validation failed (custom code)
+
+4. **Best practices for error handling:**
+   - ✅ **Always validate with Zod first** - catch malformed data before hitting the database
+   - ✅ **Use `error.code`** (PostgreSQL error codes) to identify specific error types
+   - ✅ **Use centralized messages** from `@/lib/messages.json`
+   - ❌ **Avoid string matching on `error.message`** - messages can change
+   - Return errors in the standard response format
+
+## Benefits
+
+* **Secure**: Input validation prevents malformed or malicious data
+* **Type-safe**: Zod infers TypeScript types from schemas
+* **User-friendly**: Validation messages are clear and actionable
+* **Consistent**: Same validation pattern across all CREATE operations
+* **Maintainable**: Centralized messages and schemas per feature
