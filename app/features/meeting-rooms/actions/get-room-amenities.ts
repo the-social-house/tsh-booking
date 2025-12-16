@@ -40,15 +40,27 @@ export async function getRoomAmenities(roomId: number) {
     )
     .eq("meeting_room_id", validationResult.data.roomId);
 
-  if (result.error) {
-    return toSupabaseQueryResponse<RoomAmenity[]>(result);
+  // Use toSupabaseQueryResponse for consistent error handling
+  const response =
+    toSupabaseQueryResponse<
+      Array<{
+        amenity_id: number;
+        amenities: RoomAmenity | null;
+      }>
+    >(result);
+
+  // If there's an error, return it
+  if (response.error) {
+    return response;
   }
 
   // Transform the nested structure to flat array
   const amenities =
-    result.data?.map((item) => item.amenities as RoomAmenity).filter(Boolean) ??
-    [];
+    response.data
+      ?.map((item) => item.amenities)
+      .filter((amenity): amenity is RoomAmenity => amenity !== null) ?? [];
 
+  // Return transformed data using toSupabaseQueryResponse pattern
   return {
     data: amenities,
     error: null,
