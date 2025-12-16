@@ -1,6 +1,44 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * @example
+ * // Left column is 1/3 width, right column is 2/3 width
+ * // On mobile: left (smaller) appears first
+ * <TwoColumnLayout
+ *   variant="left-narrow"
+ *   left={<RoomDescription room={room} />}
+ *   right={<RoomImage roomId={room.id} />}
+ * />
+ *
+ * @example
+ * // Right column is 1/3 width, left column is 2/3 width
+ * // On mobile: right (smaller) appears first
+ * <TwoColumnLayout
+ *   variant="right-narrow"
+ *   left={<ArticleContent />}
+ *   right={<Sidebar />}
+ * />
+ *
+ * @example
+ * // 50/50 split
+ * <TwoColumnLayout
+ *   variant="equal"
+ *   left={<Form />}
+ *   right={<Preview />}
+ * />
+ *
+ * @example
+ * // Full width (only left column shown)
+ * <TwoColumnLayout
+ *   variant="full"
+ *   left={<FullWidthContent />}
+ *   right={null}
+ * />
+ */
+
+type LayoutVariant = "left-narrow" | "right-narrow" | "equal" | "full";
+
 type TwoColumnLayoutProps = {
   /**
    * Content to display in the left column
@@ -11,25 +49,14 @@ type TwoColumnLayoutProps = {
    */
   right: ReactNode;
   /**
-   * Fraction of width for left column (e.g., 1 = 50%, 2 = 66.67%)
-   * Defaults to 1 (50/50 split)
+   * Layout variant:
+   * - "left-narrow": left = 1/3 (4 cols), right = 2/3 (8 cols)
+   * - "right-narrow": left = 2/3 (8 cols), right = 1/3 (4 cols)
+   * - "equal": 50/50 split (6 cols each)
+   * - "full": full width (12 cols, shows only left column)
+   * Defaults to "equal"
    */
-  leftFraction?: number;
-  /**
-   * Fraction of width for right column (e.g., 1 = 50%, 2 = 66.67%)
-   * Defaults to 1 (50/50 split)
-   */
-  rightFraction?: number;
-  /**
-   * Whether the left column should span full width (overrides leftFraction)
-   * Defaults to false
-   */
-  leftFullWidth?: boolean;
-  /**
-   * Whether the right column should span full width (overrides rightFraction)
-   * Defaults to false
-   */
-  rightFullWidth?: boolean;
+  variant?: LayoutVariant;
   /**
    * Gap between columns (Tailwind spacing class)
    * Defaults to "gap-6"
@@ -51,37 +78,37 @@ type TwoColumnLayoutProps = {
 
 /**
  * Two-column responsive layout component.
- * Stacks vertically on mobile, displays side-by-side on larger screens.
- * Uses CSS Grid with configurable fractions for column widths.
+ * Stacks vertically on mobile with smaller column on top, displays side-by-side on larger screens.
+ * Uses CSS Grid with predefined variants: 1/3-2/3, 2/3-1/3, 50/50, or full width.
  */
 export function TwoColumnLayout({
   left,
   right,
-  leftFraction = 1,
-  rightFraction = 1,
-  leftFullWidth = false,
-  rightFullWidth = false,
-  gap = "gap-6",
+  variant = "equal",
+  gap = "gap-10",
   className,
   leftClassName,
   rightClassName,
 }: TwoColumnLayoutProps) {
-  const totalFraction = leftFraction + rightFraction;
-  const leftSpan = leftFullWidth
-    ? "md:col-span-12"
-    : getColSpanClass(leftFraction, totalFraction);
-  const rightSpan = rightFullWidth
-    ? "md:col-span-12"
-    : getColSpanClass(rightFraction, totalFraction);
+  const { leftSpan, rightSpan, mobileOrder } = getLayoutConfig(variant);
+
+  // For full width variant, only show left column
+  if (variant === "full") {
+    return (
+      <div className={cn("container mx-auto w-full", className)}>
+        <div className={cn(leftClassName)}>{left}</div>
+      </div>
+    );
+  }
 
   return (
     <div
       className={cn(
-        "grid w-full",
+        "container mx-auto grid w-full",
         // Mobile: stack vertically
         "grid-cols-1",
-        // Tablet and up: 12-column grid for flexibility
-        "md:grid-cols-12",
+        // 949px and up: 12-column grid
+        "min-[949px]:grid-cols-12",
         gap,
         className
       )}
@@ -89,9 +116,10 @@ export function TwoColumnLayout({
       {/* Left Column */}
       <div
         className={cn(
-          // Mobile: full width
+          // Mobile: full width, order controlled by mobileOrder
           "col-span-1",
-          // Tablet and up: calculated span
+          mobileOrder.left,
+          // 949px and up: calculated span
           leftSpan,
           leftClassName
         )}
@@ -102,9 +130,10 @@ export function TwoColumnLayout({
       {/* Right Column */}
       <div
         className={cn(
-          // Mobile: full width
+          // Mobile: full width, order controlled by mobileOrder
           "col-span-1",
-          // Tablet and up: calculated span
+          mobileOrder.right,
+          // 949px and up: calculated span
           rightSpan,
           rightClassName
         )}
@@ -116,32 +145,70 @@ export function TwoColumnLayout({
 }
 
 /**
- * Helper function to get Tailwind col-span class based on fraction
- * Maps fractions to Tailwind's 12-column grid system
- * Ensures columns always add up to exactly 12
+ * Get layout configuration based on variant
  */
-function getColSpanClass(fraction: number, totalFraction: number): string {
-  // Calculate the exact number of columns (out of 12) this fraction should occupy
-  const colSpan = Math.round((fraction / totalFraction) * 12);
+function getLayoutConfig(variant: LayoutVariant): {
+  leftSpan: string;
+  rightSpan: string;
+  mobileOrder: { left: string; right: string };
+} {
+  switch (variant) {
+    case "left-narrow":
+      // Left: 1/3 (4 cols), Right: 2/3 (8 cols)
+      // Mobile: left is smaller, so it goes first (default order)
+      return {
+        leftSpan: "min-[949px]:col-span-4",
+        rightSpan: "min-[949px]:col-span-8",
+        mobileOrder: {
+          left: "order-1",
+          right: "order-2",
+        },
+      };
 
-  // Clamp between 1 and 12
-  const clampedSpan = Math.max(1, Math.min(12, colSpan));
+    case "right-narrow":
+      // Left: 2/3 (8 cols), Right: 1/3 (4 cols)
+      // Mobile: right is smaller, so it goes first (swap order)
+      return {
+        leftSpan: "min-[949px]:col-span-8",
+        rightSpan: "min-[949px]:col-span-4",
+        mobileOrder: {
+          left: "order-2",
+          right: "order-1",
+        },
+      };
 
-  // Map to Tailwind classes (must be explicit for purging)
-  const colSpanMap: Record<number, string> = {
-    1: "md:col-span-1",
-    2: "md:col-span-2",
-    3: "md:col-span-3",
-    4: "md:col-span-4",
-    5: "md:col-span-5",
-    6: "md:col-span-6",
-    7: "md:col-span-7",
-    8: "md:col-span-8",
-    9: "md:col-span-9",
-    10: "md:col-span-10",
-    11: "md:col-span-11",
-    12: "md:col-span-12",
-  };
+    case "equal":
+      // 50/50 split (6 cols each)
+      // Mobile: order doesn't matter, keep default
+      return {
+        leftSpan: "min-[949px]:col-span-6",
+        rightSpan: "min-[949px]:col-span-6",
+        mobileOrder: {
+          left: "order-1",
+          right: "order-2",
+        },
+      };
 
-  return colSpanMap[clampedSpan] ?? "md:col-span-6";
+    case "full":
+      // Full width (shouldn't reach here, handled above)
+      return {
+        leftSpan: "min-[949px]:col-span-12",
+        rightSpan: "min-[949px]:col-span-12",
+        mobileOrder: {
+          left: "order-1",
+          right: "order-2",
+        },
+      };
+
+    default:
+      // Fallback to equal
+      return {
+        leftSpan: "min-[949px]:col-span-6",
+        rightSpan: "min-[949px]:col-span-6",
+        mobileOrder: {
+          left: "order-1",
+          right: "order-2",
+        },
+      };
+  }
 }
