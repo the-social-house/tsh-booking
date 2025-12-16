@@ -182,6 +182,14 @@
         "title": "Bookings",
         "empty": "No bookings available",
         "error": "Failed to load bookings"
+      },
+      "overview": {
+        "title": "Booking overview",
+        "pickDate": "Pick a date",
+        "meetingRoomsErrorTitle": "An error has occurred",
+        "meetingRoomsErrorDescription": "There was an error while loading meeting rooms. Please try again later or contact us if the problem persists.",
+        "bookingsErrorTitle": "An error has occurred",
+        "bookingsErrorDescription": "There was an error while loading bookings. Please try again later or contact us if the problem persists."
       }
     },
     "messages": {
