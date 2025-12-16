@@ -128,6 +128,37 @@
       }
     },
     "ui": {
+      "create": {
+        "title": "Book Meeting Room",
+        "roomNameLabel": "Room",
+        "roomCapacityLabel": "Capacity",
+        "roomSizeLabel": "Size",
+        "roomPriceLabel": "Price per Hour",
+        "dateLabel": "Booking Date",
+        "datePlaceholder": "Select date",
+        "startTimeLabel": "Start Time",
+        "startTimePlaceholder": "Select start time",
+        "endTimeLabel": "End Time",
+        "endTimePlaceholder": "Select end time",
+        "numberOfPeopleLabel": "Number of People",
+        "numberOfPeoplePlaceholder": "Enter number of people",
+        "amenitiesLabel": "Additional Amenities",
+        "amenitiesHelper": "Select amenities to add to your booking",
+        "roomAmenitiesLabel": "Room Amenities",
+        "roomAmenitiesHelper": "These amenities are included with the room",
+        "totalPriceLabel": "Total Price",
+        "totalPricePlaceholder": "0.00",
+        "discountLabel": "Discount (%)",
+        "discountPlaceholder": "0",
+        "discountHelper": "Enter discount percentage",
+        "paymentStatusLabel": "Payment Status",
+        "submitButton": "Book Now",
+        "submitButtonLoading": "Booking...",
+        "stripeButton": "Pay with Stripe",
+        "stripeButtonLoading": "Processing payment...",
+        "noSlotsToday": "No available time slots for today. Please choose another date.",
+        "endTimeHelper": "Minimum booking duration is 30 minutes. Last booking ends at 22:00."
+      },
       "update": {
         "title": "Edit Booking",
         "dateLabel": "Booking Date",
@@ -151,13 +182,36 @@
         "title": "Bookings",
         "empty": "No bookings available",
         "error": "Failed to load bookings"
+      },
+      "overview": {
+        "title": "Booking overview",
+        "pickDate": "Pick a date",
+        "meetingRoomsErrorTitle": "An error has occurred",
+        "meetingRoomsErrorDescription": "There was an error while loading meeting rooms. Please try again later or contact us if the problem persists.",
+        "bookingsErrorTitle": "An error has occurred",
+        "bookingsErrorDescription": "There was an error while loading bookings. Please try again later or contact us if the problem persists."
       }
     },
     "messages": {
       "success": {
+        "create": "Booking created successfully!",
         "update": "Booking updated successfully!"
       },
       "error": {
+        "create": {
+          "23505": "A booking with these details already exists. Please check your input.",
+          "23503": "Unable to create booking. Please check that the user and meeting room exist.",
+          "23502": "Please fill in all required fields.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "subscriptionLimitExceeded": "You have reached your monthly booking limit. Please upgrade your subscription to book more meetings.",
+          "timeSlotConflict": "This time slot is already booked. Please select a different time.",
+          "invalidTimeSlot": "The selected time slot is not available. Please select a time between 9:00 and 22:00.",
+          "pastTimeSlot": "Cannot book time slots in the past. Please select a future time.",
+          "capacityExceeded": "The number of people exceeds the room capacity. Please reduce the number of attendees.",
+          "invalidAmenity": "One or more selected amenities are not available for this room.",
+          "priceMismatch": "There was an error calculating the booking price. Please try again.",
+          "unknown": "Something went wrong while creating the booking. Please try again."
+        },
         "update": {
           "PGRST116": "The booking you're trying to update doesn't exist or has been removed.",
           "23505": "A booking with these details already exists. Please check your input.",
