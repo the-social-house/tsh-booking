@@ -107,8 +107,8 @@ export function TwoColumnLayout({
         "container mx-auto grid w-full",
         // Mobile: stack vertically
         "grid-cols-1",
-        // 949px and up: 12-column grid
-        "min-[949px]:grid-cols-12",
+        // Tablet and up: 12-column grid
+        "md:grid-cols-12",
         gap,
         className
       )}
@@ -119,7 +119,7 @@ export function TwoColumnLayout({
           // Mobile: full width, order controlled by mobileOrder
           "col-span-1",
           mobileOrder.left,
-          // 949px and up: calculated span
+          // Tablet and up: calculated span
           leftSpan,
           leftClassName
         )}
@@ -133,7 +133,7 @@ export function TwoColumnLayout({
           // Mobile: full width, order controlled by mobileOrder
           "col-span-1",
           mobileOrder.right,
-          // 949px and up: calculated span
+          // Tablet and up: calculated span
           rightSpan,
           rightClassName
         )}
@@ -157,8 +157,8 @@ function getLayoutConfig(variant: LayoutVariant): {
       // Left: 1/3 (4 cols), Right: 2/3 (8 cols)
       // Mobile: left is smaller, so it goes first (default order)
       return {
-        leftSpan: "min-[949px]:col-span-4",
-        rightSpan: "min-[949px]:col-span-8",
+        leftSpan: "md:col-span-4",
+        rightSpan: "md:col-span-8",
         mobileOrder: {
           left: "order-1",
           right: "order-2",
@@ -169,8 +169,8 @@ function getLayoutConfig(variant: LayoutVariant): {
       // Left: 2/3 (8 cols), Right: 1/3 (4 cols)
       // Mobile: right is smaller, so it goes first (swap order)
       return {
-        leftSpan: "min-[949px]:col-span-8",
-        rightSpan: "min-[949px]:col-span-4",
+        leftSpan: "md:col-span-8",
+        rightSpan: "md:col-span-4",
         mobileOrder: {
           left: "order-2",
           right: "order-1",
@@ -181,8 +181,8 @@ function getLayoutConfig(variant: LayoutVariant): {
       // 50/50 split (6 cols each)
       // Mobile: order doesn't matter, keep default
       return {
-        leftSpan: "min-[949px]:col-span-6",
-        rightSpan: "min-[949px]:col-span-6",
+        leftSpan: "md:col-span-6",
+        rightSpan: "md:col-span-6",
         mobileOrder: {
           left: "order-1",
           right: "order-2",
@@ -192,8 +192,8 @@ function getLayoutConfig(variant: LayoutVariant): {
     case "full":
       // Full width (shouldn't reach here, handled above)
       return {
-        leftSpan: "min-[949px]:col-span-12",
-        rightSpan: "min-[949px]:col-span-12",
+        leftSpan: "md:col-span-12",
+        rightSpan: "md:col-span-12",
         mobileOrder: {
           left: "order-1",
           right: "order-2",
@@ -203,8 +203,8 @@ function getLayoutConfig(variant: LayoutVariant): {
     default:
       // Fallback to equal
       return {
-        leftSpan: "min-[949px]:col-span-6",
-        rightSpan: "min-[949px]:col-span-6",
+        leftSpan: "md:col-span-6",
+        rightSpan: "md:col-span-6",
         mobileOrder: {
           left: "order-1",
           right: "order-2",
