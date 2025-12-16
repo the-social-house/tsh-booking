@@ -202,12 +202,6 @@ export function CalendarBooking({
       return bookingDateStr === selectedDateISO;
     });
 
-    // Debug logging
-    if (filtered.length > 0) {
-      console.log("📅 Selected date:", selectedDateISO);
-      console.log("📋 Bookings for selected date:", filtered);
-    }
-
     return filtered;
   }, [date, existingBookings]);
 
@@ -227,12 +221,6 @@ export function CalendarBooking({
         // (start time >= booking start AND start time < booking end)
         const overlaps =
           slotMinutes >= bookingStart && slotMinutes < bookingEnd;
-
-        if (overlaps) {
-          console.log(
-            `🚫 Slot ${slotTime} overlaps with booking ${bookingStartTimeStr}-${bookingEndTimeStr}`
-          );
-        }
 
         return overlaps;
       });
@@ -465,7 +453,7 @@ export function CalendarBooking({
         {/* 3-Column Layout: Calendar | Start Time | End Time + People */}
         <div className="grid lg:grid-cols-3">
           {/* Column 1: Calendar */}
-          <div className="p-6 lg:border-r">
+          <div className="mx-auto p-6 lg:border-r">
             <Calendar
               className="bg-transparent p-0 [--cell-size:--spacing(10)] md:[--cell-size:--spacing(12)]"
               classNames={{
@@ -494,7 +482,7 @@ export function CalendarBooking({
 
           {/* Column 2: Start Time Presets */}
           <div
-            className="no-scrollbar flex flex-col gap-2 overflow-y-auto border-t p-4 lg:max-h-[340px] lg:border-t-0 lg:border-r"
+            className="no-scrollbar flex max-h-[360px] flex-col gap-2 overflow-y-auto border-t p-4 lg:border-t-0 lg:border-r"
             ref={scrollContainerRef}
           >
             <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">

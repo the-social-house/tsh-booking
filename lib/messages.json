@@ -196,6 +196,12 @@
           "23502": "Please fill in all required fields.",
           "23514": "The information you entered is invalid. Please check and try again.",
           "subscriptionLimitExceeded": "You have reached your monthly booking limit. Please upgrade your subscription to book more meetings.",
+          "timeSlotConflict": "This time slot is already booked. Please select a different time.",
+          "invalidTimeSlot": "The selected time slot is not available. Please select a time between 9:00 and 22:00.",
+          "pastTimeSlot": "Cannot book time slots in the past. Please select a future time.",
+          "capacityExceeded": "The number of people exceeds the room capacity. Please reduce the number of attendees.",
+          "invalidAmenity": "One or more selected amenities are not available for this room.",
+          "priceMismatch": "There was an error calculating the booking price. Please try again.",
           "unknown": "Something went wrong while creating the booking. Please try again."
         },
         "update": {
