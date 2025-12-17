@@ -24,17 +24,38 @@ export const createMeetingRoomSchema = z.object({
     .number()
     .min(1, messages.admin.meetingRooms.validation.size.min)
     .max(99_999.99, messages.admin.meetingRooms.validation.size.max),
-  meeting_room_images: z.array(z.url()).default([]),
+  meeting_room_images: z
+    .array(z.url())
+    .min(1, messages.admin.meetingRooms.validation.images.required)
+    .max(10, messages.admin.meetingRooms.validation.images.maxCount)
+    .default([])
+    .optional(),
 });
 
 /**
- * Schema for validating meeting room images
+ * Schema for updating a meeting room (all fields optional)
+ */
+export const updateMeetingRoomSchema = z.object({
+  meeting_room_name: createMeetingRoomSchema.shape.meeting_room_name.optional(),
+  meeting_room_capacity:
+    createMeetingRoomSchema.shape.meeting_room_capacity.optional(),
+  meeting_room_price_per_hour:
+    createMeetingRoomSchema.shape.meeting_room_price_per_hour.optional(),
+  meeting_room_size: createMeetingRoomSchema.shape.meeting_room_size.optional(),
+  meeting_room_images:
+    createMeetingRoomSchema.shape.meeting_room_images.optional(),
+});
+
+/**
+ * Schema for validating meeting room images (client-side File objects)
  */
 export const meetingRoomImagesSchema = z
   .array(z.instanceof(File))
-  .min(1, messages.admin.meetingRooms.validation.images.required);
+  .min(1, messages.admin.meetingRooms.validation.images.required)
+  .max(10, messages.admin.meetingRooms.validation.images.maxCount);
 
 export type CreateMeetingRoomInput = z.infer<typeof createMeetingRoomSchema>;
+export type UpdateMeetingRoomInput = z.infer<typeof updateMeetingRoomSchema>;
 
 /**
  * Schema for validating meeting room IDs (used for update/delete)

@@ -7,6 +7,7 @@ const BUCKET_NAME = "meeting-room-images";
 export type UploadResult = {
   success: boolean;
   urls?: string[];
+  paths?: string[];
   error?: string;
 };
 
@@ -21,6 +22,7 @@ export async function uploadMeetingRoomImages(
   }
 
   const uploadedUrls: string[] = [];
+  const uploadedPaths: string[] = [];
 
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -61,10 +63,12 @@ export async function uploadMeetingRoomImages(
     } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
 
     uploadedUrls.push(publicUrl);
+    uploadedPaths.push(data.path);
   }
 
   return {
     success: true,
     urls: uploadedUrls,
+    paths: uploadedPaths,
   };
 }
