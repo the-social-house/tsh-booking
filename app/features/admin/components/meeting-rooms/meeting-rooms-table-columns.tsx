@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontalIcon } from "lucide-react";
+import { DeleteMeetingRoomDialog } from "@/app/features/admin/components/meeting-rooms/delete-meeting-room-dialog";
 import type { MeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-rooms";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,19 +44,26 @@ export const meetingRoomsColumns: ColumnDef<MeetingRoom>[] = [
   },
   {
     id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button className="h-8 w-8 p-0" variant="ghost">
-            <span className="sr-only">{messages.admin.ui.table.actions}</span>
-            <MoreHorizontalIcon className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>{messages.common.buttons.edit}</DropdownMenuItem>
-          <DropdownMenuItem>{messages.common.buttons.delete}</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => {
+      const meetingRoom = row.original;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="h-8 w-8 p-0" variant="ghost">
+              <span className="sr-only">{messages.admin.ui.table.actions}</span>
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>{messages.common.buttons.edit}</DropdownMenuItem>
+            <DeleteMeetingRoomDialog
+              meetingRoomId={meetingRoom.meeting_room_id}
+              meetingRoomName={meetingRoom.meeting_room_name}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];
