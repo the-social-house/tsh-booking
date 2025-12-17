@@ -19,6 +19,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import ErrorFallback from "@/components/ui/error-fallback";
 import Heading from "@/components/ui/heading";
 import {
   Popover,
@@ -207,19 +208,10 @@ function BookingGrid({
 
   if (hasError(meetingRoomsResult)) {
     return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <AlertCircleIcon className="size-10 text-destructive" />
-          </EmptyMedia>
-          <EmptyTitle>
-            {messages.bookings.ui.overview.meetingRoomsErrorTitle}
-          </EmptyTitle>
-          <EmptyDescription>
-            {messages.bookings.ui.overview.meetingRoomsErrorDescription}
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <ErrorFallback
+        description={messages.bookings.ui.overview.meetingRoomsErrorDescription}
+        title={messages.bookings.ui.overview.meetingRoomsErrorTitle}
+      />
     );
   }
 

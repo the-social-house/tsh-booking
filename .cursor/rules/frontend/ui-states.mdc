@@ -1,0 +1,225 @@
+---
+globs: *.tsx
+alwaysApply: false
+---
+
+## UI States Guidelines
+
+These guidelines define the standard patterns for displaying empty states, error states, and fallback UIs when fetching data with React 19.2's `use()` hook and Supabase.
+
+## Overview
+
+- **EmptyFallback**: Use when data fetching succeeds but returns no results
+- **ErrorFallback**: Use when data fetching fails with an error
+- Both components share the same anatomy and are built on the `Empty` primitives
+
+## Available Components
+
+### Fallback Components (Recommended)
+
+Use these pre-built components for consistent empty and error states:
+
+- **`@/components/ui/empty-fallback.tsx`**: Yellow alert icon, for empty data states
+- **`@/components/ui/error-fallback.tsx`**: Destructive (red) alert icon, for error states
+
+### Empty Primitives (Advanced)
+
+For custom empty states, use the primitive components directly:
+
+- **`@/components/ui/empty.tsx`**: `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent`
+
+## Required Imports
+
+```typescript
+"use client";
+
+import { use } from "react";
+import EmptyFallback from "@/components/ui/empty-fallback";
+import ErrorFallback from "@/components/ui/error-fallback";
+import messages from "@/lib/messages.json";
+import { hasData, hasError, type SupabaseResponse } from "@/lib/supabase-response";
+```
+
+## Component Props
+
+Both `EmptyFallback` and `ErrorFallback` accept the same props:
+
+```typescript
+type FallbackProps = {
+  title: string; // Main heading text
+  description: string; // Descriptive text explaining the state
+};
+```
+
+## Standard Pattern for Data Fetching Content
+
+When creating components that display fetched data (tables, lists, grids), follow this pattern:
+
+### 1. Component Structure
+
+```typescript
+"use client";
+
+import { use } from "react";
+import EmptyFallback from "@/components/ui/empty-fallback";
+import ErrorFallback from "@/components/ui/error-fallback";
+import messages from "@/lib/messages.json";
+import { hasData, hasError, type SupabaseResponse } from "@/lib/supabase-response";
+
+type YourContentProps = {
+  promise: Promise<SupabaseResponse<YourDataType[]>>;
+};
+
+export function YourContent({ promise }: YourContentProps) {
+  const result = use(promise);
+
+  // 1. Check for errors FIRST
+  if (hasError(result)) {
+    return <ErrorFallback description={messages.feature.ui.section.error} title={messages.feature.ui.section.errorTitle} />;
+  }
+
+  // 2. Check for empty data SECOND
+  if (!hasData(result) || result.data.length === 0) {
+    return <EmptyFallback description={messages.feature.ui.section.empty} title={messages.feature.ui.section.emptyTitle} />;
+  }
+
+  // 3. Render content when data exists
+  return <YourDataDisplay data={result.data} />;
+}
+```
+
+### 2. Evaluation Order
+
+Always check states in this order:
+
+1. **Error state** (`hasError(result)`) - Highest priority
+2. **Empty state** (`!hasData(result) || result.data.length === 0`)
+3. **Success state** - Render the actual content
+
+### 3. Messages Structure
+
+Add corresponding messages to `@/lib/messages.json`:
+
+```json
+{
+  "feature": {
+    "ui": {
+      "section": {
+        "errorTitle": "Failed to load items",
+        "error": "Something went wrong while loading the items. Please try again later.",
+        "emptyTitle": "No items found",
+        "empty": "There are no items available at this time."
+      }
+    }
+  }
+}
+```
+
+## Complete Example: Table Content Component
+
+```typescript
+"use client";
+
+import { use } from "react";
+import { AdminDataTable } from "@/app/features/admin/components/admin-data-table";
+import { itemsColumns } from "@/app/features/admin/components/items/items-table-columns";
+import type { Item } from "@/app/features/items/actions/get-items";
+import EmptyFallback from "@/components/ui/empty-fallback";
+import ErrorFallback from "@/components/ui/error-fallback";
+import messages from "@/lib/messages.json";
+import { hasData, hasError, type SupabaseResponse } from "@/lib/supabase-response";
+
+type ItemsTableContentProps = {
+  promise: Promise<SupabaseResponse<Item[]>>;
+};
+
+export function ItemsTableContent({ promise }: ItemsTableContentProps) {
+  const result = use(promise);
+
+  if (hasError(result)) {
+    return <ErrorFallback description={messages.admin.ui.tabs.items.error} title={messages.admin.ui.tabs.items.errorTitle} />;
+  }
+
+  if (!hasData(result) || result.data.length === 0) {
+    return <EmptyFallback description={messages.admin.ui.tabs.items.empty} title={messages.admin.ui.tabs.items.emptyTitle} />;
+  }
+
+  return <AdminDataTable columns={itemsColumns} data={result.data} />;
+}
+```
+
+## Using with Suspense
+
+When using `use()` for streaming data, wrap the content component with `Suspense`:
+
+```typescript
+import { Suspense } from "react";
+import { ItemsTableContent } from "./items-table-content";
+import { AdminDataTableSkeleton } from "@/app/features/admin/components/admin-data-table";
+
+// In parent component
+<Suspense fallback={<AdminDataTableSkeleton columnCount={columns.length} />}>
+  <ItemsTableContent promise={itemsPromise} />
+</Suspense>;
+```
+
+## Custom Empty States (Advanced)
+
+For custom empty states with actions or different layouts, use the Empty primitives directly:
+
+```typescript
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { PlusIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+function CustomEmptyState() {
+  return (
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <PlusIcon className="size-10 text-muted-foreground" />
+        </EmptyMedia>
+        <EmptyTitle>No items yet</EmptyTitle>
+        <EmptyDescription>Get started by creating your first item.</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button>Create Item</Button>
+      </EmptyContent>
+    </Empty>
+  );
+}
+```
+
+### Empty Primitive Components
+
+| Component          | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| `Empty`            | Root container with centered flex layout                    |
+| `EmptyHeader`      | Groups icon, title, and description                         |
+| `EmptyMedia`       | Icon container with `variant="icon"` or `variant="default"` |
+| `EmptyTitle`       | Main heading text                                           |
+| `EmptyDescription` | Secondary descriptive text                                  |
+| `EmptyContent`     | Container for actions (buttons, links)                      |
+
+## Best Practices
+
+### DO:
+
+- Always import text from `@/lib/messages.json` - never hardcode strings
+- Check error state before empty state
+- Use `EmptyFallback` for data that could exist but doesn't (filtered results, new users)
+- Use `ErrorFallback` for actual errors (network failures, server errors)
+- Provide actionable descriptions when possible
+- Use appropriate icons for context
+
+### DON'T:
+
+- Hardcode error/empty messages directly in components
+- Skip error checking before empty checking
+- Use ErrorFallback for empty states (they have different semantics and colors)
+- Use EmptyFallback for actual errors
+
+## Visual Distinction
+
+- **EmptyFallback**: Yellow `AlertCircleIcon` - indicates "nothing here yet" state
+- **ErrorFallback**: Destructive (red) `AlertCircleIcon` - indicates something went wrong

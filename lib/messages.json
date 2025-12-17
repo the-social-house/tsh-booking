@@ -241,6 +241,101 @@
       "notFound": "Item not found",
       "unauthorized": "You don't have permission to perform this action",
       "pickADate": "Pick a date"
+    },
+    "words": {
+      "people": "people"
+    },
+    "units": {
+      "squareMeters": "m²",
+      "hourlyRate": "DKK/hr"
+    }
+  },
+  "admin": {
+    "ui": {
+      "table": {
+        "actions": "Actions",
+        "copyId": "Copy ID"
+      },
+      "tabs": {
+        "meetingRooms": {
+          "title": "Meeting rooms",
+          "addMeetingRoom": "Add new room",
+          "errorTitle": "Failed to load meeting rooms",
+          "error": "Something went wrong while loading the meeting rooms. Please try again later.",
+          "emptyTitle": "No meeting rooms",
+          "empty": "There are no meeting rooms available at this time.",
+          "table": {
+            "name": "Name",
+            "capacity": "Capacity",
+            "size": "Size",
+            "hourlyRate": "Hourly rate"
+          }
+        }
+      }
+    },
+    "meetingRooms": {
+      "title": "Meeting rooms",
+      "addMeetingRoom": "New room",
+      "validation": {
+        "name": {
+          "required": "Room name is required",
+          "minLength": "Room name must be at least 2 characters",
+          "maxLength": "Room name cannot exceed 100 characters"
+        },
+        "capacity": {
+          "integer": "Capacity must be a whole number",
+          "min": "Capacity must be at least 1",
+          "max": "Capacity cannot exceed 1,000"
+        },
+        "pricePerHour": {
+          "min": "Price is required",
+          "max": "Price cannot exceed 99,999.99"
+        },
+        "size": {
+          "min": "Size must be at least 1",
+          "max": "Size cannot exceed 99,999.99"
+        },
+        "id": {
+          "integer": "Room ID must be a whole number",
+          "positive": "Room ID must be a positive number"
+        },
+        "images": {
+          "required": "At least one image is required"
+        }
+      },
+      "ui": {
+        "create": {
+          "title": "Add new meeting room",
+          "description": "Create a new meeting room by filling out the form below.",
+          "nameLabel": "Room name",
+          "namePlaceholder": "e.g., Room of Innovation",
+          "capacityLabel": "Capacity",
+          "capacityPlaceholder": "e.g., 10",
+          "capacityHelper": "Maximum number of people",
+          "pricePerHourLabel": "Price per hour (DKK)",
+          "pricePerHourPlaceholder": "e.g., 500",
+          "sizeLabel": "Size (m²)",
+          "sizePlaceholder": "e.g., 25",
+          "imagesLabel": "Room Images",
+          "imagesHelper": "JPG, PNG, or WebP. Max 5MB each, up to 10 images.",
+          "submitButton": "Create Room",
+          "submitButtonLoading": "Creating..."
+        }
+      },
+      "messages": {
+        "success": {
+          "create": "Meeting room created successfully!"
+        },
+        "error": {
+          "create": {
+            "23505": "A meeting room with this name already exists. Please choose a different name.",
+            "23503": "Unable to create meeting room. Please check your input and try again.",
+            "23502": "Please fill in all required fields.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "unknown": "Something went wrong while creating the meeting room. Please try again."
+          }
+        }
+      }
     }
   }
 }
