@@ -190,7 +190,9 @@ export default function CreateMeetingRoomForm({
   }, []);
 
   const handleImageError = useCallback((error: Error) => {
-    toast.error(error.message);
+    toast.error(error.message, {
+      duration: 10_000,
+    });
   }, []);
 
   async function formAction(
@@ -206,7 +208,10 @@ export default function CreateMeetingRoomForm({
 
     if (!validation.isValid) {
       toast.error(
-        formatErrorForToast({ message: validation.errorMessages.join(". ") })
+        formatErrorForToast({ message: validation.errorMessages.join(". ") }),
+        {
+          duration: 10_000,
+        }
       );
       return {
         error: validation.errorMessages.join(". "),
