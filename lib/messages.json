@@ -234,6 +234,10 @@
       "close": "Close",
       "confirm": "Confirm"
     },
+    "ui": {
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all"
+    },
     "messages": {
       "loading": "Loading...",
       "error": "An error occurred",
@@ -247,14 +251,14 @@
     },
     "units": {
       "squareMeters": "m²",
-      "hourlyRate": "DKK/hr"
+      "hourlyRate": "DKK/hr",
+      "dkk": "DKK"
     }
   },
   "admin": {
     "ui": {
       "table": {
-        "actions": "Actions",
-        "copyId": "Copy ID"
+        "actions": "Actions"
       },
       "tabs": {
         "meetingRooms": {
@@ -300,7 +304,9 @@
           "positive": "Room ID must be a positive number"
         },
         "images": {
-          "required": "At least one image is required"
+          "required": "At least one image is required",
+          "invalid": "One or more images are invalid. Please check the file type and size.",
+          "maxCount": "You can upload at most 10 images for a meeting room."
         }
       },
       "ui": {
@@ -316,10 +322,36 @@
           "pricePerHourPlaceholder": "e.g., 500",
           "sizeLabel": "Size (m²)",
           "sizePlaceholder": "e.g., 25",
-          "imagesLabel": "Room Images",
+          "amenitiesLabel": "Select amenities",
+          "amenitiesHelper": "To add new amenities, go to the Amenities tab.",
+          "imagesLabel": "Room images",
           "imagesHelper": "JPG, PNG, or WebP. Max 5MB each, up to 10 images.",
+          "uploadingImages": "Uploading images...",
           "submitButton": "Create Room",
           "submitButtonLoading": "Creating..."
+        },
+        "update": {
+          "title": "Edit meeting room",
+          "description": "Update the details of this meeting room.",
+          "nameLabel": "Room name",
+          "namePlaceholder": "e.g., Room of Innovation",
+          "capacityLabel": "Capacity",
+          "capacityPlaceholder": "e.g., 10",
+          "capacityHelper": "Maximum number of people",
+          "pricePerHourLabel": "Price per hour (DKK)",
+          "pricePerHourPlaceholder": "e.g., 500",
+          "sizeLabel": "Size (m²)",
+          "sizePlaceholder": "e.g., 25",
+          "imagesLabel": "Room images",
+          "imagesHelper": "JPG, PNG, or WebP. Max 5MB each, up to 10 images.",
+          "amenitiesLabel": "Select amenities",
+          "amenitiesHelper": "To add new amenities, go to the Amenities tab.",
+          "amenitiesEmpty": "No amenities available.",
+          "imagesCurrentLabel": "Current images",
+          "imagesNewLabel": "New images to upload",
+          "uploadingImages": "Uploading images...",
+          "submitButton": "Save changes",
+          "submitButtonLoading": "Saving..."
         },
         "delete": {
           "dialogTitle": "Delete meeting room",
@@ -332,6 +364,7 @@
       "messages": {
         "success": {
           "create": "Meeting room created successfully!",
+          "update": "Meeting room updated successfully!",
           "delete": "Meeting room deleted successfully!"
         },
         "error": {
@@ -340,7 +373,19 @@
             "23503": "Unable to create meeting room. Please check your input and try again.",
             "23502": "Please fill in all required fields.",
             "23514": "The information you entered is invalid. Please check and try again.",
-            "unknown": "Something went wrong while creating the meeting room. Please try again."
+            "unknown": "Something went wrong while creating the meeting room. Please try again.",
+            "imagesUploadFailed": "Failed to upload images for the meeting room.",
+            "amenitiesFailed": "Meeting room was created, but amenities could not be added."
+          },
+          "update": {
+            "PGRST116": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "23505": "A meeting room with this name already exists. Please choose a different name.",
+            "23503": "Unable to update meeting room. Please check your input and try again.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "notFound": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "unknown": "Something went wrong while updating the meeting room. Please try again.",
+            "imagesUploadFailed": "Failed to upload images while updating the meeting room.",
+            "amenitiesFailed": "Meeting room was updated, but amenities could not be updated."
           },
           "delete": {
             "23503": "This meeting room cannot be deleted because it has existing bookings. Please cancel or reassign the bookings first.",

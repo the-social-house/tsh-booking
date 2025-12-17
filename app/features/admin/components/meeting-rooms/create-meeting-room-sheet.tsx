@@ -2,6 +2,7 @@
 
 import { PlusIcon } from "lucide-react";
 import { Activity, useState } from "react";
+import type { AdminAmenity } from "@/app/features/admin/actions/get-amenities";
 import CreateMeetingRoomForm from "@/app/features/admin/components/meeting-rooms/create-meeting-room-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,13 @@ import {
 } from "@/components/ui/sheet";
 import messages from "@/lib/messages.json";
 
-export function CreateMeetingRoomSheet() {
+type CreateMeetingRoomSheetProps = {
+  allAmenities: AdminAmenity[];
+};
+
+export function CreateMeetingRoomSheet({
+  allAmenities,
+}: CreateMeetingRoomSheetProps) {
   const [open, setOpen] = useState(false);
 
   function handleSuccess() {
@@ -40,7 +47,10 @@ export function CreateMeetingRoomSheet() {
             </SheetDescription>
           </SheetHeader>
           <div className="p-4">
-            <CreateMeetingRoomForm onSuccess={handleSuccess} />
+            <CreateMeetingRoomForm
+              allAmenities={allAmenities}
+              onSuccess={handleSuccess}
+            />
           </div>
         </SheetContent>
       </Activity>

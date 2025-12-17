@@ -10,7 +10,6 @@ import { createValidationError } from "@/lib/validation";
  * Delete a meeting room by ID
  */
 export async function deleteMeetingRoom(id: number) {
-  // 1. Validate ID
   const validationResult = meetingRoomIdSchema.safeParse({ id });
   if (!validationResult.success) {
     return {
@@ -19,13 +18,26 @@ export async function deleteMeetingRoom(id: number) {
     };
   }
 
-  // 2. Perform deletion
+  const amenitiesResult = await supabase
+    .from("meeting_room_amenities")
+    .delete()
+    .eq("meeting_room_id", id);
+
+  if (amenitiesResult.error) {
+    const errorMessage = getDeleteMeetingRoomErrorMessage(
+      amenitiesResult.error.code
+    );
+    return {
+      success: false,
+      error: { ...amenitiesResult.error, message: errorMessage },
+    };
+  }
+
   const result = await supabase
     .from("meeting_rooms")
     .delete()
     .eq("meeting_room_id", id);
 
-  // 3. Handle database errors
   if (result.error) {
     const errorMessage = getDeleteMeetingRoomErrorMessage(result.error.code);
     return {

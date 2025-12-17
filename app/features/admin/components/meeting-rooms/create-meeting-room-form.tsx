@@ -12,16 +12,13 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createMeetingRoom } from "@/app/features/admin/actions/create-meeting-room";
-import { uploadMeetingRoomImages } from "@/app/features/admin/actions/upload-meeting-room-images";
+import type { AdminAmenity } from "@/app/features/admin/actions/get-amenities";
+import { updateMeetingRoomAmenities } from "@/app/features/admin/actions/update-meeting-room-amenities";
+import { AmenitySelector } from "@/app/features/admin/components/meeting-rooms/amenity-selector";
 import {
   createMeetingRoomSchema,
   meetingRoomImagesSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
-
-function generateFolderId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-}
-
 import { Button } from "@/components/ui/button";
 import {
   Dropzone,
@@ -59,6 +56,7 @@ type CreateMeetingRoomFormState = FormState<FieldErrors> & {
 };
 
 type CreateMeetingRoomFormProps = {
+  allAmenities: AdminAmenity[];
   onSuccess?: () => void;
 };
 
@@ -93,27 +91,6 @@ function extractFormValues(formData: FormData): FormValues {
   };
 }
 
-async function handleImageUpload(
-  folderId: string,
-  images: ImagePreview[],
-  setIsUploading: (value: boolean) => void
-): Promise<{ success: boolean; urls?: string[]; error?: string }> {
-  if (images.length === 0) {
-    return { success: true, urls: [] };
-  }
-
-  setIsUploading(true);
-  const imageFormData = new FormData();
-  for (const image of images) {
-    imageFormData.append("images", image.file);
-  }
-
-  const uploadResult = await uploadMeetingRoomImages(folderId, imageFormData);
-  setIsUploading(false);
-
-  return uploadResult;
-}
-
 type ValidationResult = {
   isValid: boolean;
   fieldErrors: FieldErrors;
@@ -127,7 +104,6 @@ function validateForm(
   const fieldErrors: FieldErrors = {};
   const errorMessages: string[] = [];
 
-  // Validate form fields
   const formValidation = createMeetingRoomSchema.safeParse(data);
   if (!formValidation.success) {
     for (const issue of formValidation.error.issues) {
@@ -137,13 +113,15 @@ function validateForm(
     }
   }
 
-  // Validate images
   const imagesValidation = meetingRoomImagesSchema.safeParse(imageFiles);
   if (!imagesValidation.success) {
     fieldErrors.images = true;
     const imageErrorMessage =
-      imagesValidation.error.issues[0]?.message ?? "Invalid images";
-    errorMessages.push(imageErrorMessage);
+      imagesValidation.error.issues[0]?.message ??
+      messages.admin.meetingRooms.validation.images.invalid;
+    errorMessages.push(
+      imageErrorMessage ?? messages.admin.meetingRooms.validation.images.invalid
+    );
   }
 
   return {
@@ -153,13 +131,35 @@ function validateForm(
   };
 }
 
+async function addAmenitiesToRoom(
+  meetingRoomId: number,
+  amenityIds: number[]
+): Promise<void> {
+  if (amenityIds.length === 0) {
+    return;
+  }
+
+  const amenitiesResult = await updateMeetingRoomAmenities({
+    meeting_room_id: meetingRoomId,
+    amenity_ids: amenityIds,
+  });
+
+  if (!amenitiesResult.success) {
+    toast.error(
+      messages.admin.meetingRooms.messages.error.create.amenitiesFailed
+    );
+  }
+}
+
 export default function CreateMeetingRoomForm({
+  allAmenities,
   onSuccess,
 }: CreateMeetingRoomFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [images, setImages] = useState<ImagePreview[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedAmenityIds, setSelectedAmenityIds] = useState<number[]>([]);
 
   // Cleanup preview URLs on unmount
   useEffect(
@@ -203,7 +203,6 @@ export default function CreateMeetingRoomForm({
     const data = parseFormData(formData);
     const imageFiles = images.map((img) => img.file);
 
-    // Validate form fields and images client-side
     const validation = validateForm(data, imageFiles);
 
     if (!validation.isValid) {
@@ -221,44 +220,25 @@ export default function CreateMeetingRoomForm({
       };
     }
 
-    // Upload images first (before creating room)
-    const folderId = generateFolderId();
-    const uploadResult = await handleImageUpload(
-      folderId,
-      images,
-      setIsUploading
-    );
+    setIsUploading(true);
+    const { meeting_room_images: _, ...roomData } = data;
+    const createResult = await createMeetingRoom(roomData, imageFiles);
+    setIsUploading(false);
 
-    if (!uploadResult.success) {
-      toast.error(uploadResult.error ?? "Failed to upload images");
-      return {
-        error: uploadResult.error ?? "Failed to upload images",
-        fieldErrors: { images: true },
-        success: false,
-        values,
-      };
-    }
-
-    // Create room with image URLs
-    const result = await createMeetingRoom({
-      ...data,
-      meeting_room_images: uploadResult.urls ?? [],
-    });
-
-    if (hasError(result)) {
+    if (hasError(createResult)) {
       const serverFieldErrors = parseFieldErrors<FieldErrors>(
-        result.error.details
+        createResult.error.details
       );
-      toast.error(formatErrorForToast({ message: result.error.message }));
+      toast.error(formatErrorForToast({ message: createResult.error.message }));
       return {
-        error: result.error.message,
+        error: createResult.error.message,
         fieldErrors: serverFieldErrors,
         success: false,
         values,
       };
     }
 
-    if (!hasData(result)) {
+    if (!hasData(createResult)) {
       return {
         error: messages.admin.meetingRooms.messages.error.create.unknown,
         success: false,
@@ -266,8 +246,14 @@ export default function CreateMeetingRoomForm({
       };
     }
 
+    await addAmenitiesToRoom(
+      createResult.data.meeting_room_id,
+      selectedAmenityIds
+    );
+
     toast.success(messages.admin.meetingRooms.messages.success.create);
     setImages([]);
+    setSelectedAmenityIds([]);
     router.refresh();
     onSuccess?.();
 
@@ -362,6 +348,21 @@ export default function CreateMeetingRoomForm({
 
       <Field>
         <FieldLabel>
+          {messages.admin.meetingRooms.ui.create.amenitiesLabel}
+        </FieldLabel>
+        <AmenitySelector
+          amenities={allAmenities}
+          disabled={isLoading}
+          onSelectionChange={setSelectedAmenityIds}
+          selectedIds={selectedAmenityIds}
+        />
+        <FieldDescription>
+          {messages.admin.meetingRooms.ui.create.amenitiesHelper}
+        </FieldDescription>
+      </Field>
+
+      <Field>
+        <FieldLabel>
           {messages.admin.meetingRooms.ui.create.imagesLabel}
         </FieldLabel>
         <Dropzone
@@ -386,7 +387,6 @@ export default function CreateMeetingRoomForm({
         </FieldDescription>
       </Field>
 
-      {/* Image Previews */}
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {images.map((image, index) => (
@@ -419,7 +419,7 @@ export default function CreateMeetingRoomForm({
         loading={isLoading}
         loadingText={
           isUploading
-            ? "Uploading images..."
+            ? messages.admin.meetingRooms.ui.create.uploadingImages
             : messages.admin.meetingRooms.ui.create.submitButtonLoading
         }
         type="submit"
