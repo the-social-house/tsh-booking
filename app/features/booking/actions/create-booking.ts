@@ -123,7 +123,7 @@ async function validateAndCalculateAmenities(
       total: 0,
       error: {
         ...roomAmenitiesResult.error,
-        message: "Unable to verify amenities. Please try again.",
+        message: messages.bookings.messages.error.create.verifyAmenities,
       } as PostgrestError,
     };
   }
@@ -159,7 +159,7 @@ async function validateAndCalculateAmenities(
       total: 0,
       error: {
         ...amenitiesResult.error,
-        message: "Unable to calculate amenity prices. Please try again.",
+        message: messages.bookings.messages.error.create.calculateAmenityPrices,
       } as PostgrestError,
     };
   }
@@ -176,13 +176,23 @@ async function validateAndCalculateAmenities(
 
 /**
  * Check for booking conflicts
+ * A booking conflicts if:
+ * 1. It overlaps with another booking, OR
+ * 2. Another booking starts within 30 minutes after it ends (no room for buffer)
  */
 async function checkBookingConflicts(
   roomId: number,
   startTime: string,
   endTime: string
 ): Promise<{ hasConflict: boolean; error?: PostgrestError }> {
-  const conflictCheck = await supabase
+  // Calculate end time + 30 minutes (buffer requirement)
+  const endTimeDate = new Date(endTime);
+  const endTimeWithBuffer = new Date(endTimeDate);
+  endTimeWithBuffer.setMinutes(endTimeWithBuffer.getMinutes() + 30);
+  const endTimeWithBufferStr = endTimeWithBuffer.toISOString();
+
+  // Check for overlapping bookings (current check)
+  const overlapCheck = await supabase
     .from("bookings")
     .select("booking_id")
     .eq("booking_meeting_room_id", roomId)
@@ -190,18 +200,43 @@ async function checkBookingConflicts(
     .lt("booking_start_time", endTime)
     .gt("booking_end_time", startTime);
 
-  if (conflictCheck.error) {
+  if (overlapCheck.error) {
     return {
       hasConflict: false,
       error: {
-        ...conflictCheck.error,
-        message: "Unable to verify booking availability. Please try again.",
+        ...overlapCheck.error,
+        message:
+          messages.bookings.messages.error.create.verifyBookingAvailability,
       } as PostgrestError,
     };
   }
 
+  // Check if any booking starts within 30 minutes after this booking ends
+  // (ensures there's room for the buffer)
+  const bufferCheck = await supabase
+    .from("bookings")
+    .select("booking_id")
+    .eq("booking_meeting_room_id", roomId)
+    .neq("booking_payment_status", "cancelled")
+    .gte("booking_start_time", endTime) // Starts at or after our booking ends
+    .lt("booking_start_time", endTimeWithBufferStr); // But within 30 minutes
+
+  if (bufferCheck.error) {
+    return {
+      hasConflict: false,
+      error: {
+        ...bufferCheck.error,
+        message:
+          messages.bookings.messages.error.create.verifyBookingAvailability,
+      } as PostgrestError,
+    };
+  }
+
+  const hasOverlap = (overlapCheck.data?.length ?? 0) > 0;
+  const hasBufferConflict = (bufferCheck.data?.length ?? 0) > 0;
+
   return {
-    hasConflict: (conflictCheck.data?.length ?? 0) > 0,
+    hasConflict: hasOverlap || hasBufferConflict,
   };
 }
 
@@ -222,7 +257,8 @@ async function validateSubscriptionLimits(
       valid: false,
       error: {
         ...userResult.error,
-        message: "Unable to verify subscription limits. Please try again.",
+        message:
+          messages.bookings.messages.error.create.verifySubscriptionLimits,
       } as PostgrestError,
     };
   }
@@ -241,7 +277,8 @@ async function validateSubscriptionLimits(
       valid: false,
       error: {
         ...subscriptionResult.error,
-        message: "Unable to verify subscription limits. Please try again.",
+        message:
+          messages.bookings.messages.error.create.verifySubscriptionLimits,
       } as PostgrestError,
     };
   }
@@ -290,7 +327,7 @@ async function calculateBookingPrice(params: {
       discount: 0,
       error: {
         ...roomResult.error,
-        message: "Unable to fetch room pricing. Please try again.",
+        message: messages.bookings.messages.error.create.fetchRoomPricing,
       } as PostgrestError,
     };
   }
@@ -308,7 +345,7 @@ async function calculateBookingPrice(params: {
       discount: 0,
       error: {
         ...subscriptionResult.error,
-        message: "Unable to calculate discount. Please try again.",
+        message: messages.bookings.messages.error.create.calculateDiscount,
       } as PostgrestError,
     };
   }
@@ -326,6 +363,117 @@ async function calculateBookingPrice(params: {
   const discount = subscriptionDiscountRate * 100;
 
   return { totalPrice, discount };
+}
+
+/**
+ * Creates a 30-minute buffer slot after a booking to prevent back-to-back bookings.
+ * Buffer slots are marked with booking_is_type_of_booking = 'buffer'.
+ */
+async function createBufferSlot(params: {
+  roomId: number;
+  userId: number;
+  bookingEndTime: Date;
+  bookingId: number;
+}): Promise<{ success: boolean; error?: PostgrestError }> {
+  const { roomId, userId, bookingEndTime, bookingId } = params;
+
+  // Safety check: Ensure bookingEndTime is valid
+  if (!bookingEndTime || Number.isNaN(bookingEndTime.getTime())) {
+    return {
+      success: false,
+      error: {
+        name: "PostgrestError",
+        code: "INVALID_TIME",
+        message: messages.bookings.messages.error.create.invalidBookingEndTime,
+        details: "",
+        hint: "",
+      } as PostgrestError,
+    };
+  }
+
+  // Calculate buffer start time (immediately after booking ends)
+  const bufferStartTime = new Date(bookingEndTime);
+
+  // Calculate buffer end time (30 minutes after booking ends)
+  const bufferEndTime = new Date(bufferStartTime);
+  bufferEndTime.setMinutes(bufferEndTime.getMinutes() + 30);
+
+  const bufferStartHour = bufferStartTime.getHours();
+  if (bufferStartHour >= 22) {
+    // Buffer starts after business hours, skip creating it
+    return { success: true };
+  }
+
+  // Check if buffer extends beyond business hours (22:00)
+  const bufferEndHour = bufferEndTime.getHours();
+  if (bufferEndHour >= 22) {
+    // Buffer extends beyond business hours, adjust end time to 22:00
+    bufferEndTime.setHours(22, 0, 0, 0);
+  }
+
+  // Check if buffer would be shorter than 30 minutes (if it hits business hours limit)
+  const bufferDurationMinutes =
+    (bufferEndTime.getTime() - bufferStartTime.getTime()) / (1000 * 60);
+  if (bufferDurationMinutes < 30) {
+    // Buffer is too short, skip creating it
+    return { success: true };
+  }
+
+  // Format dates for database
+  const bufferDate = bufferStartTime.toISOString().split("T")[0];
+  const bufferStartTimeStr = bufferStartTime.toISOString();
+  const bufferEndTimeStr = bufferEndTime.toISOString();
+
+  // Check for conflicts with existing bookings (excluding the booking we just created)
+  const conflictCheck = await supabase
+    .from("bookings")
+    .select("booking_id")
+    .eq("booking_meeting_room_id", roomId)
+    .neq("booking_payment_status", "cancelled")
+    .neq("booking_id", bookingId) // Exclude the booking we just created
+    .lt("booking_start_time", bufferEndTimeStr)
+    .gt("booking_end_time", bufferStartTimeStr);
+
+  if (conflictCheck.error) {
+    return {
+      success: false,
+      error: {
+        ...conflictCheck.error,
+        message:
+          messages.bookings.messages.error.create.verifyBufferAvailability,
+      } as PostgrestError,
+    };
+  }
+
+  if ((conflictCheck.data?.length ?? 0) > 0) {
+    // Buffer conflicts with another booking, skip creating it
+    return { success: true };
+  }
+
+  // Create buffer slot
+  const bufferResult = await supabase.from("bookings").insert({
+    booking_user_id: userId,
+    booking_meeting_room_id: roomId,
+    booking_date: bufferDate,
+    booking_start_time: bufferStartTimeStr,
+    booking_end_time: bufferEndTimeStr,
+    booking_is_type_of_booking: "buffer",
+    booking_number_of_people: 0, // Buffer has no people
+    booking_total_price: 0, // Buffer is free
+    booking_discount: null,
+    booking_payment_status: "confirmed", // Buffers are automatically confirmed
+    booking_stripe_transaction_id: null,
+    booking_receipt_url: null,
+  });
+
+  if (bufferResult.error) {
+    return {
+      success: false,
+      error: bufferResult.error as PostgrestError,
+    };
+  }
+
+  return { success: true };
 }
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Critical security validation function requires multiple checks
@@ -370,7 +518,7 @@ export async function createBooking(
       data: null,
       error: {
         ...userResult.error,
-        message: "Unable to fetch user data. Please try again.",
+        message: messages.bookings.messages.error.create.fetchUserData,
       } as PostgrestError,
     };
   }
@@ -391,7 +539,7 @@ export async function createBooking(
       data: null,
       error: {
         ...roomResult.error,
-        message: "Unable to verify room details. Please try again.",
+        message: messages.bookings.messages.error.create.verifyRoomDetails,
       },
     };
   }
@@ -556,6 +704,31 @@ export async function createBooking(
     if (updateResult.error) {
       // Don't fail the booking creation, just log the error
       // In production, you might want to rollback or retry
+    }
+
+    // 7. Create 30-minute buffer slot after the booking
+    // This prevents back-to-back bookings and ensures room availability
+    // Use the ACTUAL booking end time from the database to ensure accuracy
+    const BookingEndTime = new Date(result.data.booking_end_time);
+    const BookingStartTime = new Date(result.data.booking_start_time);
+
+    // Safety check: Verify the end time is actually after the start time
+    if (BookingEndTime <= BookingStartTime) {
+      // Invalid booking times, skip buffer creation
+      return toSupabaseMutationResponse<Tables<"bookings">>(result);
+    }
+
+    const bufferResult = await createBufferSlot({
+      roomId: validatedData.booking_meeting_room_id,
+      userId,
+      bookingEndTime: BookingEndTime, // Use database value for accuracy
+      bookingId: result.data.booking_id,
+    });
+
+    if (!bufferResult.success && bufferResult.error) {
+      // Don't fail the booking creation if buffer creation fails
+      // Log the error but continue - the booking is still valid
+      // In production, you might want to handle this more gracefully
     }
   }
 

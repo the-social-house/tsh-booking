@@ -95,7 +95,7 @@ export function TwoColumnLayout({
   // For full width variant, only show left column
   if (variant === "full") {
     return (
-      <div className={cn("container w-full", className)}>
+      <div className={cn("container mx-auto w-full", className)}>
         <div className={cn(leftClassName)}>{left}</div>
       </div>
     );
@@ -104,7 +104,7 @@ export function TwoColumnLayout({
   return (
     <div
       className={cn(
-        "container grid w-full",
+        "container mx-auto grid w-full",
         // Mobile: stack vertically
         "grid-cols-1",
         // Tablet and up: 12-column grid

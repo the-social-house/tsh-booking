@@ -2,6 +2,18 @@ import { z } from "zod";
 import messages from "@/lib/messages.json";
 
 /**
+ * Valid booking types (must match database check constraint)
+ * 'booking' = actual booking made by a user
+ * 'buffer' = 30-minute buffer slot automatically created after each booking
+ */
+export type BookingType = "booking" | "buffer";
+
+export const BOOKING_TYPES: [BookingType, ...BookingType[]] = [
+  "booking",
+  "buffer",
+];
+
+/**
  * Schema for creating a new booking
  */
 export const createBookingSchema = z
@@ -32,6 +44,9 @@ export const createBookingSchema = z
       .refine((val) => !Number.isNaN(Date.parse(val)), {
         message: messages.bookings.validation.endTime.invalid,
       }),
+    booking_is_type_of_booking: z.enum(BOOKING_TYPES, {
+      message: "Invalid booking type. Must be 'booking' or 'buffer'.",
+    }),
     booking_number_of_people: z
       .number()
       .int(messages.bookings.validation.numberOfPeople.integer)
