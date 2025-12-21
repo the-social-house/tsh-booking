@@ -20,9 +20,10 @@ export type BookingSlot = {
 /**
  * Fetches bookings with optional filters for room and date range.
  * Excludes cancelled bookings (only returns pending and confirmed).
+ * Includes both actual bookings and buffer slots (30-min buffers after each booking).
  *
  * @param filters - Optional filters for roomId, startDate, and endDate
- * @returns Array of bookings with date and time information
+ * @returns Array of bookings with date and time information (includes buffers)
  */
 export async function getBookings(filters?: GetBookingsInput) {
   // Validate filters if provided

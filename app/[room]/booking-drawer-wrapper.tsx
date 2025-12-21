@@ -16,7 +16,7 @@ import type { Tables } from "@/supabase/types/database";
 
 type MeetingRoom = Tables<"meeting_rooms">;
 
-type SimulatedUser = {
+type BookingUser = {
   user_id: number;
   user_email: string;
   subscription_discount?: number;
@@ -25,7 +25,7 @@ type SimulatedUser = {
 type BookingDrawerWrapperProps = {
   meetingRoom: MeetingRoom;
   roomAmenities: RoomAmenity[];
-  user: SimulatedUser;
+  user: BookingUser;
 };
 
 export function BookingDrawerWrapper({

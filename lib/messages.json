@@ -202,6 +202,16 @@
           "capacityExceeded": "The number of people exceeds the room capacity. Please reduce the number of attendees.",
           "invalidAmenity": "One or more selected amenities are not available for this room.",
           "priceMismatch": "There was an error calculating the booking price. Please try again.",
+          "verifyAmenities": "Unable to verify amenities. Please try again.",
+          "calculateAmenityPrices": "Unable to calculate amenity prices. Please try again.",
+          "verifyBookingAvailability": "Unable to verify booking availability. Please try again.",
+          "verifySubscriptionLimits": "Unable to verify subscription limits. Please try again.",
+          "fetchRoomPricing": "Unable to fetch room pricing. Please try again.",
+          "calculateDiscount": "Unable to calculate discount. Please try again.",
+          "invalidBookingEndTime": "Invalid booking end time provided",
+          "verifyBufferAvailability": "Unable to verify buffer availability. Please try again.",
+          "fetchUserData": "Unable to fetch user data. Please try again.",
+          "verifyRoomDetails": "Unable to verify room details. Please try again.",
           "unknown": "Something went wrong while creating the booking. Please try again."
         },
         "update": {

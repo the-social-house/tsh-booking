@@ -6,6 +6,7 @@ create table bookings (
   booking_end_time timestamptz not null,
   booking_created_at timestamptz default now() not null,
   booking_date date not null,
+  booking_is_type_of_booking text not null,
   booking_number_of_people int not null,
   booking_total_price numeric(10, 2) not null,
   booking_discount numeric(5, 2) default 0,

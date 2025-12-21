@@ -89,6 +89,7 @@ export type Database = {
           booking_discount: number | null;
           booking_end_time: string;
           booking_id: number;
+          booking_is_type_of_booking: string;
           booking_meeting_room_id: number;
           booking_number_of_people: number;
           booking_payment_status: string;
@@ -104,6 +105,7 @@ export type Database = {
           booking_discount?: number | null;
           booking_end_time: string;
           booking_id?: never;
+          booking_is_type_of_booking: string;
           booking_meeting_room_id: number;
           booking_number_of_people: number;
           booking_payment_status?: string;
@@ -119,6 +121,7 @@ export type Database = {
           booking_discount?: number | null;
           booking_end_time?: string;
           booking_id?: never;
+          booking_is_type_of_booking?: string;
           booking_meeting_room_id?: number;
           booking_number_of_people?: number;
           booking_payment_status?: string;

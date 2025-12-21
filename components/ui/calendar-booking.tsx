@@ -205,7 +205,8 @@ export function CalendarBooking({
     return filtered;
   }, [date, existingBookings]);
 
-  // Check if a time slot overlaps with any existing booking (returns a memoized function)
+  // Check if a time slot overlaps with any existing booking or violates buffer requirement
+  // (returns a memoized function)
   const isTimeSlotBooked = useMemo(() => {
     return (slotTime: string): boolean => {
       const slotMinutes = timeToMinutes(slotTime);
@@ -222,7 +223,14 @@ export function CalendarBooking({
         const overlaps =
           slotMinutes >= bookingStart && slotMinutes < bookingEnd;
 
-        return overlaps;
+        // A slot is also unavailable if it starts within 30 minutes after a booking ends
+        // (ensures there's room for the 30-minute buffer)
+        // slotMinutes must be >= bookingEnd (after booking ends)
+        // AND slotMinutes < bookingEnd + 30 (within 30 minutes)
+        const violatesBuffer =
+          slotMinutes >= bookingEnd && slotMinutes < bookingEnd + 30;
+
+        return overlaps || violatesBuffer;
       });
 
       return isBooked;
@@ -254,6 +262,24 @@ export function CalendarBooking({
 
     return nearestStart;
   }, [selectedTime, date, bookingsForSelectedDate]);
+
+  // Check if an end time overlaps with any booking
+  const checkEndTimeOverlaps = useMemo(() => {
+    return (startMinutes: number, endMinutes: number): boolean => {
+      return bookingsForSelectedDate.some((booking) => {
+        const bookingStart = timeToMinutes(
+          extractTime(booking.booking_start_time)
+        );
+        const bookingEnd = timeToMinutes(extractTime(booking.booking_end_time));
+        // Check if end time falls within this booking range
+        // OR if the booking falls within our selected time range
+        return (
+          (endMinutes > bookingStart && endMinutes <= bookingEnd) ||
+          (startMinutes < bookingEnd && endMinutes > bookingStart)
+        );
+      });
+    };
+  }, [bookingsForSelectedDate]);
 
   // Filter end time slots based on selected start time and next booking
   const availableEndTimeSlots = useMemo(() => {
@@ -291,27 +317,16 @@ export function CalendarBooking({
       }
 
       // Check if this end time overlaps with any booking
-      const endTimeOverlaps = bookingsForSelectedDate.some((booking) => {
-        const bookingStart = timeToMinutes(
-          extractTime(booking.booking_start_time)
-        );
-        const bookingEnd = timeToMinutes(extractTime(booking.booking_end_time));
-        // Check if end time falls within this booking range
-        // OR if the booking falls within our selected time range
-        return (
-          (endMinutes > bookingStart && endMinutes <= bookingEnd) ||
-          (startMinutes < bookingEnd && endMinutes > bookingStart)
-        );
-      });
-
-      if (endTimeOverlaps) {
+      if (checkEndTimeOverlaps(startMinutes, endMinutes)) {
         return false;
       }
 
       // Must not overlap with next booking
+      // Also ensure there's at least 30 minutes before the next booking starts
+      // (required for the buffer slot)
       if (
         nextBookingStartMinutes !== null &&
-        endMinutes > nextBookingStartMinutes
+        endMinutes + 30 > nextBookingStartMinutes
       ) {
         return false;
       }
@@ -325,6 +340,7 @@ export function CalendarBooking({
     endHour,
     nextBookingStartMinutes,
     bookingsForSelectedDate,
+    checkEndTimeOverlaps,
   ]);
 
   // Filter available time slots based on date, current time, and existing bookings
@@ -576,13 +592,11 @@ export function CalendarBooking({
       </CardContent>
       <CardFooter className="flex flex-col gap-4 border-t px-6 py-5! md:flex-row">
         <div className="text-sm">
-          {date !== undefined &&
-          selectedTime !== undefined &&
-          selectedTime !== null ? (
+          {endTime !== undefined && endTime !== "" ? (
             <>
               Your meeting starts on{" "}
               <span className="font-medium">
-                {date.toLocaleDateString("en-US", {
+                {date?.toLocaleDateString("en-US", {
                   weekday: "long",
                   day: "numeric",
                   month: "long",

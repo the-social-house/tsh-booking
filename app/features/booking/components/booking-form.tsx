@@ -17,6 +17,7 @@ import {
 } from "@/app/features/booking/actions/get-bookings";
 import { StripePaymentModal } from "@/app/features/booking/components/stripe-payment-modal";
 import type { CreateBookingInput } from "@/app/features/booking/lib/booking.schema";
+import type { RoomAmenity } from "@/app/features/meeting-rooms/actions/get-room-amenities";
 import { Button } from "@/components/ui/button";
 import { CalendarBooking } from "@/components/ui/calendar-booking";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,32 +30,20 @@ import {
 } from "@/lib/form-errors";
 import messages from "@/lib/messages.json";
 import { hasData, hasError } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
 
-// Simulated types (will be replaced with actual database types later)
-type SimulatedMeetingRoom = {
-  meeting_room_id: number;
-  meeting_room_name: string;
-  meeting_room_capacity: number;
-  meeting_room_price_per_hour: number;
-  meeting_room_size: number;
-};
+type MeetingRoom = Tables<"meeting_rooms">;
 
-type SimulatedAmenity = {
-  amenity_id: number;
-  amenity_name: string;
-  amenity_price: number | null;
-};
-
-type SimulatedUser = {
+type BookingUser = {
   user_id: number;
   user_email: string;
   subscription_discount?: number; // Discount percentage from subscription
 };
 
 type BookingFormProps = {
-  meetingRoom: SimulatedMeetingRoom;
-  roomAmenities: SimulatedAmenity[]; // Amenities available for this room
-  user: SimulatedUser;
+  meetingRoom: MeetingRoom;
+  roomAmenities: RoomAmenity[]; // Amenities available for this room
+  user: BookingUser;
   isOpen?: boolean; // Whether the drawer/form is open (triggers booking fetch)
   onSuccess?: () => void;
 };
@@ -68,6 +57,15 @@ type FieldErrors = {
 
 type BookingFormState = FormState<FieldErrors>;
 
+// Get current date in Danish timezone (same logic as calendar component)
+const getTodayDanishDate = (): Date => {
+  const today = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Europe/Copenhagen" })
+  );
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
 export default function BookingForm({
   meetingRoom,
   roomAmenities,
@@ -78,7 +76,9 @@ export default function BookingForm({
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    getTodayDanishDate()
+  );
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [numberOfPeople, setNumberOfPeople] = useState<string>("");
@@ -185,6 +185,7 @@ export default function BookingForm({
       booking_date: bookingDate,
       booking_start_time: startDateTime,
       booking_end_time: endDateTime,
+      booking_is_type_of_booking: "booking", // Always "booking" for actual bookings
       booking_number_of_people: Number(numberOfPeople),
       booking_total_price: totalPrice,
       booking_discount: subscriptionDiscount > 0 ? subscriptionDiscount : null,
@@ -302,7 +303,7 @@ export default function BookingForm({
 
     // Reset form
     formRef.current?.reset();
-    setSelectedDate(undefined);
+    setSelectedDate(getTodayDanishDate());
     setStartTime("");
     setEndTime("");
     setNumberOfPeople("");
@@ -339,7 +340,7 @@ export default function BookingForm({
     // (Payment success is handled in handlePaymentSuccess)
     if (state?.success && !isPaymentModalOpen) {
       formRef.current?.reset();
-      setSelectedDate(undefined);
+      setSelectedDate(getTodayDanishDate());
       setStartTime("");
       setEndTime("");
       setNumberOfPeople("");
