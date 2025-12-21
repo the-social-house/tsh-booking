@@ -12,7 +12,7 @@
       "args": ["shadcn@latest", "mcp"]
     },
     "supabase": {
-      "url": "https://mcp.supabase.com/mcp?project_ref=rukxjslnbhsqdzmeenbn"
+      "url": "http://127.0.0.1:54321/mcp"
     },
     "stripe": {
       "url": "https://mcp.stripe.com"

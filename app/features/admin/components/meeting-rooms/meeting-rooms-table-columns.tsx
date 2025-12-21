@@ -1,0 +1,59 @@
+"use client";
+
+import type { ColumnDef } from "@tanstack/react-table";
+import { Coins, DoorOpen, Ruler, Users } from "lucide-react";
+import { MeetingRoomActions } from "@/app/features/admin/components/meeting-rooms/meeting-room-actions";
+import { TableHeaderCell } from "@/app/features/admin/components/meeting-rooms/table-header-cell";
+import type { MeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-rooms";
+import messages from "@/lib/messages.json";
+
+export const meetingRoomsColumns: ColumnDef<MeetingRoom>[] = [
+  {
+    accessorKey: "meeting_room_name",
+    header: () => (
+      <TableHeaderCell icon={DoorOpen}>
+        {messages.admin.ui.tabs.meetingRooms.table.name}
+      </TableHeaderCell>
+    ),
+  },
+  {
+    accessorKey: "meeting_room_capacity",
+    header: () => (
+      <TableHeaderCell icon={Users}>
+        {messages.admin.ui.tabs.meetingRooms.table.capacity}
+      </TableHeaderCell>
+    ),
+    cell: ({ row }) => {
+      const capacity = row.getValue("meeting_room_capacity") as number;
+      return `${capacity} ${messages.common.words.people}`;
+    },
+  },
+  {
+    accessorKey: "meeting_room_size",
+    header: () => (
+      <TableHeaderCell icon={Ruler}>
+        {messages.admin.ui.tabs.meetingRooms.table.size}
+      </TableHeaderCell>
+    ),
+    cell: ({ row }) => {
+      const size = row.getValue("meeting_room_size") as number;
+      return `${size} ${messages.common.units.squareMeters}`;
+    },
+  },
+  {
+    accessorKey: "meeting_room_price_per_hour",
+    header: () => (
+      <TableHeaderCell icon={Coins}>
+        {messages.admin.ui.tabs.meetingRooms.table.hourlyRate}
+      </TableHeaderCell>
+    ),
+    cell: ({ row }) => {
+      const price = row.getValue("meeting_room_price_per_hour") as number;
+      return `${price} ${messages.common.units.hourlyRate}`;
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => <MeetingRoomActions meetingRoom={row.original} />,
+  },
+];

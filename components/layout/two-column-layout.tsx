@@ -47,7 +47,7 @@ type TwoColumnLayoutProps = {
   /**
    * Content to display in the right column
    */
-  right: ReactNode;
+  right?: ReactNode;
   /**
    * Layout variant:
    * - "left-narrow": left = 1/3 (4 cols), right = 2/3 (8 cols)

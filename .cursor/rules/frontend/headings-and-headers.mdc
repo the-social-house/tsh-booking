@@ -1,0 +1,301 @@
+---
+globs: *.tsx
+alwaysApply: false
+---
+
+## Headings and Headers Guidelines
+
+These guidelines define the standard patterns for using headings and section headers throughout the application.
+
+## Overview
+
+- **Heading**: Generic heading component with semantic HTML and consistent styling
+- **TableActionHeader**: Specialized header for tables/lists with an action slot
+
+## Available Components
+
+- **`@/components/ui/heading.tsx`**: Flexible heading component with size variants
+- **`@/app/features/admin/components/table-action-header.tsx`**: Header with title and action slot for tables
+
+## Heading Component
+
+### Import
+
+```typescript
+import Heading from "@/components/ui/heading";
+```
+
+### Props
+
+```typescript
+type HeadingProps = ComponentProps<"h1"> & {
+  size?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6"; // Visual size
+  as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6"; // Semantic HTML element
+  className?: string;
+};
+```
+
+### Size Variants
+
+| Size | Mobile      | Desktop     |
+| ---- | ----------- | ----------- |
+| `h1` | `text-2xl`  | `text-3xl`  |
+| `h2` | `text-xl`   | `text-2xl`  |
+| `h3` | `text-lg`   | `text-xl`   |
+| `h4` | `text-md`   | `text-lg`   |
+| `h5` | `text-base` | `text-base` |
+| `h6` | `text-sm`   | `text-sm`   |
+
+### Basic Usage
+
+```typescript
+// Page title (semantic h1, visual h1)
+<Heading as="h1" size="h1">
+  Page Title
+</Heading>
+
+// Section title (semantic h2, visual h2)
+<Heading as="h2" size="h2">
+  Section Title
+</Heading>
+
+// Subsection (semantic h3, visual h3)
+<Heading as="h3" size="h3">
+  Subsection Title
+</Heading>
+```
+
+### Semantic vs Visual Size
+
+You can decouple the semantic HTML element from the visual size:
+
+```typescript
+// Semantic h2 but visually smaller (h3 size)
+<Heading as="h2" size="h3">
+  Visually Smaller Section
+</Heading>
+
+// Semantic h3 but visually larger (h2 size)
+<Heading as="h3" size="h2">
+  Visually Larger Subsection
+</Heading>
+```
+
+### Styling
+
+The Heading component uses these default styles:
+
+- `font-thin` - Light font weight
+- `leading-tight` - Tight line height
+- `tracking-tight` - Tight letter spacing
+
+Add custom classes via the `className` prop:
+
+```typescript
+<Heading as="h1" size="h1" className="mb-4">
+  Page Title with Margin
+</Heading>
+```
+
+## TableActionHeader Component
+
+Use `TableActionHeader` when creating table or list sections that need a title with action buttons.
+
+### Import
+
+```typescript
+import TableActionHeader from "@/app/features/admin/components/table-action-header";
+```
+
+### Props
+
+```typescript
+type TableActionHeaderProps = {
+  title: string; // Header title text
+  actionSlot: ReactNode; // Action buttons/components
+};
+```
+
+### Usage
+
+```typescript
+import TableActionHeader from "@/app/features/admin/components/table-action-header";
+import { CreateItemSheet } from "./create-item-sheet";
+import messages from "@/lib/messages.json";
+
+function ItemsTable({ itemsPromise }) {
+  return (
+    <>
+      <TableActionHeader actionSlot={<CreateItemSheet />} title={messages.feature.section.title} />
+      <Suspense fallback={<TableSkeleton />}>
+        <ItemsTableContent promise={itemsPromise} />
+      </Suspense>
+    </>
+  );
+}
+```
+
+### Multiple Actions
+
+Pass multiple buttons/components to the action slot:
+
+```typescript
+<TableActionHeader
+  actionSlot={
+    <>
+      <Button variant="outline">Export</Button>
+      <CreateItemSheet />
+    </>
+  }
+  title={messages.admin.items.title}
+/>
+```
+
+### Layout Details
+
+`TableActionHeader` provides:
+
+- Flexbox layout with `justify-between`
+- Responsive wrapping (`flex-wrap`)
+- Consistent gap between title and actions
+- Bottom margin (`mb-4`)
+- `<header>` semantic HTML element
+
+## Page Structure Patterns
+
+### Admin/Dashboard Page
+
+```typescript
+import { TwoColumnLayout } from "@/components/layout/two-column-layout";
+import Heading from "@/components/ui/heading";
+
+function AdminPage() {
+  return (
+    <TwoColumnLayout
+      left={
+        <>
+          <Heading as="h1" size="h1">
+            Admin Panel
+          </Heading>
+          <AdminContent />
+        </>
+      }
+      variant="full"
+    />
+  );
+}
+```
+
+### Table Section within Page
+
+```typescript
+import TableActionHeader from "@/app/features/admin/components/table-action-header";
+import { CreateMeetingRoomSheet } from "./create-meeting-room-sheet";
+import messages from "@/lib/messages.json";
+
+export function MeetingRoomsTable({ meetingRoomsPromise }) {
+  return (
+    <>
+      <TableActionHeader actionSlot={<CreateMeetingRoomSheet />} title={messages.admin.meetingRooms.title} />
+      <Suspense fallback={<AdminDataTableSkeleton columnCount={columns.length} />}>
+        <MeetingRoomsTableContent promise={meetingRoomsPromise} />
+      </Suspense>
+    </>
+  );
+}
+```
+
+### Multiple Sections on a Page
+
+```typescript
+function DashboardPage() {
+  return (
+    <TwoColumnLayout
+      left={
+        <>
+          <Heading as="h1" size="h1">
+            Dashboard
+          </Heading>
+
+          {/* First section */}
+          <section className="mt-8">
+            <Heading as="h2" size="h2" className="mb-4">
+              Recent Activity
+            </Heading>
+            <ActivityList />
+          </section>
+
+          {/* Second section with actions */}
+          <section className="mt-8">
+            <TableActionHeader actionSlot={<CreateItemButton />} title="Your Items" />
+            <ItemsTable />
+          </section>
+        </>
+      }
+      variant="full"
+    />
+  );
+}
+```
+
+## Messages Structure
+
+Always source title text from `@/lib/messages.json`:
+
+```json
+{
+  "admin": {
+    "meetingRooms": {
+      "title": "Meeting rooms"
+    }
+  },
+  "feature": {
+    "section": {
+      "title": "Section Title"
+    }
+  }
+}
+```
+
+## When to Use Which
+
+### Use `Heading` for:
+
+- Page titles (`as="h1"`)
+- Section titles without actions (`as="h2"`)
+- Subsection titles (`as="h3"` through `as="h6"`)
+- Form section headings
+- Card titles
+- Any standalone heading text
+
+### Use `TableActionHeader` for:
+
+- Table sections with create/add buttons
+- List sections with filter/action buttons
+- Any section that needs a title aligned with action buttons
+- Data display sections in admin/dashboard contexts
+
+## Best Practices
+
+### DO:
+
+- Match semantic level (`as`) to document outline hierarchy
+- Use `TableActionHeader` for table/list sections with actions
+- Import title text from `@/lib/messages.json`
+- Use appropriate size variants for visual hierarchy
+- Add spacing via `className` when needed
+
+### DON'T:
+
+- Skip heading levels (h1 → h3, missing h2)
+- Hardcode heading text directly in components
+- Use `Heading` with inline action buttons (use `TableActionHeader` instead)
+- Use multiple h1 elements on a page
+- Mix heading patterns inconsistently within the same section type
+
+## Accessibility Notes
+
+- Always use semantic heading levels (`as` prop) that reflect document structure
+- Don't skip heading levels - if you have h1, the next should be h2
+- Visual size (`size` prop) can differ from semantic level when needed
+- `TableActionHeader` uses `<header>` element for semantic grouping
