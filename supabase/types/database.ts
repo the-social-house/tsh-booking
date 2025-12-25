@@ -220,6 +220,38 @@ export type Database = {
         };
         Relationships: [];
       };
+      room_unavailabilities: {
+        Row: {
+          meeting_room_id: number;
+          unavailability_id: number;
+          unavailability_reason: string | null;
+          unavailable_end_date: string;
+          unavailable_start_date: string;
+        };
+        Insert: {
+          meeting_room_id: number;
+          unavailability_id?: never;
+          unavailability_reason?: string | null;
+          unavailable_end_date: string;
+          unavailable_start_date: string;
+        };
+        Update: {
+          meeting_room_id?: number;
+          unavailability_id?: never;
+          unavailability_reason?: string | null;
+          unavailable_end_date?: string;
+          unavailable_start_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "room_unavailabilities_meeting_room_id_fkey";
+            columns: ["meeting_room_id"];
+            isOneToOne: false;
+            referencedRelation: "meeting_rooms";
+            referencedColumns: ["meeting_room_id"];
+          },
+        ];
+      };
       subscriptions: {
         Row: {
           subscription_discount_rate: number;

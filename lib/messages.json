@@ -282,7 +282,8 @@
             "name": "Name",
             "capacity": "Capacity",
             "size": "Size",
-            "hourlyRate": "Hourly rate"
+            "hourlyRate": "Hourly rate",
+            "availability": "Unavailability"
           }
         }
       }
@@ -317,6 +318,20 @@
           "required": "At least one image is required",
           "invalid": "One or more images are invalid. Please check the file type and size.",
           "maxCount": "You can upload at most 10 images for a meeting room."
+        },
+        "availability": {
+          "startDate": {
+            "required": "Please select a date range for the unavailability period",
+            "invalid": "Please enter a valid start date"
+          },
+          "endDate": {
+            "required": "Please select an end date for the unavailability period",
+            "invalid": "Please enter a valid end date",
+            "afterStart": "End date must be on or after the start date"
+          },
+          "dates": {
+            "required": "Please select a date range for the unavailability period"
+          }
         }
       },
       "ui": {
@@ -369,13 +384,38 @@
           "dialogCancel": "Cancel",
           "dialogConfirm": "Delete room",
           "dialogConfirmLoading": "Deleting..."
+        },
+        "availability": {
+          "dialogTitle": "Add unavailability period",
+          "dialogDescription": "Select a date range and optionally provide a reason for making this room unavailable.",
+          "dateRangeLabel": "Unavailable dates",
+          "dateRangePlaceholder": "Select date range",
+          "dateRangeHelper": "Select a start date, then an end date. Click a single date for a one-day unavailability.",
+          "reasonLabel": "Reason (optional)",
+          "reasonPlaceholder": "e.g., Maintenance, Renovation, Event",
+          "submitButton": "Add unavailability",
+          "submitButtonLoading": "Adding...",
+          "addButton": "Add unavailability",
+          "badgeTooltip": "Click to edit/remove",
+          "editDialogTitle": "Edit unavailability period",
+          "editDialogDescription": "Update the date range and reason for this unavailability period.",
+          "editSubmitButton": "Save changes",
+          "editSubmitButtonLoading": "Saving...",
+          "deleteDialogTitle": "Delete unavailability period",
+          "deleteDialogDescription": "Are you sure you want to delete this unavailability period?",
+          "deleteDialogConfirm": "Delete",
+          "deleteDialogConfirmLoading": "Deleting..."
         }
       },
       "messages": {
         "success": {
           "create": "Meeting room created successfully!",
           "update": "Meeting room updated successfully!",
-          "delete": "Meeting room deleted successfully!"
+          "delete": "Meeting room deleted successfully!",
+          "availabilityUpdate": "Room availability updated successfully!",
+          "unavailabilityCreate": "Unavailability period added successfully!",
+          "unavailabilityUpdate": "Unavailability period updated successfully!",
+          "unavailabilityDelete": "Unavailability period deleted successfully!"
         },
         "error": {
           "create": {
@@ -402,6 +442,39 @@
             "23514": "Unable to delete this meeting room. Please try again later.",
             "notFound": "The meeting room you're trying to delete doesn't exist or has been removed.",
             "unknown": "Something went wrong while deleting the meeting room. Please try again."
+          },
+          "availabilityUpdate": {
+            "PGRST116": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "23503": "Unable to update room availability. Please check your input and try again.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "notFound": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "unknown": "Something went wrong while updating room availability. Please try again."
+          },
+          "unavailabilityCreate": {
+            "23505": "An unavailability period with these dates already exists for this room.",
+            "23503": "Unable to create unavailability period. Please check your input and try again.",
+            "23502": "Please fill in all required fields.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "overlappingDates": "This date range overlaps with an existing unavailability period for this room.",
+            "bookingConflict": "Cannot make room unavailable during this period because there are existing bookings.",
+            "unknown": "Something went wrong while creating the unavailability period. Please try again."
+          },
+          "unavailabilityUpdate": {
+            "PGRST116": "The unavailability period you're trying to update doesn't exist or has been removed.",
+            "23505": "An unavailability period with these dates already exists for this room.",
+            "23503": "Unable to update unavailability period. Please check your input and try again.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "notFound": "The unavailability period you're trying to update doesn't exist or has been removed.",
+            "overlappingDates": "This date range overlaps with another unavailability period for this room.",
+            "bookingConflict": "Cannot update unavailability period because the new dates conflict with existing bookings.",
+            "unknown": "Something went wrong while updating the unavailability period. Please try again."
+          },
+          "unavailabilityDelete": {
+            "PGRST116": "The unavailability period you're trying to delete doesn't exist or has been removed.",
+            "23503": "Unable to delete this unavailability period. Please try again later.",
+            "23514": "Unable to delete this unavailability period. Please try again later.",
+            "notFound": "The unavailability period you're trying to delete doesn't exist or has been removed.",
+            "unknown": "Something went wrong while deleting the unavailability period. Please try again."
           }
         }
       }

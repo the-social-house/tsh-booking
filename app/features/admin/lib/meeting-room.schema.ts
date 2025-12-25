@@ -58,6 +58,81 @@ export type CreateMeetingRoomInput = z.infer<typeof createMeetingRoomSchema>;
 export type UpdateMeetingRoomInput = z.infer<typeof updateMeetingRoomSchema>;
 
 /**
+ * Schema for creating a room unavailability period
+ */
+export const createRoomUnavailabilitySchema = z
+  .object({
+    unavailable_start_date: z
+      .string()
+      .min(
+        1,
+        messages.admin.meetingRooms.validation.availability.startDate.required
+      )
+      .refine((val) => !Number.isNaN(Date.parse(val)), {
+        message:
+          messages.admin.meetingRooms.validation.availability.startDate.invalid,
+      }),
+    unavailable_end_date: z
+      .string()
+      .min(
+        1,
+        messages.admin.meetingRooms.validation.availability.endDate.required
+      )
+      .refine((val) => !Number.isNaN(Date.parse(val)), {
+        message:
+          messages.admin.meetingRooms.validation.availability.endDate.invalid,
+      }),
+    unavailability_reason: z.string().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      const startDate = new Date(data.unavailable_start_date);
+      const endDate = new Date(data.unavailable_end_date);
+      return endDate >= startDate;
+    },
+    {
+      message:
+        messages.admin.meetingRooms.validation.availability.endDate.afterStart,
+      path: ["unavailable_end_date"],
+    }
+  );
+
+/**
+ * Schema for updating a room unavailability period (all fields optional)
+ */
+export const updateRoomUnavailabilitySchema = z
+  .object({
+    unavailable_start_date:
+      createRoomUnavailabilitySchema.shape.unavailable_start_date.optional(),
+    unavailable_end_date:
+      createRoomUnavailabilitySchema.shape.unavailable_end_date.optional(),
+    unavailability_reason: z.string().optional().nullable(),
+  })
+  .refine(
+    (data) => {
+      // If both dates are provided, validate range
+      if (data.unavailable_start_date && data.unavailable_end_date) {
+        const startDate = new Date(data.unavailable_start_date);
+        const endDate = new Date(data.unavailable_end_date);
+        return endDate >= startDate;
+      }
+      return true;
+    },
+    {
+      message:
+        messages.admin.meetingRooms.validation.availability.endDate.afterStart,
+      path: ["unavailable_end_date"],
+    }
+  );
+
+export type CreateRoomUnavailabilityInput = z.infer<
+  typeof createRoomUnavailabilitySchema
+>;
+export type UpdateRoomUnavailabilityInput = z.infer<
+  typeof updateRoomUnavailabilitySchema
+>;
+
+/**
  * Schema for validating meeting room IDs (used for update/delete)
  */
 export const meetingRoomIdSchema = z.object({

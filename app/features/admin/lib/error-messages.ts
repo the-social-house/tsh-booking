@@ -67,3 +67,97 @@ export function getDeleteMeetingRoomErrorMessage(
     messages.admin.meetingRooms.messages.error.delete.unknown
   );
 }
+
+/**
+ * Get user-friendly error message for CREATE room unavailability operations
+ */
+export function getCreateRoomUnavailabilityErrorMessage(
+  errorCode: string | undefined
+): string {
+  if (!errorCode) {
+    return messages.admin.meetingRooms.messages.error.unavailabilityCreate
+      .unknown;
+  }
+
+  const errorMessages: Record<string, string> = {
+    "23505":
+      messages.admin.meetingRooms.messages.error.unavailabilityCreate["23505"],
+    "23503":
+      messages.admin.meetingRooms.messages.error.unavailabilityCreate["23503"],
+    "23502":
+      messages.admin.meetingRooms.messages.error.unavailabilityCreate["23502"],
+    "23514":
+      messages.admin.meetingRooms.messages.error.unavailabilityCreate["23514"],
+    OVERLAPPING_DATES:
+      messages.admin.meetingRooms.messages.error.unavailabilityCreate
+        .overlappingDates,
+    BOOKING_CONFLICT:
+      messages.admin.meetingRooms.messages.error.unavailabilityCreate
+        .bookingConflict,
+  };
+
+  return (
+    errorMessages[errorCode] ||
+    messages.admin.meetingRooms.messages.error.unavailabilityCreate.unknown
+  );
+}
+
+/**
+ * Get user-friendly error message for UPDATE room unavailability operations
+ */
+export function getUpdateRoomUnavailabilityErrorMessage(
+  errorCode: string | undefined
+): string {
+  if (!errorCode) {
+    return messages.admin.meetingRooms.messages.error.unavailabilityUpdate
+      .unknown;
+  }
+
+  const errorMessages: Record<string, string> = {
+    PGRST116:
+      messages.admin.meetingRooms.messages.error.unavailabilityUpdate.notFound,
+    "23505":
+      messages.admin.meetingRooms.messages.error.unavailabilityUpdate["23505"],
+    "23503":
+      messages.admin.meetingRooms.messages.error.unavailabilityUpdate["23503"],
+    "23514":
+      messages.admin.meetingRooms.messages.error.unavailabilityUpdate["23514"],
+    OVERLAPPING_DATES:
+      messages.admin.meetingRooms.messages.error.unavailabilityUpdate
+        .overlappingDates,
+    BOOKING_CONFLICT:
+      messages.admin.meetingRooms.messages.error.unavailabilityUpdate
+        .bookingConflict,
+  };
+
+  return (
+    errorMessages[errorCode] ||
+    messages.admin.meetingRooms.messages.error.unavailabilityUpdate.unknown
+  );
+}
+
+/**
+ * Get user-friendly error message for DELETE room unavailability operations
+ */
+export function getDeleteRoomUnavailabilityErrorMessage(
+  errorCode: string | undefined
+): string {
+  if (!errorCode) {
+    return messages.admin.meetingRooms.messages.error.unavailabilityDelete
+      .unknown;
+  }
+
+  const errorMessages: Record<string, string> = {
+    PGRST116:
+      messages.admin.meetingRooms.messages.error.unavailabilityDelete.notFound,
+    "23503":
+      messages.admin.meetingRooms.messages.error.unavailabilityDelete["23503"],
+    "23514":
+      messages.admin.meetingRooms.messages.error.unavailabilityDelete["23514"],
+  };
+
+  return (
+    errorMessages[errorCode] ||
+    messages.admin.meetingRooms.messages.error.unavailabilityDelete.unknown
+  );
+}
