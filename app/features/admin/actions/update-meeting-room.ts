@@ -7,8 +7,8 @@ import {
   type UpdateMeetingRoomInput,
   updateMeetingRoomSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import messages from "@/lib/messages.json";
-import { supabase } from "@/lib/supabase";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -17,9 +17,24 @@ import type { Tables } from "@/supabase/types/database";
  * Update a meeting room by ID
  */
 export async function updateMeetingRoom(
-  id: number,
+  id: string,
   data: UpdateMeetingRoomInput
 ) {
+  // Verify admin access and get Supabase client
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "FORBIDDEN",
+        message: "You must be an admin to perform this action",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   // 1. Validate ID
   const idValidation = meetingRoomIdSchema.safeParse({ id });
   if (!idValidation.success) {

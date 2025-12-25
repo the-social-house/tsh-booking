@@ -132,8 +132,8 @@ function validateForm(
 }
 
 async function addAmenitiesToRoom(
-  meetingRoomId: number,
-  amenityIds: number[]
+  meetingRoomId: string,
+  amenityIds: string[]
 ): Promise<void> {
   if (amenityIds.length === 0) {
     return;
@@ -159,7 +159,7 @@ export default function CreateMeetingRoomForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [images, setImages] = useState<ImagePreview[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedAmenityIds, setSelectedAmenityIds] = useState<number[]>([]);
+  const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
 
   // Cleanup preview URLs on unmount
   useEffect(

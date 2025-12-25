@@ -63,7 +63,7 @@ type ImagePreview = {
 type EditMeetingRoomFormProps = {
   meetingRoom: MeetingRoom;
   allAmenities: AdminAmenity[];
-  currentAmenityIds: number[];
+  currentAmenityIds: string[];
   onSuccess?: () => void;
 };
 
@@ -184,7 +184,7 @@ export default function EditMeetingRoomForm({
 
   // Track selected amenities
   const [selectedAmenityIds, setSelectedAmenityIds] =
-    useState<number[]>(currentAmenityIds);
+    useState<string[]>(currentAmenityIds);
 
   // Track new images to upload
   const [newImages, setNewImages] = useState<ImagePreview[]>([]);

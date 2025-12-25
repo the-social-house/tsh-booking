@@ -61,10 +61,7 @@ export type UpdateMeetingRoomInput = z.infer<typeof updateMeetingRoomSchema>;
  * Schema for validating meeting room IDs (used for update/delete)
  */
 export const meetingRoomIdSchema = z.object({
-  id: z
-    .number()
-    .int(messages.admin.meetingRooms.validation.id.integer)
-    .positive(messages.admin.meetingRooms.validation.id.positive),
+  id: z.string().uuid(),
 });
 
 export type MeetingRoomIdInput = z.infer<typeof meetingRoomIdSchema>;

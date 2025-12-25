@@ -18,14 +18,8 @@ export const BOOKING_TYPES: [BookingType, ...BookingType[]] = [
  */
 export const createBookingSchema = z
   .object({
-    booking_user_id: z
-      .number()
-      .int(messages.bookings.validation.id.integer)
-      .positive(messages.bookings.validation.id.positive),
-    booking_meeting_room_id: z
-      .number()
-      .int(messages.bookings.validation.id.integer)
-      .positive(messages.bookings.validation.id.positive),
+    booking_user_id: z.string().uuid("Invalid user ID"),
+    booking_meeting_room_id: z.string().uuid("Invalid meeting room ID"),
     booking_date: z
       .string()
       .min(1, messages.bookings.validation.date.required)
@@ -87,11 +81,7 @@ export type CreateBookingInput = z.infer<typeof createBookingSchema>;
  * Schema for fetching bookings with optional filters
  */
 export const getBookingsSchema = z.object({
-  roomId: z
-    .number()
-    .int(messages.bookings.validation.id.integer)
-    .positive(messages.bookings.validation.id.positive)
-    .optional(),
+  roomId: z.string().uuid("Invalid room ID").optional(),
   startDate: z
     .string()
     .refine((val) => !Number.isNaN(Date.parse(val)), {

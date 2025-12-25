@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -11,10 +11,10 @@ export type RoomAmenity = Tables<"amenities">;
 /**
  * Fetches all amenities associated with a meeting room.
  *
- * @param roomId - The meeting room ID
+ * @param roomId - The meeting room ID (UUID)
  * @returns Array of amenities with their details
  */
-export async function getRoomAmenities(roomId: number) {
+export async function getRoomAmenities(roomId: string) {
   // Validate input
   const validationResult = getRoomAmenitiesSchema.safeParse({ roomId });
 
@@ -24,6 +24,8 @@ export async function getRoomAmenities(roomId: number) {
       error: createValidationError(validationResult.error),
     };
   }
+
+  const supabase = await createClient();
 
   // Query with join to get full amenity details
   const result = await supabase
@@ -44,7 +46,7 @@ export async function getRoomAmenities(roomId: number) {
   const response =
     toSupabaseQueryResponse<
       Array<{
-        amenity_id: number;
+        amenity_id: string;
         amenities: RoomAmenity | null;
       }>
     >(result);

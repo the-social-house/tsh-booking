@@ -1,31 +1,22 @@
 -- Seed data for bookings table
--- 15 bookings with references to users and meeting rooms
-
-INSERT INTO bookings (
-  booking_user_id,
-  booking_meeting_room_id,
-  booking_start_time,
-  booking_end_time,
-  booking_date,
-  booking_is_type_of_booking,
-  booking_number_of_people,
-  booking_total_price,
-  booking_discount,
-  booking_payment_status
-) VALUES
-  (2, 1, '2024-12-10 09:00:00+00', '2024-12-10 10:00:00+00', '2024-12-10', 'booking', 8, 50.00, 0.00, 'paid'),
-  (3, 2, '2024-12-10 10:00:00+00', '2024-12-10 12:00:00+00', '2024-12-10', 'booking', 12, 150.00, 15.00, 'paid'),
-  (4, 3, '2024-12-11 14:00:00+00', '2024-12-11 15:00:00+00', '2024-12-11', 'booking', 5, 45.00, 0.00, 'pending'),
-  (5, 4, '2024-12-11 09:00:00+00', '2024-12-11 11:00:00+00', '2024-12-11', 'booking', 18, 200.00, 40.00, 'paid'),
-  (6, 5, '2024-12-12 13:00:00+00', '2024-12-12 14:00:00+00', '2024-12-12', 'booking', 4, 40.00, 0.00, 'paid'),
-  (7, 6, '2024-12-12 10:00:00+00', '2024-12-12 12:00:00+00', '2024-12-12', 'booking', 10, 120.00, 12.00, 'paid'),
-  (8, 7, '2024-12-13 09:00:00+00', '2024-12-13 13:00:00+00', '2024-12-13', 'booking', 20, 500.00, 100.00, 'paid'),
-  (9, 8, '2024-12-13 14:00:00+00', '2024-12-13 16:00:00+00', '2024-12-13', 'booking', 15, 180.00, 36.00, 'paid'),
-  (10, 1, '2024-12-14 09:00:00+00', '2024-12-14 10:30:00+00', '2024-12-14', 'booking', 7, 75.00, 15.00, 'pending'),
-  (2, 2, '2024-12-14 11:00:00+00', '2024-12-14 13:00:00+00', '2024-12-14', 'booking', 12, 150.00, 15.00, 'paid'),
-  (3, 3, '2024-12-15 10:00:00+00', '2024-12-15 11:00:00+00', '2024-12-15', 'booking', 6, 45.00, 0.00, 'paid'),
-  (4, 4, '2024-12-15 14:00:00+00', '2024-12-15 16:00:00+00', '2024-12-15', 'booking', 18, 200.00, 40.00, 'paid'),
-  (5, 5, '2024-12-16 09:00:00+00', '2024-12-16 10:00:00+00', '2024-12-16', 'booking', 4, 40.00, 0.00, 'pending'),
-  (6, 6, '2024-12-16 13:00:00+00', '2024-12-16 15:00:00+00', '2024-12-16', 'booking', 10, 120.00, 12.00, 'paid'),
-  (7, 7, '2024-12-17 10:00:00+00', '2024-12-17 12:00:00+00', '2024-12-17', 'booking', 22, 250.00, 50.00, 'paid');
+-- NOTE: Bookings cannot be seeded until users exist in auth.users and public.users
+-- Users must be created via Supabase Auth Admin API first
+-- This file is commented out until users are created
+--
+-- Example structure (requires user_id from auth.users):
+-- INSERT INTO bookings (
+--   booking_user_id,
+--   booking_meeting_room_id,
+--   booking_start_time,
+--   booking_end_time,
+--   booking_date,
+--   booking_is_type_of_booking,
+--   booking_number_of_people,
+--   booking_total_price,
+--   booking_discount,
+--   booking_payment_status
+-- ) VALUES
+--   ((SELECT user_id FROM users WHERE user_email = 'user@example.com'), 
+--    (SELECT meeting_room_id FROM meeting_rooms WHERE meeting_room_name = 'Room of Innovation'),
+--    '2024-12-10 09:00:00+00', '2024-12-10 10:00:00+00', '2024-12-10', 'booking', 8, 50.00, 0.00, 'paid');
 

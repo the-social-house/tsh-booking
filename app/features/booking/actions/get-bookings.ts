@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import {
@@ -36,6 +36,8 @@ export async function getBookings(filters?: GetBookingsInput) {
       };
     }
   }
+
+  const supabase = await createClient();
 
   // Build query
   let query = supabase

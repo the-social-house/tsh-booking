@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -30,6 +30,8 @@ export async function getMeetingRoom(roomName: string) {
   // Normalize room name: convert URL format to database format
   // "room-of-innovation" -> "Room of Innovation"
   const normalizedName = normalizeRoomName(validationResult.data.roomName);
+
+  const supabase = await createClient();
 
   // Query database (case-insensitive search)
   // Use ilike for case-insensitive matching since normalization may not match exactly

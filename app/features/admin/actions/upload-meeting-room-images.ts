@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 
 const BUCKET_NAME = "meeting-room-images";
 
@@ -15,6 +15,16 @@ export async function uploadMeetingRoomImages(
   folderId: string,
   formData: FormData
 ): Promise<UploadResult> {
+  // Verify admin access and get Supabase client
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError || !supabase) {
+    return {
+      success: false,
+      error:
+        authError?.message || "You must be an admin to perform this action",
+    };
+  }
+
   const files = formData.getAll("images") as File[];
 
   if (!files || files.length === 0) {

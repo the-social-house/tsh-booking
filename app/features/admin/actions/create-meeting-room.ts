@@ -5,7 +5,8 @@ import {
   type CreateMeetingRoomInput,
   createMeetingRoomSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
-import { supabase } from "@/lib/supabase";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import type { createClient } from "@/lib/supabase/server";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -24,7 +25,10 @@ function generateFolderId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-async function uploadImages(files: File[]): Promise<{
+async function uploadImages(
+  files: File[],
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<{
   success: boolean;
   urls?: string[];
   paths?: string[];
@@ -82,7 +86,10 @@ async function uploadImages(files: File[]): Promise<{
   };
 }
 
-async function deleteImages(paths: string[]): Promise<void> {
+async function deleteImages(
+  paths: string[],
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<void> {
   if (!paths || paths.length === 0) {
     return;
   }
@@ -91,7 +98,8 @@ async function deleteImages(paths: string[]): Promise<void> {
 }
 
 async function handleImageUploadAndCleanup(
-  imageFiles: File[] | undefined
+  imageFiles: File[] | undefined,
+  supabase: Awaited<ReturnType<typeof createClient>>
 ): Promise<{
   success: boolean;
   urls: string[];
@@ -108,7 +116,7 @@ async function handleImageUploadAndCleanup(
     return { success: true, urls: [], paths: [] };
   }
 
-  const uploadResult = await uploadImages(imageFiles);
+  const uploadResult = await uploadImages(imageFiles, supabase);
 
   if (!uploadResult.success) {
     return {
@@ -149,7 +157,25 @@ export async function createMeetingRoom(
   data: CreateMeetingRoomInput,
   imageFiles?: File[]
 ) {
-  const imageUploadResult = await handleImageUploadAndCleanup(imageFiles);
+  // Verify admin access and get Supabase client
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "FORBIDDEN",
+        message: "You must be an admin to perform this action",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  const imageUploadResult = await handleImageUploadAndCleanup(
+    imageFiles,
+    supabase
+  );
 
   if (!imageUploadResult.success) {
     return {
@@ -173,7 +199,7 @@ export async function createMeetingRoom(
 
   if (!validationResult.success) {
     if (uploadedImagePaths.length > 0) {
-      await deleteImages(uploadedImagePaths);
+      await deleteImages(uploadedImagePaths, supabase);
     }
     return {
       data: null,
@@ -191,7 +217,7 @@ export async function createMeetingRoom(
 
   if (result.error) {
     if (uploadedImagePaths.length > 0) {
-      await deleteImages(uploadedImagePaths);
+      await deleteImages(uploadedImagePaths, supabase);
     }
 
     const errorMessage = getCreateMeetingRoomErrorMessage(result.error.code);

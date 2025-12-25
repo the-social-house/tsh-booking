@@ -1,5 +1,4 @@
 import { z } from "zod";
-import messages from "@/lib/messages.json";
 
 /**
  * Schema for fetching a meeting room by name
@@ -17,10 +16,7 @@ export type GetMeetingRoomInput = z.infer<typeof getMeetingRoomSchema>;
  * Schema for fetching room amenities
  */
 export const getRoomAmenitiesSchema = z.object({
-  roomId: z
-    .number()
-    .int(messages.bookings.validation.id.integer)
-    .positive(messages.bookings.validation.id.positive),
+  roomId: z.string().uuid("Invalid room ID"),
 });
 
 export type GetRoomAmenitiesInput = z.infer<typeof getRoomAmenitiesSchema>;

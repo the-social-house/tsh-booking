@@ -2,6 +2,14 @@
 # Exit on any error
 set -e
 
+# Load nvm/fnm/volta if available (needed for npx in git hooks)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$HOME/.fnm/fnm" ] && eval "$(~/.fnm/fnm env)"
+[ -s "$HOME/.volta/bin/volta" ] && export PATH="$HOME/.volta/bin:$PATH"
+# Fallback: add common Node locations to PATH
+export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
+
 # Check if there are any staged files
 if [ -z "$(git diff --cached --name-only)" ]; then
   echo "No staged files to format"

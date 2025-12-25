@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 
 type AmenitySelectorProps = {
   amenities: AdminAmenity[];
-  selectedIds: number[];
-  onSelectionChange: (ids: number[]) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   disabled?: boolean;
 };
 
@@ -22,7 +22,7 @@ export function AmenitySelector({
   disabled = false,
 }: AmenitySelectorProps) {
   const toggleAmenity = useCallback(
-    (amenityId: number) => {
+    (amenityId: string) => {
       if (disabled) {
         return;
       }
@@ -44,7 +44,7 @@ export function AmenitySelector({
   const allSelected = useMemo(
     () =>
       amenities.length > 0 &&
-      allAmenityIds.every((id: number) => selectedIds.includes(id)),
+      allAmenityIds.every((id: string) => selectedIds.includes(id)),
     [amenities.length, allAmenityIds, selectedIds]
   );
 

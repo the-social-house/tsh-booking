@@ -1,17 +1,13 @@
 "use server";
 
 import { z } from "zod";
-import messages from "@/lib/messages.json";
-import { supabase } from "@/lib/supabase";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import { toSupabaseMutationResult } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 
 const updateMeetingRoomAmenitiesSchema = z.object({
-  meeting_room_id: z
-    .number()
-    .int(messages.admin.meetingRooms.validation.id.integer)
-    .positive(messages.admin.meetingRooms.validation.id.positive),
-  amenity_ids: z.array(z.number().int().positive()).default([]),
+  meeting_room_id: z.string().uuid(),
+  amenity_ids: z.array(z.string().uuid()).default([]),
 });
 
 export type UpdateMeetingRoomAmenitiesInput = z.infer<
@@ -27,6 +23,21 @@ export type UpdateMeetingRoomAmenitiesInput = z.infer<
 export async function updateMeetingRoomAmenities(
   data: UpdateMeetingRoomAmenitiesInput
 ) {
+  // Verify admin access and get Supabase client
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError || !supabase) {
+    return {
+      success: false,
+      error: authError || {
+        code: "FORBIDDEN",
+        message: "You must be an admin to perform this action",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   const validationResult = updateMeetingRoomAmenitiesSchema.safeParse(data);
 
   if (!validationResult.success) {

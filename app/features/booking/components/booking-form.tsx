@@ -15,6 +15,7 @@ import {
   type BookingSlot,
   getBookings,
 } from "@/app/features/booking/actions/get-bookings";
+import { rollbackBooking } from "@/app/features/booking/actions/rollback-booking";
 import { StripePaymentModal } from "@/app/features/booking/components/stripe-payment-modal";
 import type { CreateBookingInput } from "@/app/features/booking/lib/booking.schema";
 import type { RoomAmenity } from "@/app/features/meeting-rooms/actions/get-room-amenities";
@@ -35,7 +36,7 @@ import type { Tables } from "@/supabase/types/database";
 type MeetingRoom = Tables<"meeting_rooms">;
 
 type BookingUser = {
-  user_id: number;
+  user_id: string;
   user_email: string;
   subscription_discount?: number; // Discount percentage from subscription
 };
@@ -82,14 +83,14 @@ export default function BookingForm({
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [numberOfPeople, setNumberOfPeople] = useState<string>("");
-  const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [existingBookings, setExistingBookings] = useState<BookingSlot[]>([]);
 
   // Payment modal state
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string>("");
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
-  const [pendingBookingId, setPendingBookingId] = useState<number | null>(null);
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
   // Fetch existing bookings for the room (next 30 days) ONLY when drawer opens
   useEffect(() => {
@@ -195,9 +196,44 @@ export default function BookingForm({
     };
   };
 
-  const handleAmenitiesCreation = async (bookingId: number): Promise<void> => {
+  // Helper: Create booking with validation
+  async function createBookingWithValidation(
+    data: CreateBookingInput
+  ): Promise<{
+    success: boolean;
+    bookingId?: string;
+    error?: string;
+    fieldErrors?: FieldErrors;
+  }> {
+    const result = await createBooking(data, {
+      amenityIds: selectedAmenities.length > 0 ? selectedAmenities : undefined,
+    });
+
+    if (hasError(result)) {
+      toast.error(formatErrorForToast(result.error));
+      return {
+        success: false,
+        error: result.error.message,
+        fieldErrors: parseFieldErrors<FieldErrors>(result.error.details),
+      };
+    }
+
+    if (!hasData(result)) {
+      return {
+        success: false,
+        error: messages.bookings.messages.error.create.unknown,
+      };
+    }
+
+    return { success: true, bookingId: result.data.booking_id };
+  }
+
+  // Helper: Create amenities for a booking with rollback on error
+  async function createAmenitiesForBooking(
+    bookingId: string
+  ): Promise<{ success: boolean; error?: string }> {
     if (selectedAmenities.length === 0) {
-      return;
+      return { success: true };
     }
 
     const amenitiesResult = await createBookingAmenities({
@@ -206,12 +242,58 @@ export default function BookingForm({
     });
 
     if (hasError(amenitiesResult)) {
-      toast.error(
-        "Booking created but failed to add amenities: " +
-          amenitiesResult.error.message
-      );
+      await rollbackBooking(bookingId, user.user_id);
+      toast.error(messages.bookings.messages.error.amenities.addFailed);
+      return {
+        success: false,
+        error: messages.bookings.messages.error.amenities.addFailed,
+      };
     }
-  };
+
+    return { success: true };
+  }
+
+  // Helper: Create payment intent with rollback on error
+  async function createPaymentIntentForBooking(
+    bookingId: string,
+    bookingDate: string
+  ): Promise<{
+    success: boolean;
+    data?: CreatePaymentIntentResult;
+    error?: string;
+  }> {
+    const paymentIntentResult = await createPaymentIntent({
+      amount: totalPrice,
+      userId: user.user_id,
+      roomId: meetingRoom.meeting_room_id,
+      bookingDate,
+      bookingId,
+    });
+
+    if (hasError(paymentIntentResult) || !hasData(paymentIntentResult)) {
+      await rollbackBooking(bookingId, user.user_id);
+      toast.error(messages.bookings.messages.error.payment.initFailed);
+      return {
+        success: false,
+        error: messages.bookings.messages.error.payment.initFailed,
+      };
+    }
+
+    return { success: true, data: paymentIntentResult.data };
+  }
+
+  // Helper: Open payment modal
+  function openPaymentModal(
+    bookingId: string,
+    paymentData: CreatePaymentIntentResult
+  ) {
+    if (paymentData.clientSecret) {
+      setPaymentClientSecret(paymentData.clientSecret);
+      setPaymentIntentId(paymentData.paymentIntentId);
+      setPendingBookingId(bookingId);
+      setIsPaymentModalOpen(true);
+    }
+  }
 
   async function bookingAction(
     _previousState: BookingFormState | null,
@@ -226,64 +308,55 @@ export default function BookingForm({
       };
     }
 
-    // Step 1: Create booking with "pending" status to reserve the time slot
-    const result = await createBooking(data, {
-      amenityIds: selectedAmenities.length > 0 ? selectedAmenities : undefined,
-    });
-
-    if (hasError(result)) {
-      toast.error(formatErrorForToast(result.error));
+    // Step 1: Create booking
+    const bookingResult = await createBookingWithValidation(data);
+    if (!bookingResult.success) {
       return {
-        error: result.error.message,
-        fieldErrors: parseFieldErrors<FieldErrors>(result.error.details),
+        error:
+          bookingResult.error ||
+          messages.bookings.messages.error.create.unknown,
+        fieldErrors: bookingResult.fieldErrors,
         success: false,
       };
     }
 
-    if (!hasData(result)) {
+    if (!bookingResult.bookingId) {
       return {
         error: messages.bookings.messages.error.create.unknown,
         success: false,
       };
     }
 
-    const bookingId = result.data.booking_id;
+    const bookingId = bookingResult.bookingId;
 
     // Step 2: Create booking amenities if any selected
-    await handleAmenitiesCreation(bookingId);
-
-    // Step 3: Create payment intent
-    const paymentIntentResult = await createPaymentIntent({
-      amount: totalPrice,
-      userId: user.user_id,
-      roomId: meetingRoom.meeting_room_id,
-      bookingDate: data.booking_date,
-      bookingId,
-    });
-
-    if (hasError(paymentIntentResult)) {
-      toast.error(paymentIntentResult.error.message);
+    const amenitiesResult = await createAmenitiesForBooking(bookingId);
+    if (!amenitiesResult.success) {
       return {
-        error: paymentIntentResult.error.message,
+        error:
+          amenitiesResult.error ||
+          messages.bookings.messages.error.amenities.addFailed,
         success: false,
       };
     }
 
-    if (!hasData(paymentIntentResult)) {
-      toast.error("Failed to initialize payment");
+    // Step 3: Create payment intent
+    const paymentResult = await createPaymentIntentForBooking(
+      bookingId,
+      data.booking_date
+    );
+    if (!paymentResult.success) {
       return {
-        error: "Failed to initialize payment",
+        error:
+          paymentResult.error ||
+          messages.bookings.messages.error.payment.initFailed,
         success: false,
       };
     }
 
     // Step 4: Open payment modal
-    const paymentData = paymentIntentResult.data as CreatePaymentIntentResult;
-    if (paymentData.clientSecret) {
-      setPaymentClientSecret(paymentData.clientSecret);
-      setPaymentIntentId(paymentData.paymentIntentId);
-      setPendingBookingId(bookingId);
-      setIsPaymentModalOpen(true);
+    if (paymentResult.data) {
+      openPaymentModal(bookingId, paymentResult.data);
     }
 
     // Don't mark as success yet - wait for payment confirmation
@@ -348,7 +421,7 @@ export default function BookingForm({
     }
   }, [state?.success, isPaymentModalOpen]);
 
-  const toggleAmenity = (amenityId: number) => {
+  const toggleAmenity = (amenityId: string) => {
     setSelectedAmenities((prev) =>
       prev.includes(amenityId)
         ? prev.filter((id) => id !== amenityId)
@@ -525,6 +598,7 @@ export default function BookingForm({
           onClose={handlePaymentCancel}
           onSuccess={handlePaymentSuccess}
           paymentIntentId={paymentIntentId}
+          userId={user.user_id}
         />
       )}
     </div>

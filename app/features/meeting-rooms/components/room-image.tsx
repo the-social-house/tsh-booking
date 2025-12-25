@@ -4,7 +4,7 @@ type RoomImageProps = {
   /**
    * Room ID or name to generate a consistent image seed
    */
-  roomId: number;
+  roomId: string;
   /**
    * Image width in pixels
    * Defaults to 800

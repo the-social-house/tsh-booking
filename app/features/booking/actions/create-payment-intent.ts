@@ -1,5 +1,6 @@
 "use server";
 
+import messages from "@/lib/messages.json";
 import { stripe } from "@/lib/stripe";
 import type { SupabaseResponse } from "@/lib/supabase-response";
 
@@ -9,21 +10,21 @@ export type CreatePaymentIntentInput = {
    */
   amount: number;
   /**
-   * User ID for metadata
+   * User ID for metadata (UUID)
    */
-  userId: number;
+  userId: string;
   /**
-   * Meeting room ID for metadata
+   * Meeting room ID for metadata (UUID)
    */
-  roomId: number;
+  roomId: string;
   /**
    * Booking date for metadata
    */
   bookingDate: string;
   /**
-   * Optional booking ID if booking already created
+   * Optional booking ID if booking already created (UUID)
    */
-  bookingId?: number;
+  bookingId?: string;
 };
 
 export type CreatePaymentIntentResult = {
@@ -49,7 +50,7 @@ export async function createPaymentIntent(
         error: {
           name: "PostgrestError",
           code: "INVALID_AMOUNT",
-          message: "Payment amount must be at least 0.50 DKK",
+          message: messages.bookings.messages.error.payment.initFailed,
           details: "",
           hint: "",
         },
@@ -79,7 +80,7 @@ export async function createPaymentIntent(
         error: {
           name: "PostgrestError",
           code: "STRIPE_ERROR",
-          message: "Payment intent created but no client secret returned",
+          message: messages.bookings.messages.error.payment.initFailed,
           details: "",
           hint: "",
         },
@@ -93,17 +94,14 @@ export async function createPaymentIntent(
       },
       error: null,
     };
-  } catch (error) {
+  } catch {
     return {
       data: null,
       error: {
         name: "PostgrestError",
         code: "STRIPE_ERROR",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to create payment intent",
-        details: error instanceof Error ? error.stack || "" : String(error),
+        message: messages.bookings.messages.error.payment.initFailed,
+        details: "",
         hint: "",
       },
     };
