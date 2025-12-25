@@ -59,6 +59,7 @@ schema_paths = [
   "./schemas/users.sql",
   "./schemas/amenities.sql",
   "./schemas/meeting_rooms.sql",
+  "./schemas/room_unavailabilities.sql",
   "./schemas/bookings.sql",
   "./schemas/booking_amenities.sql",
   "./schemas/meeting_room_amenities.sql"
