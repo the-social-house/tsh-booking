@@ -20,7 +20,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import messages from "@/lib/messages.json";
 
 type DeleteMeetingRoomDialogProps = {
-  meetingRoomId: number;
+  meetingRoomId: string;
   meetingRoomName: string;
 };
 

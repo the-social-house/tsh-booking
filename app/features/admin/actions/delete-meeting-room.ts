@@ -2,14 +2,29 @@
 
 import { getDeleteMeetingRoomErrorMessage } from "@/app/features/admin/lib/error-messages";
 import { meetingRoomIdSchema } from "@/app/features/admin/lib/meeting-room.schema";
-import { supabase } from "@/lib/supabase";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import { toSupabaseMutationResult } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 
 /**
  * Delete a meeting room by ID
  */
-export async function deleteMeetingRoom(id: number) {
+export async function deleteMeetingRoom(id: string) {
+  // Verify admin access and get Supabase client
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError || !supabase) {
+    return {
+      success: false,
+      error: authError || {
+        code: "FORBIDDEN",
+        message: "You must be an admin to perform this action",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   const validationResult = meetingRoomIdSchema.safeParse({ id });
   if (!validationResult.success) {
     return {

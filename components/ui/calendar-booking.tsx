@@ -233,9 +233,42 @@ export function CalendarBooking({
         return overlaps || violatesBuffer;
       });
 
+      // Check if starting at this slot would only leave 30 minutes before the next booking
+      // If the next booking starts exactly 30 minutes after this slot, then this slot is unavailable
+      // because the buffer (slot to slot+30) would conflict with the next booking
+      // UNLESS the end time would be 22:00 (end of business hours, so no buffer needed)
+
+      // Find the next booking that starts after this slot
+      const nextBooking = bookingsForSelectedDate
+        .map((booking) => ({
+          start: timeToMinutes(extractTime(booking.booking_start_time)),
+          end: timeToMinutes(extractTime(booking.booking_end_time)),
+        }))
+        .filter((booking) => booking.start > slotMinutes)
+        .sort((a, b) => a.start - b.start)[0]; // Get the earliest next booking
+
+      if (nextBooking) {
+        const timeUntilNextBooking = nextBooking.start - slotMinutes;
+
+        // If there's exactly 30 minutes until the next booking, block this slot
+        if (timeUntilNextBooking === 30) {
+          // Check if the end time would be 22:00 (end of business hours)
+          // If so, allow it because no buffer is needed at the end of the day
+          const endTimeMinutes = endHour * 60; // 22:00 = 22 * 60 = 1320 minutes
+          const minimumBookingDuration = 30; // Minimum booking is 30 minutes
+          const wouldEndAtClose =
+            slotMinutes + minimumBookingDuration >= endTimeMinutes;
+
+          // Only block if it wouldn't end at 22:00
+          if (!wouldEndAtClose) {
+            return true; // Block this slot
+          }
+        }
+      }
+
       return isBooked;
     };
-  }, [bookingsForSelectedDate]);
+  }, [bookingsForSelectedDate, endHour]);
 
   // Find the next booking's start time after the selected start time
   const nextBookingStartMinutes = useMemo(() => {

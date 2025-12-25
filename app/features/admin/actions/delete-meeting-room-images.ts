@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 
 const BUCKET_NAME = "meeting-room-images";
 
@@ -16,6 +16,16 @@ export type DeleteResult = {
 export async function deleteMeetingRoomImages(
   paths: string[]
 ): Promise<DeleteResult> {
+  // Verify admin access and get Supabase client
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError || !supabase) {
+    return {
+      success: false,
+      error:
+        authError?.message || "You must be an admin to perform this action",
+    };
+  }
+
   if (!paths || paths.length === 0) {
     return { success: true };
   }

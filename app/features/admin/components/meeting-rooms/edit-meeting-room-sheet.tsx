@@ -25,7 +25,7 @@ type EditMeetingRoomSheetProps = {
 
 type LoadedData = {
   allAmenities: Tables<"amenities">[];
-  currentAmenityIds: number[];
+  currentAmenityIds: string[];
 };
 
 export function EditMeetingRoomSheet({

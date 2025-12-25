@@ -5,6 +5,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { confirmPayment } from "@/app/features/booking/actions/confirm-payment";
+import { rollbackBooking } from "@/app/features/booking/actions/rollback-booking";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import messages from "@/lib/messages.json";
 import { hasData, hasError } from "@/lib/supabase-response";
 import { PaymentForm } from "./payment-form";
 
@@ -38,9 +40,13 @@ type StripePaymentModalProps = {
    */
   paymentIntentId: string;
   /**
-   * Booking ID to update after payment
+   * Booking ID to update after payment (UUID)
    */
-  bookingId: number;
+  bookingId: string;
+  /**
+   * User ID for rollback (UUID)
+   */
+  userId: string;
   /**
    * Callback when payment succeeds
    */
@@ -57,6 +63,7 @@ export function StripePaymentModal({
   clientSecret,
   paymentIntentId,
   bookingId,
+  userId,
   onSuccess,
 }: StripePaymentModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -75,9 +82,8 @@ export function StripePaymentModal({
     details?: string;
     hint?: string;
   }) => {
-    const errorDetails = error.details ? `\nDetails: ${error.details}` : "";
-    const errorHint = error.hint ? `\nHint: ${error.hint}` : "";
-    toast.error(`${error.message}${errorDetails}${errorHint}`, {
+    // Only show user-friendly message, hide technical details
+    toast.error(error.message, {
       duration: 10_000,
     });
   };
@@ -116,7 +122,17 @@ export function StripePaymentModal({
       });
 
       if (hasError(result)) {
-        handlePaymentError(result.error);
+        // Payment succeeded but confirmation failed - rollback the booking
+        const rollbackResult = await rollbackBooking(bookingId, userId);
+        if (hasError(rollbackResult)) {
+          // Rollback also failed - critical error
+          toast.error(messages.bookings.messages.error.rollback.failed, {
+            duration: 10_000,
+          });
+        } else {
+          handlePaymentError(result.error);
+        }
+        setIsProcessing(false);
         return;
       }
 
@@ -125,12 +141,17 @@ export function StripePaymentModal({
         return;
       }
 
-      toast.error(
-        "Payment confirmation incomplete. Please check your booking status.",
-        {
+      // No data returned - rollback
+      const rollbackResult = await rollbackBooking(bookingId, userId);
+      if (hasError(rollbackResult)) {
+        toast.error(messages.bookings.messages.error.rollback.failed, {
           duration: 10_000,
-        }
-      );
+        });
+      } else {
+        toast.error(messages.bookings.messages.error.payment.confirmFailed, {
+          duration: 10_000,
+        });
+      }
       setIsProcessing(false);
     } catch (error) {
       toast.error(

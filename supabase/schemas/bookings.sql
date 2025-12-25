@@ -1,7 +1,7 @@
 create table bookings (
-  booking_id bigint primary key generated always as identity,
-  booking_user_id bigint not null references users (user_id),
-  booking_meeting_room_id bigint not null references meeting_rooms (meeting_room_id),
+  booking_id uuid primary key default gen_random_uuid(),
+  booking_user_id uuid not null references users (user_id),
+  booking_meeting_room_id uuid not null references meeting_rooms (meeting_room_id),
   booking_start_time timestamptz not null,
   booking_end_time timestamptz not null,
   booking_created_at timestamptz default now() not null,

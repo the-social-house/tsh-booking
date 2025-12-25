@@ -14,9 +14,54 @@ Whenever you are tasked with creating a new **UPDATE** Server Action file, use t
 
 * Always create a separate file for each server action in the following directory structure: `app/features/<feature-name>/actions/update-<entity-name>.ts`
 
-* Always import the Supabase client from `@/lib/supabase` and use it for database operations.
+* **Always use `requireAuth()` or `requireAdmin()`** for authentication and to get the Supabase client.
 
 * **Always validate input with Zod** before performing database operations.
+
+## Authentication Protocol
+
+All UPDATE server actions MUST verify authentication before performing any database operations.
+
+### 1. Import and Use Auth Helpers
+
+```typescript
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+// OR for admin-only actions:
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+```
+
+### 2. Authentication Check Pattern
+
+```typescript
+export async function updateEntity(id: number, data: UpdateEntityInput) {
+  // 1. Verify authentication and get Supabase client (ALWAYS first)
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to perform this action",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  // 2. Validate ID and input with Zod
+  // 3. Perform database operation using the returned supabase client
+  // ...
+}
+```
+
+### 3. Key Points
+
+- **`requireAuth()`** returns `{ user, supabase, error }` - use for user actions
+- **`requireAdmin()`** returns `{ user, supabase, error }` - use for admin-only actions
+- **Reuse the returned `supabase` client** - don't create a new one
+- **Auth check comes BEFORE validation** - no point validating if user isn't authenticated
+- **One Supabase client per request** - efficient connection pooling
 
 ## Zod Validation Protocol
 
@@ -67,14 +112,14 @@ export type UpdateAmenityInput = z.infer<typeof updateAmenitySchema>;
 - Reuse the ID validation schema (`deleteAmenitySchema`) for validating IDs
 - Keep the same validation rules as create, just make fields optional
 
-### 2. Implement Validation in Server Action
+### 2. Implement Authentication and Validation in Server Action
 
 ```typescript
 "use server";
 
 import type { PostgrestError } from "@supabase/supabase-js";
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
 import messages from "@/lib/messages.json";
-import { supabase } from "@/lib/supabase";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -86,7 +131,22 @@ import {
 import { getUpdateErrorMessage } from "../lib/error-messages";
 
 export async function updateAmenity(id: number, data: UpdateAmenityInput) {
-  // 1. Validate ID
+  // 1. Verify authentication and get Supabase client (ALWAYS first)
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to update an amenity",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  // 2. Validate ID
   const idValidation = deleteAmenitySchema.safeParse({ id });
   if (!idValidation.success) {
     return {
@@ -95,7 +155,7 @@ export async function updateAmenity(id: number, data: UpdateAmenityInput) {
     };
   }
 
-  // 2. Validate update data
+  // 3. Validate update data
   const dataValidation = updateAmenitySchema.safeParse(data);
   if (!dataValidation.success) {
     return {
@@ -104,7 +164,7 @@ export async function updateAmenity(id: number, data: UpdateAmenityInput) {
     };
   }
 
-  // 3. Perform database operation with validated data
+  // 4. Perform database operation with validated data
   const validatedData = dataValidation.data;
   const result = await supabase
     .from("amenities")
@@ -113,7 +173,7 @@ export async function updateAmenity(id: number, data: UpdateAmenityInput) {
     .select()
     .single();
 
-  // 4. Handle database errors
+  // 5. Handle database errors
   if (result.error) {
     const errorMessage = getUpdateErrorMessage(result.error.code);
     return {
@@ -122,7 +182,7 @@ export async function updateAmenity(id: number, data: UpdateAmenityInput) {
     };
   }
 
-  // 5. Handle not found case
+  // 6. Handle not found case
   if (!result.data) {
     const notFoundError: PostgrestError = {
       code: "PGRST116",
@@ -154,7 +214,9 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
 
 1. **Import required utilities:**
    ```typescript
-   import { supabase } from "@/lib/supabase";
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   // OR for admin-only actions:
+   import { requireAdmin } from "@/app/features/auth/lib/require-admin";
    import { toSupabaseMutationResponse } from "@/lib/supabase-response";
    import { createValidationError } from "@/lib/validation";
    import type { Tables } from "@/supabase/types/database";
@@ -170,8 +232,8 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
    "use server";
 
    import type { PostgrestError } from "@supabase/supabase-js";
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
    import messages from "@/lib/messages.json";
-   import { supabase } from "@/lib/supabase";
    import { toSupabaseMutationResponse } from "@/lib/supabase-response";
    import { createValidationError } from "@/lib/validation";
    import type { Tables } from "@/supabase/types/database";
@@ -183,18 +245,25 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
    import { getUpdateErrorMessage } from "../lib/error-messages";
 
    export async function updateAmenity(id: number, data: UpdateAmenityInput) {
-     // Validate ID
+     // 1. Verify authentication and get Supabase client
+     const { supabase, error: authError } = await requireAuth();
+     if (authError || !supabase) {
+       return { data: null, error: authError };
+     }
+
+     // 2. Validate ID
      const idValidation = deleteAmenitySchema.safeParse({ id });
      if (!idValidation.success) {
        return { data: null, error: createValidationError(idValidation.error) };
      }
 
-     // Validate update data
+     // 3. Validate update data
      const dataValidation = updateAmenitySchema.safeParse(data);
      if (!dataValidation.success) {
        return { data: null, error: createValidationError(dataValidation.error) };
      }
 
+     // 4. Perform database operation
      const result = await supabase
        .from("amenities")
        .update(dataValidation.data)
@@ -226,7 +295,7 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
    ```typescript
    "use server";
 
-   import { supabase } from "@/lib/supabase";
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
    import { toSupabaseMutationResult } from "@/lib/supabase-response";
    import { createValidationError } from "@/lib/validation";
    import {
@@ -236,18 +305,25 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
    } from "../lib/amenity.schema";
 
    export async function updateAmenityStatus(id: number, data: UpdateAmenityInput) {
-     // Validate ID
+     // 1. Verify authentication and get Supabase client
+     const { supabase, error: authError } = await requireAuth();
+     if (authError || !supabase) {
+       return { success: false, error: authError };
+     }
+
+     // 2. Validate ID
      const idValidation = deleteAmenitySchema.safeParse({ id });
      if (!idValidation.success) {
        return { success: false, error: createValidationError(idValidation.error) };
      }
 
-     // Validate update data
+     // 3. Validate update data
      const dataValidation = updateAmenitySchema.safeParse(data);
      if (!dataValidation.success) {
        return { success: false, error: createValidationError(dataValidation.error) };
      }
 
+     // 4. Perform database operation
      const result = await supabase
        .from("amenities")
        .update(dataValidation.data)
@@ -286,7 +362,9 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
    ```
 
 5. **Key points:**
-   - **Always validate both ID and data** before any database operation
+   - **Always verify authentication first** with `requireAuth()` or `requireAdmin()`
+   - **Reuse the returned `supabase` client** - don't import or create a new one
+   - **Then validate both ID and data** before any database operation
    - Use `deleteAmenitySchema` (or a shared ID schema) for ID validation
    - Use `UpdateAmenityInput` for the update data parameter type
    - Always include the record ID as a separate parameter
@@ -376,7 +454,9 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
    }
    ```
 
-2. **Common PostgreSQL error codes for UPDATE operations:**
+2. **Common error codes for UPDATE operations:**
+   - `UNAUTHENTICATED` - User not logged in (from `requireAuth()`)
+   - `FORBIDDEN` - User not authorized/not admin (from `requireAdmin()`)
    - `VALIDATION_ERROR` - Zod validation failed (custom code)
    - `PGRST116` - No rows returned (record not found)
    - `23505` - Unique violation (duplicate entry)
@@ -384,17 +464,19 @@ Supabase UPDATE operations return `{ data, error, status, statusText }` where:
    - `23514` - Check violation (constraint check failed)
 
 3. **Best practices for error handling:**
-   - ✅ **Always validate ID and data with Zod first**
+   - ✅ **Always verify authentication first** with `requireAuth()` or `requireAdmin()`
+   - ✅ **Then validate ID and data with Zod**
    - ✅ **Use `error.code`** to identify specific error types
    - ✅ **Handle "not found" cases** (PGRST116 or null data)
    - ✅ **Use centralized messages** from `@/lib/messages.json`
    - ❌ **Avoid string matching on `error.message`** - messages can change
-   - Return errors in the standard response format
+   - ❌ **Never import `supabase` directly** - always use the client from auth helpers
 
 ## Benefits
 
-* **Secure**: Input validation prevents malformed or malicious data
+* **Secure**: Authentication verified before any operation
+* **Efficient**: Single Supabase client per request (connection pooling)
 * **Type-safe**: Zod infers TypeScript types from schemas
 * **User-friendly**: Validation messages are clear and actionable
-* **Consistent**: Same validation pattern across all UPDATE operations
-* **Maintainable**: Centralized messages and schemas per feature
+* **Consistent**: Same auth + validation pattern across all UPDATE operations
+* **Maintainable**: Centralized auth helpers, messages, and schemas per feature

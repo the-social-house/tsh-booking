@@ -1,13 +1,11 @@
 -- Seed data for booking_amenities table
--- Linking amenities to bookings
-
-INSERT INTO booking_amenities (booking_id, amenity_id) VALUES
-  (1, 1), (1, 5),           -- Booking 1: Projector, WiFi
-  (2, 1), (2, 3), (2, 5),   -- Booking 2: Projector, Video Conferencing, WiFi
-  (4, 1), (4, 3), (4, 5),   -- Booking 4: Projector, Video Conferencing, WiFi
-  (7, 1), (7, 3), (7, 4), (7, 5), -- Booking 7: All amenities
-  (8, 1), (8, 3), (8, 5),   -- Booking 8: Projector, Video Conferencing, WiFi
-  (10, 1), (10, 5),         -- Booking 10: Projector, WiFi
-  (12, 1), (12, 3), (12, 5), -- Booking 12: Projector, Video Conferencing, WiFi
-  (15, 1), (15, 3), (15, 5); -- Booking 15: Projector, Video Conferencing, WiFi
+-- NOTE: Booking amenities cannot be seeded until bookings exist
+-- This file is commented out until bookings are created
+--
+-- Example structure (requires booking_id from bookings table):
+-- INSERT INTO booking_amenities (booking_id, amenity_id) VALUES
+--   ((SELECT booking_id FROM bookings WHERE booking_user_id = (SELECT user_id FROM users WHERE user_email = 'user@example.com') LIMIT 1),
+--    (SELECT amenity_id FROM amenities WHERE amenity_name = 'Projector')),
+--   ((SELECT booking_id FROM bookings WHERE booking_user_id = (SELECT user_id FROM users WHERE user_email = 'user@example.com') LIMIT 1),
+--    (SELECT amenity_id FROM amenities WHERE amenity_name = 'WiFi'));
 

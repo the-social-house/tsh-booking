@@ -14,9 +14,54 @@ Whenever you are tasked with creating a new **CREATE** Server Action file, use t
 
 * Always create a separate file for each server action in the following directory structure: `app/features/<feature-name>/actions/create-<entity-name>.ts`
 
-* Always import the Supabase client from `@/lib/supabase` and use it for database operations.
+* **Always use `requireAuth()` or `requireAdmin()`** for authentication and to get the Supabase client.
 
 * **Always validate input with Zod** before performing database operations.
+
+## Authentication Protocol
+
+All CREATE server actions MUST verify authentication before performing any database operations.
+
+### 1. Import and Use Auth Helpers
+
+```typescript
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+// OR for admin-only actions:
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+```
+
+### 2. Authentication Check Pattern
+
+```typescript
+export async function createEntity(data: CreateEntityInput) {
+  // 1. Verify authentication and get Supabase client (ALWAYS first)
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to perform this action",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  // 2. Validate input with Zod
+  // 3. Perform database operation using the returned supabase client
+  // ...
+}
+```
+
+### 3. Key Points
+
+- **`requireAuth()`** returns `{ user, supabase, error }` - use for user actions
+- **`requireAdmin()`** returns `{ user, supabase, error }` - use for admin-only actions
+- **Reuse the returned `supabase` client** - don't create a new one
+- **Auth check comes BEFORE validation** - no point validating if user isn't authenticated
+- **One Supabase client per request** - efficient connection pooling
 
 ## Zod Validation Protocol
 
@@ -86,12 +131,12 @@ export function createValidationError(error: z.ZodError) {
 }
 ```
 
-### 3. Implement Validation in Server Action
+### 3. Implement Authentication and Validation in Server Action
 
 ```typescript
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -102,9 +147,23 @@ import {
 import { getCreateErrorMessage } from "../lib/error-messages";
 
 export async function createAmenity(data: CreateAmenityInput) {
-  // 1. Validate input with Zod (ALWAYS first)
-  const validationResult = createAmenitySchema.safeParse(data);
+  // 1. Verify authentication and get Supabase client (ALWAYS first)
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to create an amenity",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
 
+  // 2. Validate input with Zod
+  const validationResult = createAmenitySchema.safeParse(data);
   if (!validationResult.success) {
     return {
       data: null,
@@ -112,7 +171,7 @@ export async function createAmenity(data: CreateAmenityInput) {
     };
   }
 
-  // 2. Use validated data for database operation
+  // 3. Use validated data for database operation
   const validatedData = validationResult.data;
 
   const result = await supabase
@@ -121,7 +180,7 @@ export async function createAmenity(data: CreateAmenityInput) {
     .select()
     .single();
 
-  // 3. Handle database errors with user-friendly messages
+  // 4. Handle database errors with user-friendly messages
   if (result.error) {
     const errorMessage = getCreateErrorMessage(result.error.code);
     return {
@@ -150,7 +209,9 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
 
 1. **Import required utilities:**
    ```typescript
-   import { supabase } from "@/lib/supabase";
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   // OR for admin-only actions:
+   import { requireAdmin } from "@/app/features/auth/lib/require-admin";
    import { toSupabaseMutationResponse } from "@/lib/supabase-response";
    import { createValidationError } from "@/lib/validation";
    import type { Tables } from "@/supabase/types/database";
@@ -161,7 +222,7 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
    ```typescript
    "use server";
 
-   import { supabase } from "@/lib/supabase";
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
    import { toSupabaseMutationResponse } from "@/lib/supabase-response";
    import { createValidationError } from "@/lib/validation";
    import type { Tables } from "@/supabase/types/database";
@@ -171,7 +232,22 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
    } from "../lib/amenity.schema";
 
    export async function createAmenity(data: CreateAmenityInput) {
-     // Validate input
+     // 1. Verify authentication and get Supabase client
+     const { supabase, error: authError } = await requireAuth();
+     if (authError || !supabase) {
+       return {
+         data: null,
+         error: authError || {
+           code: "UNAUTHENTICATED",
+           message: "You must be logged in to create an amenity",
+           details: "",
+           hint: "",
+           name: "AuthError",
+         },
+       };
+     }
+
+     // 2. Validate input
      const validationResult = createAmenitySchema.safeParse(data);
      if (!validationResult.success) {
        return {
@@ -180,6 +256,7 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
        };
      }
 
+     // 3. Perform database operation
      const result = await supabase
        .from("amenities")
        .insert(validationResult.data)
@@ -195,7 +272,7 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
    ```typescript
    "use server";
 
-   import { supabase } from "@/lib/supabase";
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
    import { toSupabaseMutationResult } from "@/lib/supabase-response";
    import { createValidationError } from "@/lib/validation";
    import {
@@ -204,7 +281,22 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
    } from "../lib/amenity.schema";
 
    export async function createAmenitySilent(data: CreateAmenityInput) {
-     // Validate input
+     // 1. Verify authentication and get Supabase client
+     const { supabase, error: authError } = await requireAuth();
+     if (authError || !supabase) {
+       return {
+         success: false,
+         error: authError || {
+           code: "UNAUTHENTICATED",
+           message: "You must be logged in",
+           details: "",
+           hint: "",
+           name: "AuthError",
+         },
+       };
+     }
+
+     // 2. Validate input
      const validationResult = createAmenitySchema.safeParse(data);
      if (!validationResult.success) {
        return {
@@ -213,6 +305,7 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
        };
      }
 
+     // 3. Perform database operation
      const result = await supabase.from("amenities").insert(validationResult.data);
      return toSupabaseMutationResult(result);
    }
@@ -244,7 +337,9 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
    ```
 
 5. **Key points:**
-   - **Always validate input first** with Zod before any database operation
+   - **Always verify authentication first** with `requireAuth()` or `requireAdmin()`
+   - **Reuse the returned `supabase` client** - don't import or create a new one
+   - **Validate input second** with Zod before any database operation
    - Use the schema's inferred type (`CreateAmenityInput`) for the input parameter
    - Use `safeParse()` not `parse()` - it returns a result object instead of throwing
    - Use `createValidationError()` to format validation errors
@@ -311,7 +406,13 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
 1. **Custom error messages based on error codes (Best Practice):**
    ```typescript
    export async function createAmenity(data: CreateAmenityInput) {
-     // 1. Validate input first
+     // 1. Verify authentication first
+     const { supabase, error: authError } = await requireAuth();
+     if (authError || !supabase) {
+       return { data: null, error: authError };
+     }
+
+     // 2. Validate input
      const validationResult = createAmenitySchema.safeParse(data);
      if (!validationResult.success) {
        return {
@@ -320,6 +421,7 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
        };
      }
 
+     // 3. Perform database operation
      const result = await supabase
        .from("amenities")
        .insert(validationResult.data)
@@ -327,9 +429,8 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
        .single();
 
      if (result.error) {
-       // 2. Handle database errors with user-friendly messages
+       // 4. Handle database errors with user-friendly messages
        // Best Practice: Always use error.code to identify errors
-       // Reference: https://supabase.com/docs/guides/auth/debugging/error-codes#error-types
        const errorMessage = getCreateErrorMessage(result.error.code);
        return {
          data: null,
@@ -361,24 +462,28 @@ Supabase INSERT operations return `{ data, error, status, statusText }` where:
    }
    ```
 
-3. **Common PostgreSQL error codes for CREATE operations:**
+3. **Common error codes for CREATE operations:**
+   - `UNAUTHENTICATED` - User not logged in (from `requireAuth()`)
+   - `FORBIDDEN` - User not authorized/not admin (from `requireAdmin()`)
+   - `VALIDATION_ERROR` - Zod validation failed (custom code)
    - `23505` - Unique violation (duplicate entry)
    - `23503` - Foreign key violation (referenced record doesn't exist)
    - `23502` - Not null violation (required field missing)
    - `23514` - Check violation (constraint check failed)
-   - `VALIDATION_ERROR` - Zod validation failed (custom code)
 
 4. **Best practices for error handling:**
-   - ✅ **Always validate with Zod first** - catch malformed data before hitting the database
-   - ✅ **Use `error.code`** (PostgreSQL error codes) to identify specific error types
+   - ✅ **Always verify authentication first** with `requireAuth()` or `requireAdmin()`
+   - ✅ **Then validate input with Zod** - catch malformed data before hitting the database
+   - ✅ **Use `error.code`** to identify specific error types
    - ✅ **Use centralized messages** from `@/lib/messages.json`
    - ❌ **Avoid string matching on `error.message`** - messages can change
-   - Return errors in the standard response format
+   - ❌ **Never import `supabase` directly** - always use the client from auth helpers
 
 ## Benefits
 
-* **Secure**: Input validation prevents malformed or malicious data
+* **Secure**: Authentication verified before any operation
+* **Efficient**: Single Supabase client per request (connection pooling)
 * **Type-safe**: Zod infers TypeScript types from schemas
 * **User-friendly**: Validation messages are clear and actionable
-* **Consistent**: Same validation pattern across all CREATE operations
-* **Maintainable**: Centralized messages and schemas per feature
+* **Consistent**: Same auth + validation pattern across all CREATE operations
+* **Maintainable**: Centralized auth helpers, messages, and schemas per feature

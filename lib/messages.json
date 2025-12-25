@@ -229,6 +229,22 @@
           "23514": "The information you entered is invalid. Please check and try again.",
           "notFound": "The booking you're trying to update doesn't exist or has been removed.",
           "unknown": "Something went wrong while updating the booking. Please try again."
+        },
+        "payment": {
+          "notSucceeded": "Payment could not be confirmed. Please contact support if you were charged.",
+          "updateFailed": "Payment was successful but we couldn't update your booking. Please contact support.",
+          "bookingNotFound": "Booking not found. Please contact support if you were charged.",
+          "confirmFailed": "Unable to confirm payment. Please contact support if you were charged.",
+          "initFailed": "Unable to initialize payment. Please try again."
+        },
+        "amenities": {
+          "addFailed": "Booking was created but we couldn't add the selected amenities. Please contact support to add them manually."
+        },
+        "rollback": {
+          "failed": "Unable to complete booking. Please try again."
+        },
+        "cancel": {
+          "failed": "Unable to cancel booking. Please try again."
         }
       }
     }
@@ -254,7 +270,14 @@
       "success": "Operation completed successfully",
       "notFound": "Item not found",
       "unauthorized": "You don't have permission to perform this action",
-      "pickADate": "Pick a date"
+      "pickADate": "Pick a date",
+      "authenticationRequired": "Authentication required",
+      "pleaseLogIn": "Please log in to view this page.",
+      "userNotFound": "User not found",
+      "userProfileNotSetUp": "Your account exists but user profile is not set up. Please contact an administrator.",
+      "unableToLoadUserData": "Unable to load user data. Please try again.",
+      "roomNotFound": "Room not found",
+      "roomDoesNotExist": "The requested room does not exist."
     },
     "words": {
       "people": "people"

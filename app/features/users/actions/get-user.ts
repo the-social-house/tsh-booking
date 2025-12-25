@@ -1,13 +1,14 @@
 "use server";
 
 import type { PostgrestError, QueryData } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import { getUserByIdSchema } from "../lib/user.schema";
 
 // Helper function to build the query (used for both type inference and execution)
-function buildUserQuery(userId: number) {
+async function buildUserQuery(userId: string) {
+  const supabase = await createClient();
   return supabase
     .from("users")
     .select(
@@ -37,7 +38,7 @@ export type UserWithSubscription = Omit<
   subscription_discount_rate: number;
 };
 
-export async function getUser(userId: number) {
+export async function getUser(userId: string) {
   // Validate input
   const validationResult = getUserByIdSchema.safeParse({ userId });
 
@@ -63,7 +64,7 @@ export async function getUser(userId: number) {
   if (!userWithSubscriptionResult.data) {
     const notFoundError: PostgrestError = {
       code: "PGRST116",
-      message: "User not found",
+      message: "User not found", // This is a standard Supabase error code message
       details: "",
       hint: "",
       name: "PostgrestError",

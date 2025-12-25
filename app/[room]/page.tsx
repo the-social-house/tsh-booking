@@ -4,7 +4,8 @@ import { RoomContent } from "@/app/[room]/room-content";
 import { RoomContentSkeleton } from "@/app/[room]/room-content-skeleton";
 import { getMeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-room";
 import { getRoomAmenities } from "@/app/features/meeting-rooms/actions/get-room-amenities";
-import { getUser } from "@/app/features/users/actions/get-user";
+import { getCurrentUserData } from "@/app/features/users/actions/get-current-user-data";
+import messages from "@/lib/messages.json";
 import { hasData, hasError } from "@/lib/supabase-response";
 
 export default async function BookingPage({
@@ -17,10 +18,8 @@ export default async function BookingPage({
   // Don't await - pass Promise to enable streaming
   const roomPromise = getMeetingRoom(room);
 
-  // TODO: Replace with actual user session data - for now use user_id: 1
-  // When authentication is added, get user_id from session
-  const userId = 1;
-  const userPromise = getUser(userId);
+  // Get current authenticated user's data from public.users
+  const userPromise = getCurrentUserData();
 
   return (
     <Suspense fallback={<RoomContentSkeleton />}>
@@ -35,18 +34,32 @@ async function RoomContentWrapper({
   userPromise,
 }: {
   roomPromise: ReturnType<typeof getMeetingRoom>;
-  userPromise: ReturnType<typeof getUser>;
+  userPromise: ReturnType<typeof getCurrentUserData>;
 }) {
   // Await user first (needed for BookingDrawerWrapper)
   const userResult = await userPromise;
 
   if (hasError(userResult) || !hasData(userResult)) {
+    const errorCode = userResult.error?.code;
+
+    let errorMessage: string;
+    let errorTitle: string;
+
+    if (errorCode === "UNAUTHENTICATED") {
+      errorTitle = messages.common.messages.authenticationRequired;
+      errorMessage = messages.common.messages.pleaseLogIn;
+    } else if (errorCode === "PGRST116") {
+      errorTitle = messages.common.messages.userNotFound;
+      errorMessage = messages.common.messages.userProfileNotSetUp;
+    } else {
+      errorTitle = messages.common.messages.userNotFound;
+      errorMessage = messages.common.messages.unableToLoadUserData;
+    }
+
     return (
       <div className="container mx-auto py-8">
-        <h1 className="font-bold text-2xl">User not found</h1>
-        <p className="text-muted-foreground">
-          Unable to load user data. Please try again.
-        </p>
+        <h1 className="font-bold text-2xl">{errorTitle}</h1>
+        <p className="text-muted-foreground">{errorMessage}</p>
       </div>
     );
   }
@@ -59,9 +72,11 @@ async function RoomContentWrapper({
   if (hasError(roomResult) || !hasData(roomResult)) {
     return (
       <div className="container mx-auto py-8">
-        <h1 className="font-bold text-2xl">Room not found</h1>
+        <h1 className="font-bold text-2xl">
+          {messages.common.messages.roomNotFound}
+        </h1>
         <p className="text-muted-foreground">
-          The requested room does not exist.
+          {messages.common.messages.roomDoesNotExist}
         </p>
       </div>
     );

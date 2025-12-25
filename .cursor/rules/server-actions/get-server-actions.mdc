@@ -14,9 +14,83 @@ Whenever you are tasked with creating a new **GET** Server Action file, use the 
 
 * Always create a separate file for each server action in the following directory structure: `app/features/<feature-name>/actions/<action-name>.ts`
 
-* Always import the Supabase client from `@/lib/supabase` and use it for database operations.
+* **Use `requireAuth()` for private data**, or import the Supabase client directly for public data.
 
 * **Validate input parameters with Zod** when accepting user input (IDs, filters, pagination).
+
+## Authentication Protocol
+
+GET server actions may or may not require authentication depending on the data being accessed.
+
+### When to Use Authentication
+
+**Use `requireAuth()` for:**
+- User-specific data (bookings, profile, settings)
+- Private/sensitive information
+- Data that requires user context
+
+**Skip authentication for:**
+- Public listings (meeting rooms, amenities)
+- Public information that anyone can view
+- Data shown to unauthenticated users
+
+### 1. Private Data Pattern (with auth)
+
+```typescript
+"use server";
+
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+export async function getUserBookings() {
+  // 1. Verify authentication and get Supabase client
+  const { user, supabase, error: authError } = await requireAuth();
+  if (authError || !supabase || !user) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to view your bookings",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  // 2. Query using user context
+  const result = await supabase
+    .from("bookings")
+    .select()
+    .eq("booking_user_id", user.id);
+
+  return toSupabaseQueryResponse<Tables<"bookings">[]>(result);
+}
+```
+
+### 2. Public Data Pattern (no auth)
+
+```typescript
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+export async function getMeetingRooms() {
+  const supabase = await createClient();
+  const result = await supabase.from("meeting_rooms").select();
+  return toSupabaseQueryResponse<Tables<"meeting_rooms">[]>(result);
+}
+```
+
+### 3. Key Points
+
+- **Private data**: Use `requireAuth()` to get client and user
+- **Public data**: Import `createClient` from `@/lib/supabase/server`
+- **Reuse the returned `supabase` client** when using auth
+- **Use `user.id`** for user-specific queries when authenticated
 
 ## Zod Validation Protocol
 
@@ -75,33 +149,40 @@ export type AmenitiesFilterInput = z.infer<typeof amenitiesFilterSchema>;
 
 ### 3. Implementation Examples
 
-**Simple GET (no validation needed):**
+**Simple GET - Public Data (no auth, no validation):**
 ```typescript
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import type { Tables } from "@/supabase/types/database";
 
 export async function getAmenities() {
+  const supabase = await createClient();
   const result = await supabase.from("amenities").select();
   return toSupabaseQueryResponse<Tables<"amenities">[]>(result);
 }
 ```
 
-**GET by ID (validate the ID):**
+**GET by ID - Private Data (with auth and validation):**
 ```typescript
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
-import { getAmenityByIdSchema } from "../lib/amenity.schema";
+import { getBookingByIdSchema } from "../lib/booking.schema";
 
-export async function getAmenityById(id: number) {
-  // Validate ID
-  const validationResult = getAmenityByIdSchema.safeParse({ id });
+export async function getBookingById(id: string) {
+  // 1. Verify authentication and get Supabase client
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return { data: null, error: authError };
+  }
+
+  // 2. Validate ID
+  const validationResult = getBookingByIdSchema.safeParse({ id });
   if (!validationResult.success) {
     return {
       data: null,
@@ -109,21 +190,47 @@ export async function getAmenityById(id: number) {
     };
   }
 
+  // 3. Query database
   const result = await supabase
-    .from("amenities")
+    .from("bookings")
     .select()
-    .eq("amenity_id", id)
+    .eq("booking_id", id)
     .single();
 
-  return toSupabaseQueryResponse<Tables<"amenities">>(result);
+  return toSupabaseQueryResponse<Tables<"bookings">>(result);
 }
 ```
 
-**GET with pagination (validate pagination params):**
+**GET User's Data (with auth, using user context):**
 ```typescript
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+export async function getUserBookings() {
+  // 1. Verify authentication and get Supabase client + user
+  const { user, supabase, error: authError } = await requireAuth();
+  if (authError || !supabase || !user) {
+    return { data: null, error: authError };
+  }
+
+  // 2. Query using user context
+  const result = await supabase
+    .from("bookings")
+    .select()
+    .eq("booking_user_id", user.id);
+
+  return toSupabaseQueryResponse<Tables<"bookings">[]>(result);
+}
+```
+
+**GET with pagination - Public Data (validate pagination params):**
+```typescript
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -143,6 +250,7 @@ export async function getAmenitiesPaginated(params: PaginationInput) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  const supabase = await createClient();
   const result = await supabase
     .from("amenities")
     .select()
@@ -152,11 +260,11 @@ export async function getAmenitiesPaginated(params: PaginationInput) {
 }
 ```
 
-**GET with filters (validate filter params):**
+**GET with filters - Public Data (validate filter params):**
 ```typescript
 "use server";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -174,6 +282,7 @@ export async function searchAmenities(filters: AmenitiesFilterInput) {
 
   const { search, minPrice, maxPrice } = validationResult.data;
 
+  const supabase = await createClient();
   let query = supabase.from("amenities").select();
 
   if (search) {
@@ -199,27 +308,58 @@ All server actions that interact with Supabase MUST use the standardized `Supaba
 
 1. **Import required utilities:**
    ```typescript
-   import { supabase } from "@/lib/supabase";
+   // For private data (requires authentication):
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   
+   // For public data (no authentication):
+   import { createClient } from "@/lib/supabase/server";
+   
+   // Common imports:
    import { toSupabaseQueryResponse } from "@/lib/supabase-response";
    import { createValidationError } from "@/lib/validation"; // Only if validating
    import type { Tables } from "@/supabase/types/database";
    ```
 
-2. **Structure your server action:**
+2. **Structure for private data (with auth):**
    ```typescript
    "use server";
 
-   import { supabase } from "@/lib/supabase";
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
    import { toSupabaseQueryResponse } from "@/lib/supabase-response";
    import type { Tables } from "@/supabase/types/database";
 
-   export async function getAmenities() {
-     const result = await supabase.from("amenities").select();
-     return toSupabaseQueryResponse<Tables<"amenities">[]>(result);
+   export async function getUserBookings() {
+     const { user, supabase, error: authError } = await requireAuth();
+     if (authError || !supabase || !user) {
+       return { data: null, error: authError };
+     }
+
+     const result = await supabase
+       .from("bookings")
+       .select()
+       .eq("booking_user_id", user.id);
+     return toSupabaseQueryResponse<Tables<"bookings">[]>(result);
    }
    ```
 
-3. **Key points:**
+3. **Structure for public data (no auth):**
+   ```typescript
+   "use server";
+
+   import { createClient } from "@/lib/supabase/server";
+   import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+   import type { Tables } from "@/supabase/types/database";
+
+   export async function getMeetingRooms() {
+     const supabase = await createClient();
+     const result = await supabase.from("meeting_rooms").select();
+     return toSupabaseQueryResponse<Tables<"meeting_rooms">[]>(result);
+   }
+   ```
+
+4. **Key points:**
+   - **Private data**: Use `requireAuth()` to get the client and user
+   - **Public data**: Use `createClient()` from `@/lib/supabase/server`
    - Always wrap Supabase query results with `toSupabaseQueryResponse<T>()`
    - Use `Tables<"table_name">` for single records or `Tables<"table_name">[]` for arrays
    - Validate user input with Zod when accepting IDs, filters, or pagination
@@ -328,16 +468,23 @@ All server actions that interact with Supabase MUST use the standardized `Supaba
 ### Error Handling for GET Operations
 
 1. **Common error codes:**
+   - `UNAUTHENTICATED` - User not logged in (from `requireAuth()`)
+   - `FORBIDDEN` - User not authorized/not admin (from `requireAdmin()`)
    - `VALIDATION_ERROR` - Zod validation failed (invalid ID, filter params, etc.)
    - `PGRST116` - No rows returned (record not found with `.single()`)
 
 2. **Error handling in components:**
    ```typescript
    if (hasError(result)) {
-     // Handle both validation errors and query errors
+     // Handle auth errors
+     if (result.error.code === "UNAUTHENTICATED") {
+       return <div>Please log in to view this content</div>;
+     }
+     // Handle validation errors
      if (result.error.code === "VALIDATION_ERROR") {
        return <div>Invalid request: {result.error.message}</div>;
      }
+     // Handle not found
      if (result.error.code === "PGRST116") {
        return <div>Record not found</div>;
      }
@@ -347,7 +494,9 @@ All server actions that interact with Supabase MUST use the standardized `Supaba
 
 ## Benefits
 
-* **Secure**: Input validation prevents malformed queries and injection attacks
+* **Secure**: Authentication for private data, validation prevents injection attacks
+* **Efficient**: Single Supabase client per request when using auth
+* **Flexible**: Public data doesn't require unnecessary auth checks
 * **Type-safe**: TypeScript automatically narrows types with `hasData()` and `hasError()`
 * **Consistent**: Same pattern across all server actions
 * **Reusable**: `toSupabaseQueryResponse()` works with any Supabase query

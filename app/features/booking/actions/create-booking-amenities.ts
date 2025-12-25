@@ -1,17 +1,14 @@
 "use server";
 
 import { z } from "zod";
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
 import messages from "@/lib/messages.json";
-import { supabase } from "@/lib/supabase";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 
 const createBookingAmenitiesSchema = z.object({
-  booking_id: z
-    .number()
-    .int(messages.bookings.validation.id.integer)
-    .positive(messages.bookings.validation.id.positive),
-  amenity_ids: z.array(z.number().int().positive()).min(1),
+  booking_id: z.string().uuid(),
+  amenity_ids: z.array(z.string().uuid()).min(1),
 });
 
 export type CreateBookingAmenitiesInput = z.infer<
@@ -21,6 +18,21 @@ export type CreateBookingAmenitiesInput = z.infer<
 export async function createBookingAmenities(
   data: CreateBookingAmenitiesInput
 ) {
+  // Verify authentication and get Supabase client
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: messages.common.messages.pleaseLogIn,
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   // Validate input
   const validationResult = createBookingAmenitiesSchema.safeParse(data);
 
@@ -45,9 +57,15 @@ export async function createBookingAmenities(
     .select();
 
   if (result.error) {
+    // Return user-friendly error message
     return {
       data: null,
-      error: result.error,
+      error: {
+        ...result.error,
+        message: messages.bookings.messages.error.amenities.addFailed,
+        details: "",
+        hint: "",
+      },
     };
   }
 

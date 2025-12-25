@@ -1,7 +1,8 @@
 "use server";
 
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+import messages from "@/lib/messages.json";
 import { stripe } from "@/lib/stripe";
-import { supabase } from "@/lib/supabase";
 import type { SupabaseResponse } from "@/lib/supabase-response";
 
 export type ConfirmPaymentInput = {
@@ -10,9 +11,9 @@ export type ConfirmPaymentInput = {
    */
   paymentIntentId: string;
   /**
-   * Booking ID to update
+   * Booking ID to update (UUID)
    */
-  bookingId: number;
+  bookingId: string;
 };
 
 /**
@@ -21,6 +22,21 @@ export type ConfirmPaymentInput = {
 export async function confirmPayment(
   data: ConfirmPaymentInput
 ): Promise<SupabaseResponse<{ success: boolean }>> {
+  // Verify authentication and get Supabase client
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to confirm payment",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   try {
     // Retrieve payment intent from Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(
@@ -29,19 +45,14 @@ export async function confirmPayment(
 
     // Verify payment was successful
     if (paymentIntent.status !== "succeeded") {
-      const errorMessage = `Payment status is "${paymentIntent.status}". Expected "succeeded". Payment Intent ID: ${data.paymentIntentId}`;
       return {
         data: null,
         error: {
           name: "PostgrestError",
           code: "PAYMENT_NOT_SUCCEEDED",
-          message: errorMessage,
-          details: JSON.stringify({
-            status: paymentIntent.status,
-            paymentIntentId: data.paymentIntentId,
-            bookingId: data.bookingId,
-          }),
-          hint: "The payment may still be processing. Please check your Stripe dashboard.",
+          message: messages.bookings.messages.error.payment.notSucceeded,
+          details: "",
+          hint: "",
         },
       };
     }
@@ -56,6 +67,7 @@ export async function confirmPayment(
     }
 
     // Update booking with payment information
+    // Use .single() as per Supabase best practices - it will throw an error if no rows match
     const updateResult = await supabase
       .from("bookings")
       .update({
@@ -68,14 +80,52 @@ export async function confirmPayment(
       .single();
 
     if (updateResult.error) {
+      // Payment succeeded but we couldn't update the booking
+      // This is a critical error - we need to rollback
+      // Get the user ID from the booking before rolling back
+      const bookingCheck = await supabase
+        .from("bookings")
+        .select("booking_user_id")
+        .eq("booking_id", data.bookingId)
+        .single();
+
+      if (bookingCheck.data) {
+        // Import and call rollback (will be handled by caller)
+        // Return error with rollback flag
+        return {
+          data: null,
+          error: {
+            name: "PostgrestError",
+            code: updateResult.error.code || "UPDATE_FAILED",
+            message: messages.bookings.messages.error.payment.updateFailed,
+            details: "",
+            hint: "",
+          },
+        };
+      }
+
       return {
         data: null,
         error: {
           name: "PostgrestError",
-          code: "UPDATE_FAILED",
-          message: "Failed to update booking with payment information",
-          details: updateResult.error.message || "",
-          hint: `Booking ID: ${data.bookingId}, Payment Intent ID: ${data.paymentIntentId}`,
+          code: updateResult.error.code || "UPDATE_FAILED",
+          message: messages.bookings.messages.error.payment.updateFailed,
+          details: "",
+          hint: "",
+        },
+      };
+    }
+
+    // Verify we got data back
+    if (!updateResult.data) {
+      return {
+        data: null,
+        error: {
+          name: "PostgrestError",
+          code: "PGRST116",
+          message: messages.bookings.messages.error.payment.bookingNotFound,
+          details: "",
+          hint: "",
         },
       };
     }
@@ -84,16 +134,15 @@ export async function confirmPayment(
       data: { success: true },
       error: null,
     };
-  } catch (error) {
+  } catch {
     return {
       data: null,
       error: {
         name: "PostgrestError",
         code: "CONFIRM_PAYMENT_ERROR",
-        message:
-          error instanceof Error ? error.message : "Failed to confirm payment",
-        details: error instanceof Error ? error.stack || "" : String(error),
-        hint: `Payment Intent ID: ${data.paymentIntentId}, Booking ID: ${data.bookingId}`,
+        message: messages.bookings.messages.error.payment.confirmFailed,
+        details: "",
+        hint: "",
       },
     };
   }

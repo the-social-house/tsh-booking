@@ -17,7 +17,7 @@ import type { Tables } from "@/supabase/types/database";
 type MeetingRoom = Tables<"meeting_rooms">;
 
 type BookingUser = {
-  user_id: number;
+  user_id: string;
   user_email: string;
   subscription_discount?: number;
 };

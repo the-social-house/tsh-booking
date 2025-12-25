@@ -36,17 +36,17 @@ export type Database = {
     Tables: {
       amenities: {
         Row: {
-          amenity_id: number;
+          amenity_id: string;
           amenity_name: string;
           amenity_price: number | null;
         };
         Insert: {
-          amenity_id?: never;
+          amenity_id?: string;
           amenity_name: string;
           amenity_price?: number | null;
         };
         Update: {
-          amenity_id?: never;
+          amenity_id?: string;
           amenity_name?: string;
           amenity_price?: number | null;
         };
@@ -54,16 +54,16 @@ export type Database = {
       };
       booking_amenities: {
         Row: {
-          amenity_id: number;
-          booking_id: number;
+          amenity_id: string;
+          booking_id: string;
         };
         Insert: {
-          amenity_id: number;
-          booking_id: number;
+          amenity_id: string;
+          booking_id: string;
         };
         Update: {
-          amenity_id?: number;
-          booking_id?: number;
+          amenity_id?: string;
+          booking_id?: string;
         };
         Relationships: [
           {
@@ -88,48 +88,48 @@ export type Database = {
           booking_date: string;
           booking_discount: number | null;
           booking_end_time: string;
-          booking_id: number;
+          booking_id: string;
           booking_is_type_of_booking: string;
-          booking_meeting_room_id: number;
+          booking_meeting_room_id: string;
           booking_number_of_people: number;
           booking_payment_status: string;
           booking_receipt_url: string | null;
           booking_start_time: string;
           booking_stripe_transaction_id: string | null;
           booking_total_price: number;
-          booking_user_id: number;
+          booking_user_id: string;
         };
         Insert: {
           booking_created_at?: string;
           booking_date: string;
           booking_discount?: number | null;
           booking_end_time: string;
-          booking_id?: never;
+          booking_id?: string;
           booking_is_type_of_booking: string;
-          booking_meeting_room_id: number;
+          booking_meeting_room_id: string;
           booking_number_of_people: number;
           booking_payment_status?: string;
           booking_receipt_url?: string | null;
           booking_start_time: string;
           booking_stripe_transaction_id?: string | null;
           booking_total_price: number;
-          booking_user_id: number;
+          booking_user_id: string;
         };
         Update: {
           booking_created_at?: string;
           booking_date?: string;
           booking_discount?: number | null;
           booking_end_time?: string;
-          booking_id?: never;
+          booking_id?: string;
           booking_is_type_of_booking?: string;
-          booking_meeting_room_id?: number;
+          booking_meeting_room_id?: string;
           booking_number_of_people?: number;
           booking_payment_status?: string;
           booking_receipt_url?: string | null;
           booking_start_time?: string;
           booking_stripe_transaction_id?: string | null;
           booking_total_price?: number;
-          booking_user_id?: number;
+          booking_user_id?: string;
         };
         Relationships: [
           {
@@ -150,16 +150,16 @@ export type Database = {
       };
       meeting_room_amenities: {
         Row: {
-          amenity_id: number;
-          meeting_room_id: number;
+          amenity_id: string;
+          meeting_room_id: string;
         };
         Insert: {
-          amenity_id: number;
-          meeting_room_id: number;
+          amenity_id: string;
+          meeting_room_id: string;
         };
         Update: {
-          amenity_id?: number;
-          meeting_room_id?: number;
+          amenity_id?: string;
+          meeting_room_id?: string;
         };
         Relationships: [
           {
@@ -181,7 +181,7 @@ export type Database = {
       meeting_rooms: {
         Row: {
           meeting_room_capacity: number;
-          meeting_room_id: number;
+          meeting_room_id: string;
           meeting_room_images: string[] | null;
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
@@ -189,7 +189,7 @@ export type Database = {
         };
         Insert: {
           meeting_room_capacity: number;
-          meeting_room_id?: never;
+          meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
@@ -197,7 +197,7 @@ export type Database = {
         };
         Update: {
           meeting_room_capacity?: number;
-          meeting_room_id?: never;
+          meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name?: string;
           meeting_room_price_per_hour?: number;
@@ -207,15 +207,15 @@ export type Database = {
       };
       roles: {
         Row: {
-          role_id: number;
+          role_id: string;
           role_name: string;
         };
         Insert: {
-          role_id?: never;
+          role_id?: string;
           role_name: string;
         };
         Update: {
-          role_id?: never;
+          role_id?: string;
           role_name?: string;
         };
         Relationships: [];
@@ -255,21 +255,21 @@ export type Database = {
       subscriptions: {
         Row: {
           subscription_discount_rate: number;
-          subscription_id: number;
+          subscription_id: string;
           subscription_max_monthly_bookings: number | null;
           subscription_monthly_price: number;
           subscription_name: string;
         };
         Insert: {
           subscription_discount_rate: number;
-          subscription_id?: never;
+          subscription_id?: string;
           subscription_max_monthly_bookings?: number | null;
           subscription_monthly_price: number;
           subscription_name: string;
         };
         Update: {
           subscription_discount_rate?: number;
-          subscription_id?: never;
+          subscription_id?: string;
           subscription_max_monthly_bookings?: number | null;
           subscription_monthly_price?: number;
           subscription_name?: string;
@@ -281,30 +281,27 @@ export type Database = {
           user_created_at: string;
           user_current_monthly_bookings: number | null;
           user_email: string;
-          user_id: number;
-          user_password: string;
-          user_role_id: number;
-          user_subscription_id: number;
+          user_id: string;
+          user_role_id: string;
+          user_subscription_id: string;
           user_username: string;
         };
         Insert: {
           user_created_at?: string;
           user_current_monthly_bookings?: number | null;
           user_email: string;
-          user_id?: never;
-          user_password: string;
-          user_role_id: number;
-          user_subscription_id: number;
+          user_id: string;
+          user_role_id: string;
+          user_subscription_id: string;
           user_username: string;
         };
         Update: {
           user_created_at?: string;
           user_current_monthly_bookings?: number | null;
           user_email?: string;
-          user_id?: never;
-          user_password?: string;
-          user_role_id?: number;
-          user_subscription_id?: number;
+          user_id?: string;
+          user_role_id?: string;
+          user_subscription_id?: string;
           user_username?: string;
         };
         Relationships: [
@@ -329,7 +326,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      is_admin: { Args: never; Returns: boolean };
     };
     Enums: {
       [_ in never]: never;

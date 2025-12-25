@@ -1,19 +1,21 @@
 "use server";
 
-import type { PostgrestError } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
 import messages from "@/lib/messages.json";
-import { supabase } from "@/lib/supabase";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
-import type { Tables } from "@/supabase/types/database";
+import type { Database, Tables } from "@/supabase/types/database";
 import {
   type CreateBookingInput,
   createBookingSchema,
 } from "../lib/booking.schema";
 import { getCreateErrorMessage } from "../lib/error-messages";
 
+type TypedSupabaseClient = SupabaseClient<Database>;
+
 type CreateBookingOptions = {
-  amenityIds?: number[];
+  amenityIds?: string[];
 };
 
 /**
@@ -109,8 +111,9 @@ function validateNotInPast(
  * Validate and calculate amenity prices
  */
 async function validateAndCalculateAmenities(
-  amenityIds: number[],
-  roomId: number
+  supabase: TypedSupabaseClient,
+  amenityIds: string[],
+  roomId: string
 ): Promise<{ total: number; error?: PostgrestError }> {
   // Fetch room amenities to verify they belong to this room
   const roomAmenitiesResult = await supabase
@@ -181,7 +184,8 @@ async function validateAndCalculateAmenities(
  * 2. Another booking starts within 30 minutes after it ends (no room for buffer)
  */
 async function checkBookingConflicts(
-  roomId: number,
+  supabase: TypedSupabaseClient,
+  roomId: string,
   startTime: string,
   endTime: string
 ): Promise<{ hasConflict: boolean; error?: PostgrestError }> {
@@ -244,7 +248,8 @@ async function checkBookingConflicts(
  * Validate subscription limits
  */
 async function validateSubscriptionLimits(
-  userId: number
+  supabase: TypedSupabaseClient,
+  userId: string
 ): Promise<{ valid: boolean; error?: PostgrestError }> {
   const userResult = await supabase
     .from("users")
@@ -306,13 +311,16 @@ async function validateSubscriptionLimits(
 /**
  * Calculate booking price server-side
  */
-async function calculateBookingPrice(params: {
-  roomId: number;
-  startTime: Date;
-  endTime: Date;
-  amenitiesTotal: number;
-  subscriptionId: number;
-}): Promise<{ totalPrice: number; discount: number; error?: PostgrestError }> {
+async function calculateBookingPrice(
+  supabase: TypedSupabaseClient,
+  params: {
+    roomId: string;
+    startTime: Date;
+    endTime: Date;
+    amenitiesTotal: number;
+    subscriptionId: string;
+  }
+): Promise<{ totalPrice: number; discount: number; error?: PostgrestError }> {
   const { roomId, startTime, endTime, amenitiesTotal, subscriptionId } = params;
   // Fetch room price
   const roomResult = await supabase
@@ -369,12 +377,15 @@ async function calculateBookingPrice(params: {
  * Creates a 30-minute buffer slot after a booking to prevent back-to-back bookings.
  * Buffer slots are marked with booking_is_type_of_booking = 'buffer'.
  */
-async function createBufferSlot(params: {
-  roomId: number;
-  userId: number;
-  bookingEndTime: Date;
-  bookingId: number;
-}): Promise<{ success: boolean; error?: PostgrestError }> {
+async function createBufferSlot(
+  supabase: TypedSupabaseClient,
+  params: {
+    roomId: string;
+    userId: string;
+    bookingEndTime: Date;
+    bookingId: string;
+  }
+): Promise<{ success: boolean; error?: PostgrestError }> {
   const { roomId, userId, bookingEndTime, bookingId } = params;
 
   // Safety check: Ensure bookingEndTime is valid
@@ -481,6 +492,21 @@ export async function createBooking(
   data: CreateBookingInput,
   options?: CreateBookingOptions
 ) {
+  // Verify authentication and get Supabase client
+  const { user, supabase, error: authError } = await requireAuth();
+  if (authError || !user || !supabase) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to create a booking",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   // 1. Validate input with Zod (ALWAYS first)
   const validationResult = createBookingSchema.safeParse(data);
 
@@ -496,6 +522,7 @@ export async function createBooking(
 
   // 3. Check user's subscription limit BEFORE creating booking
   const subscriptionValidation = await validateSubscriptionLimits(
+    supabase,
     validatedData.booking_user_id
   );
 
@@ -587,6 +614,7 @@ export async function createBooking(
 
   // 7. Check for booking conflicts
   const conflictResult = await checkBookingConflicts(
+    supabase,
     validatedData.booking_meeting_room_id,
     validatedData.booking_start_time,
     validatedData.booking_end_time
@@ -617,6 +645,7 @@ export async function createBooking(
   let amenitiesTotal = 0;
   if (options?.amenityIds && options.amenityIds.length > 0) {
     const amenitiesResult = await validateAndCalculateAmenities(
+      supabase,
       options.amenityIds,
       validatedData.booking_meeting_room_id
     );
@@ -632,7 +661,7 @@ export async function createBooking(
   }
 
   // 9. Calculate price server-side
-  const priceCalculation = await calculateBookingPrice({
+  const priceCalculation = await calculateBookingPrice(supabase, {
     roomId: validatedData.booking_meeting_room_id,
     startTime,
     endTime,
@@ -718,7 +747,7 @@ export async function createBooking(
       return toSupabaseMutationResponse<Tables<"bookings">>(result);
     }
 
-    const bufferResult = await createBufferSlot({
+    const bufferResult = await createBufferSlot(supabase, {
       roomId: validatedData.booking_meeting_room_id,
       userId,
       bookingEndTime: BookingEndTime, // Use database value for accuracy
