@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { createValidationError } from "@/lib/validation";
+import type { TablesInsert } from "@/supabase/types/database";
 
 /**
  * Schema for creating a new user (admin only)
@@ -74,7 +75,7 @@ export async function createUser(data: CreateUserInput) {
       user_role_id: roleId,
       user_subscription_id: subscriptionId,
       user_current_monthly_bookings: 0,
-    })
+    } as TablesInsert<"users">)
     .select()
     .single();
 

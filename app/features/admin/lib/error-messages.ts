@@ -161,3 +161,68 @@ export function getDeleteRoomUnavailabilityErrorMessage(
     messages.admin.meetingRooms.messages.error.unavailabilityDelete.unknown
   );
 }
+
+/**
+ * Get user-friendly error message for CREATE amenity operations
+ */
+export function getCreateAmenityErrorMessage(
+  errorCode: string | undefined
+): string {
+  if (!errorCode) {
+    return messages.amenities.messages.error.create.unknown;
+  }
+
+  const errorMessages: Record<string, string> = {
+    "23505": messages.amenities.messages.error.create["23505"],
+    "23503": messages.amenities.messages.error.create["23503"],
+    "23502": messages.amenities.messages.error.create["23502"],
+    "23514": messages.amenities.messages.error.create["23514"],
+  };
+
+  return (
+    errorMessages[errorCode] || messages.amenities.messages.error.create.unknown
+  );
+}
+
+/**
+ * Get user-friendly error message for UPDATE amenity operations
+ */
+export function getUpdateAmenityErrorMessage(
+  errorCode: string | undefined
+): string {
+  if (!errorCode) {
+    return messages.amenities.messages.error.update.unknown;
+  }
+
+  const errorMessages: Record<string, string> = {
+    PGRST116: messages.amenities.messages.error.update.notFound,
+    "23505": messages.amenities.messages.error.update["23505"],
+    "23503": messages.amenities.messages.error.update["23503"],
+    "23514": messages.amenities.messages.error.update["23514"],
+  };
+
+  return (
+    errorMessages[errorCode] || messages.amenities.messages.error.update.unknown
+  );
+}
+
+/**
+ * Get user-friendly error message for DELETE amenity operations
+ */
+export function getDeleteAmenityErrorMessage(
+  errorCode: string | undefined
+): string {
+  if (!errorCode) {
+    return messages.amenities.messages.error.delete.unknown;
+  }
+
+  const errorMessages: Record<string, string> = {
+    PGRST116: messages.amenities.messages.error.delete.notFound,
+    "23503": messages.amenities.messages.error.delete["23503"],
+    "23514": messages.amenities.messages.error.delete["23514"],
+  };
+
+  return (
+    errorMessages[errorCode] || messages.amenities.messages.error.delete.unknown
+  );
+}

@@ -2,13 +2,13 @@
 
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deleteRoomUnavailability } from "@/app/features/admin/actions/delete-room-unavailability";
-import { getRoomUnavailabilities } from "@/app/features/admin/actions/get-room-unavailabilities";
 import { AddUnavailabilityDialog } from "@/app/features/admin/components/meeting-rooms/add-unavailability-dialog";
 import { EditUnavailabilityDialog } from "@/app/features/admin/components/meeting-rooms/edit-unavailability-dialog";
 import type { MeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-rooms";
+import { getRoomUnavailabilities } from "@/app/features/meeting-rooms/actions/get-room-unavailabilities";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -21,9 +21,9 @@ import messages from "@/lib/messages.json";
 import { hasData } from "@/lib/supabase-response";
 import type { Tables } from "@/supabase/types/database";
 
-type RoomAvailabilityCellProps = {
+type RoomAvailabilityCellProps = Readonly<{
   meetingRoom: MeetingRoom;
-};
+}>;
 
 type Unavailability = Tables<"room_unavailabilities">;
 
@@ -38,27 +38,22 @@ export function RoomAvailabilityCell({
   const [editingUnavailability, setEditingUnavailability] =
     useState<Unavailability | null>(null);
 
+  // Shared function to reload unavailabilities
+  const reloadUnavailabilities = useCallback(async () => {
+    const result = await getRoomUnavailabilities(meetingRoom.meeting_room_id);
+    if (hasData(result)) {
+      setUnavailabilities(result.data);
+    }
+  }, [meetingRoom.meeting_room_id]);
+
   // Load unavailabilities when component mounts or room changes
   useEffect(() => {
-    async function loadUnavailabilities() {
-      const result = await getRoomUnavailabilities(meetingRoom.meeting_room_id);
-      if (hasData(result)) {
-        setUnavailabilities(result.data);
-      }
-    }
-    loadUnavailabilities();
-  }, [meetingRoom.meeting_room_id]);
+    reloadUnavailabilities();
+  }, [reloadUnavailabilities]);
 
   function handleAddSuccess() {
     setIsAddDialogOpen(false);
     router.refresh();
-    // Reload unavailabilities
-    async function reloadUnavailabilities() {
-      const result = await getRoomUnavailabilities(meetingRoom.meeting_room_id);
-      if (hasData(result)) {
-        setUnavailabilities(result.data);
-      }
-    }
     reloadUnavailabilities();
   }
 
@@ -69,13 +64,6 @@ export function RoomAvailabilityCell({
   function handleEditSuccess() {
     setEditingUnavailability(null);
     router.refresh();
-    // Reload unavailabilities
-    async function reloadUnavailabilities() {
-      const result = await getRoomUnavailabilities(meetingRoom.meeting_room_id);
-      if (hasData(result)) {
-        setUnavailabilities(result.data);
-      }
-    }
     reloadUnavailabilities();
   }
 
@@ -91,16 +79,7 @@ export function RoomAvailabilityCell({
       messages.admin.meetingRooms.messages.success.unavailabilityDelete
     );
     router.refresh();
-    // Reload unavailabilities
-    async function reloadAfterDelete() {
-      const reloadResult = await getRoomUnavailabilities(
-        meetingRoom.meeting_room_id
-      );
-      if (hasData(reloadResult)) {
-        setUnavailabilities(reloadResult.data);
-      }
-    }
-    reloadAfterDelete();
+    reloadUnavailabilities();
   }
 
   // Format date for display helper
@@ -176,7 +155,6 @@ export function RoomAvailabilityCell({
       />
       {editingUnavailability ? (
         <EditUnavailabilityDialog
-          meetingRoomId={meetingRoom.meeting_room_id}
           onDelete={handleDelete}
           onOpenChange={(open) => {
             if (!open) {

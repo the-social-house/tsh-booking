@@ -1,8 +1,8 @@
 "use client";
 
 import { Activity, useEffect, useState } from "react";
-import { getAmenities } from "@/app/features/admin/actions/get-amenities";
 import EditMeetingRoomForm from "@/app/features/admin/components/meeting-rooms/edit-meeting-room-form";
+import { getAmenities } from "@/app/features/amenities/actions/get-amenities";
 import type { MeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-rooms";
 import { getRoomAmenities } from "@/app/features/meeting-rooms/actions/get-room-amenities";
 import {
@@ -17,11 +17,11 @@ import messages from "@/lib/messages.json";
 import { hasData, hasError } from "@/lib/supabase-response";
 import type { Tables } from "@/supabase/types/database";
 
-type EditMeetingRoomSheetProps = {
+type EditMeetingRoomSheetProps = Readonly<{
   meetingRoom: MeetingRoom;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-};
+}>;
 
 type LoadedData = {
   allAmenities: Tables<"amenities">[];

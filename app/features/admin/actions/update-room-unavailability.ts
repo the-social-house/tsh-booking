@@ -3,7 +3,7 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { getUpdateRoomUnavailabilityErrorMessage } from "@/app/features/admin/lib/error-messages";
 import {
-  meetingRoomIdSchema,
+  unavailabilityIdSchema,
   updateRoomUnavailabilitySchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
 import {
@@ -12,8 +12,9 @@ import {
   createBookingConflictError,
   createOverlappingDatesError,
 } from "@/app/features/admin/lib/unavailability-validation";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import messages from "@/lib/messages.json";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { hasData, toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -31,11 +32,17 @@ function createNotFoundError(): PostgrestError {
   } as PostgrestError;
 }
 
+type UnavailabilityData = {
+  meeting_room_id: string;
+  unavailable_start_date: string;
+  unavailable_end_date: string;
+};
+
 /**
  * Get current unavailability record or return error
  */
 async function getCurrentUnavailability(unavailabilityId: string) {
-  const currentResult = await supabase
+  const currentResult = await supabaseAdmin
     .from("room_unavailabilities")
     .select("meeting_room_id, unavailable_start_date, unavailable_end_date")
     .eq("unavailability_id", unavailabilityId)
@@ -48,7 +55,7 @@ async function getCurrentUnavailability(unavailabilityId: string) {
     };
   }
 
-  return { data: currentResult.data, error: null };
+  return { data: currentResult.data as UnavailabilityData, error: null };
 }
 
 /**
@@ -115,8 +122,25 @@ export async function updateRoomUnavailability(
     unavailability_reason?: string | null;
   }
 ) {
+  // Verify admin access
+  const { error: authError } = await requireAdmin();
+  if (authError) {
+    return {
+      data: null,
+      error: authError || {
+        code: "FORBIDDEN",
+        message: messages.common.messages.adminRequired,
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   // 1. Validate unavailability ID
-  const idValidation = meetingRoomIdSchema.safeParse({ id: unavailabilityId });
+  const idValidation = unavailabilityIdSchema.safeParse({
+    id: unavailabilityId,
+  });
   if (!idValidation.success) {
     return {
       data: null,
@@ -166,7 +190,7 @@ export async function updateRoomUnavailability(
   }
 
   // 6. Perform database operation
-  const result = await supabase
+  const result = await supabaseAdmin
     .from("room_unavailabilities")
     .update(dataValidation.data)
     .eq("unavailability_id", unavailabilityId)

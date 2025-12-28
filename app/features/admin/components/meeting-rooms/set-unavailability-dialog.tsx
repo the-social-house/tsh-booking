@@ -53,13 +53,13 @@ function ControlledDateRangePicker({
   id,
   onDateRangeChange,
   placeholder,
-}: {
+}: Readonly<{
   dateRange: DateRange | undefined;
   error?: boolean;
   id: string;
   onDateRangeChange: (range: DateRange | undefined) => void;
   placeholder: string;
-}) {
+}>) {
   const [isOpen, setIsOpen] = useState(false);
 
   let displayText = placeholder;
@@ -97,7 +97,6 @@ function ControlledDateRangePicker({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
-          className="rounded-lg border shadow-sm"
           defaultMonth={dateRange?.from}
           mode="range"
           onSelect={onDateRangeChange}
@@ -112,7 +111,7 @@ export function SetUnavailabilityDialog({
   meetingRoomId,
   onOpenChange,
   open,
-}: SetUnavailabilityDialogProps) {
+}: Readonly<SetUnavailabilityDialogProps>) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();

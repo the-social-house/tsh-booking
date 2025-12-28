@@ -37,7 +37,7 @@ export async function requireAdmin(): Promise<AuthResult> {
       supabase: null,
       error: {
         code: "FORBIDDEN",
-        message: "You must be an admin to perform this action",
+        message: messages.common.messages.adminRequired,
         details: "",
         hint: "",
         name: "AuthError",

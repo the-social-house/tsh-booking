@@ -2,8 +2,7 @@
 
 import { PlusIcon } from "lucide-react";
 import { Activity, useState } from "react";
-import CreateMeetingRoomForm from "@/app/features/admin/components/meeting-rooms/create-meeting-room-form";
-import type { AdminAmenity } from "@/app/features/amenities/actions/get-amenities";
+import CreateAmenityForm from "@/app/features/admin/components/amenities/create-amenity-form";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,13 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import messages from "@/lib/messages.json";
 
-type CreateMeetingRoomSheetProps = Readonly<{
-  allAmenities: AdminAmenity[];
-}>;
-
-export function CreateMeetingRoomSheet({
-  allAmenities,
-}: CreateMeetingRoomSheetProps) {
+export function CreateAmenitySheet() {
   const [open, setOpen] = useState(false);
 
   function handleSuccess() {
@@ -33,24 +26,19 @@ export function CreateMeetingRoomSheet({
       <SheetTrigger asChild>
         <Button>
           <PlusIcon className="size-4" />
-          {messages.admin.meetingRooms.addMeetingRoom}
+          {messages.admin.ui.tabs.amenities.addAmenity}
         </Button>
       </SheetTrigger>
       <Activity mode={open ? "visible" : "hidden"}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>
-              {messages.admin.meetingRooms.ui.create.title}
-            </SheetTitle>
+            <SheetTitle>{messages.amenities.ui.create.title}</SheetTitle>
             <SheetDescription>
-              {messages.admin.meetingRooms.ui.create.description}
+              {messages.amenities.ui.create.description}
             </SheetDescription>
           </SheetHeader>
           <div className="p-4">
-            <CreateMeetingRoomForm
-              allAmenities={allAmenities}
-              onSuccess={handleSuccess}
-            />
+            <CreateAmenityForm onSuccess={handleSuccess} />
           </div>
         </SheetContent>
       </Activity>

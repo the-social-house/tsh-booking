@@ -55,14 +55,13 @@ type UnavailabilityFormState = FormState<FieldErrors>;
 
 type Unavailability = Tables<"room_unavailabilities">;
 
-type EditUnavailabilityDialogProps = {
-  meetingRoomId: string;
+type EditUnavailabilityDialogProps = Readonly<{
   unavailability: Unavailability;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  onDelete: (id: string) => void;
-};
+  onDelete: (id: string) => Promise<void>;
+}>;
 
 function ControlledDateRangePicker({
   dateRange,
@@ -70,13 +69,13 @@ function ControlledDateRangePicker({
   id,
   onDateRangeChange,
   placeholder,
-}: {
+}: Readonly<{
   dateRange: DateRange | undefined;
   error?: boolean;
   id: string;
   onDateRangeChange: (range: DateRange | undefined) => void;
   placeholder: string;
-}) {
+}>) {
   const [isOpen, setIsOpen] = useState(false);
 
   let displayText = placeholder;
@@ -114,7 +113,6 @@ function ControlledDateRangePicker({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
-          className="rounded-lg border shadow-sm"
           defaultMonth={dateRange?.from}
           mode="range"
           onSelect={onDateRangeChange}
@@ -154,7 +152,6 @@ export function EditUnavailabilityDialog({
         to: undefined,
       };
     }
-    return;
   });
 
   async function formAction(
