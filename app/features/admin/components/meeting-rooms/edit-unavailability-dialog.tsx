@@ -56,12 +56,12 @@ type UnavailabilityFormState = FormState<FieldErrors>;
 type Unavailability = Tables<"room_unavailabilities">;
 
 type EditUnavailabilityDialogProps = {
-  meetingRoomId: number;
+  meetingRoomId: string;
   unavailability: Unavailability;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 };
 
 function ControlledDateRangePicker({

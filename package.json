@@ -9,7 +9,7 @@
     "lint": "eslint",
     "prepare": "husky",
     "release": "tsx scripts/create-release.ts",
-    "seed": "npx supabase db reset",
+    "seed": "npx supabase db reset && tsx scripts/seed-users.ts",
     "supabase:typegen": "npx supabase gen types typescript --local > supabase/types/database.ts"
   },
   "dependencies": {

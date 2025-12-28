@@ -43,7 +43,7 @@ type FieldErrors = {
 type UnavailabilityFormState = FormState<FieldErrors>;
 
 type AddUnavailabilityDialogProps = {
-  meetingRoomId: number;
+  meetingRoomId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;

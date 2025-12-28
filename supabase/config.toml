@@ -53,14 +53,15 @@ max_client_conn = 100
 enabled = true
 # Specifies an ordered list of schema files that describe your database.
 # Supports glob patterns relative to supabase directory: "./schemas/*.sql"
+# Order matters: base tables first, then tables with foreign keys, then junction tables
 schema_paths = [
   "./schemas/roles.sql",
   "./schemas/subscriptions.sql",
-  "./schemas/users.sql",
   "./schemas/amenities.sql",
   "./schemas/meeting_rooms.sql",
-  "./schemas/room_unavailabilities.sql",
+  "./schemas/users.sql",
   "./schemas/bookings.sql",
+  "./schemas/room_unavailabilities.sql",
   "./schemas/booking_amenities.sql",
   "./schemas/meeting_room_amenities.sql"
 ]
@@ -70,7 +71,6 @@ enabled = true
 sql_paths = [
   './seeds/roles.sql',
   './seeds/subscriptions.sql',
-  './seeds/users.sql',
   './seeds/amenities.sql',
   './seeds/meeting_rooms.sql',
   './seeds/meeting_room_amenities.sql',

@@ -9,7 +9,7 @@ import { createValidationError } from "@/lib/validation";
 /**
  * Delete a room unavailability period
  */
-export async function deleteRoomUnavailability(unavailabilityId: number) {
+export async function deleteRoomUnavailability(unavailabilityId: string) {
   // 1. Validate ID
   const idValidation = meetingRoomIdSchema.safeParse({ id: unavailabilityId });
   if (!idValidation.success) {

@@ -34,7 +34,7 @@ function createNotFoundError(): PostgrestError {
 /**
  * Get current unavailability record or return error
  */
-async function getCurrentUnavailability(unavailabilityId: number) {
+async function getCurrentUnavailability(unavailabilityId: string) {
   const currentResult = await supabase
     .from("room_unavailabilities")
     .select("meeting_room_id, unavailable_start_date, unavailable_end_date")
@@ -55,10 +55,10 @@ async function getCurrentUnavailability(unavailabilityId: number) {
  * Validate date changes for overlaps and booking conflicts
  */
 async function validateDateChanges(
-  meetingRoomId: number,
+  meetingRoomId: string,
   startDate: string,
   endDate: string,
-  excludeUnavailabilityId: number
+  excludeUnavailabilityId: string
 ) {
   const overlapCheck = await checkOverlappingUnavailabilities(
     meetingRoomId,
@@ -108,7 +108,7 @@ async function validateDateChanges(
  * Update a room unavailability period
  */
 export async function updateRoomUnavailability(
-  unavailabilityId: number,
+  unavailabilityId: string,
   data: {
     unavailable_start_date?: string;
     unavailable_end_date?: string;

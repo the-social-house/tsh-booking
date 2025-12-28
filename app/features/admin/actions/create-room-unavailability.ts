@@ -20,7 +20,7 @@ import type { Tables } from "@/supabase/types/database";
  * Create a new room unavailability period
  */
 export async function createRoomUnavailability(
-  meetingRoomId: number,
+  meetingRoomId: string,
   data: {
     unavailable_start_date: string;
     unavailable_end_date: string;
