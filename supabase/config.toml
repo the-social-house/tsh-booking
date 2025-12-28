@@ -51,7 +51,20 @@ max_client_conn = 100
 [db.migrations]
 # If disabled, migrations will be skipped during a db push or reset.
 enabled = true
-# Migrations handle all table creation - no schema_paths needed
+# Specifies an ordered list of schema files that describe your database.
+# Supports glob patterns relative to supabase directory: "./schemas/*.sql"
+# Order matters: base tables first, then tables with foreign keys, then junction tables
+schema_paths = [
+  "./schemas/roles.sql",
+  "./schemas/subscriptions.sql",
+  "./schemas/amenities.sql",
+  "./schemas/meeting_rooms.sql",
+  "./schemas/users.sql",
+  "./schemas/bookings.sql",
+  "./schemas/room_unavailabilities.sql",
+  "./schemas/booking_amenities.sql",
+  "./schemas/meeting_room_amenities.sql"
+]
 
 [db.seed]
 enabled = true

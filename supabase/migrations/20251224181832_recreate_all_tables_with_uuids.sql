@@ -12,6 +12,7 @@ drop table if exists meeting_room_amenities cascade;
 
 -- Drop tables with foreign keys
 drop table if exists bookings cascade;
+drop table if exists room_unavailabilities cascade;
 drop table if exists users cascade;
 
 -- Drop base tables
@@ -87,6 +88,16 @@ create table bookings (
   booking_payment_status text not null default 'pending',
   booking_stripe_transaction_id text,
   booking_receipt_url text
+);
+
+-- Room unavailabilities table (references meeting_rooms)
+create table room_unavailabilities (
+  unavailability_id uuid primary key default gen_random_uuid(),
+  meeting_room_id uuid not null references meeting_rooms (meeting_room_id) on delete cascade,
+  unavailable_start_date date not null,
+  unavailable_end_date date not null,
+  unavailability_reason text,
+  constraint valid_date_range check (unavailable_end_date >= unavailable_start_date)
 );
 
 -- ============================================================================

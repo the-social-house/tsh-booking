@@ -79,7 +79,7 @@ export function RoomAvailabilityCell({
     reloadUnavailabilities();
   }
 
-  async function handleDelete(unavailabilityId: number) {
+  async function handleDelete(unavailabilityId: string) {
     const result = await deleteRoomUnavailability(unavailabilityId);
 
     if (!result.success) {

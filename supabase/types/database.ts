@@ -222,22 +222,22 @@ export type Database = {
       };
       room_unavailabilities: {
         Row: {
-          meeting_room_id: number;
-          unavailability_id: number;
+          meeting_room_id: string;
+          unavailability_id: string;
           unavailability_reason: string | null;
           unavailable_end_date: string;
           unavailable_start_date: string;
         };
         Insert: {
-          meeting_room_id: number;
-          unavailability_id?: never;
+          meeting_room_id: string;
+          unavailability_id?: string;
           unavailability_reason?: string | null;
           unavailable_end_date: string;
           unavailable_start_date: string;
         };
         Update: {
-          meeting_room_id?: number;
-          unavailability_id?: never;
+          meeting_room_id?: string;
+          unavailability_id?: string;
           unavailability_reason?: string | null;
           unavailable_end_date?: string;
           unavailable_start_date?: string;
@@ -326,7 +326,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      is_admin: { Args: never; Returns: boolean };
+      [_ in never]: never;
     };
     Enums: {
       [_ in never]: never;

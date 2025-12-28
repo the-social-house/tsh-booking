@@ -27,10 +27,10 @@ function dateRangesOverlap(
  * Check if there are overlapping unavailability periods for a room
  */
 export async function checkOverlappingUnavailabilities(
-  meetingRoomId: number,
+  meetingRoomId: string,
   startDate: string,
   endDate: string,
-  excludeUnavailabilityId?: number
+  excludeUnavailabilityId?: string
 ): Promise<{ hasOverlap: boolean; error?: PostgrestError }> {
   try {
     // Get all existing unavailabilities for this room
@@ -57,7 +57,7 @@ export async function checkOverlappingUnavailabilities(
 
     // Check if any existing unavailability overlaps with the new/updated range
     type UnavailabilityRow = {
-      unavailability_id: number;
+      unavailability_id: string;
       unavailable_start_date: string;
       unavailable_end_date: string;
     };
@@ -87,7 +87,7 @@ export async function checkOverlappingUnavailabilities(
  * Check if there are bookings during the unavailability period
  */
 export async function checkBookingConflicts(
-  meetingRoomId: number,
+  meetingRoomId: string,
   startDate: string,
   endDate: string
 ): Promise<{ hasConflict: boolean; error?: PostgrestError }> {
