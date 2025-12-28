@@ -6,10 +6,11 @@ import {
   createMeetingRoomSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
-import type { createClient } from "@/lib/supabase/server";
+import messages from "@/lib/messages.json";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
-import type { Tables } from "@/supabase/types/database";
+import type { Tables, TablesInsert } from "@/supabase/types/database";
 
 const BUCKET_NAME = "meeting-room-images";
 
@@ -25,10 +26,7 @@ function generateFolderId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-async function uploadImages(
-  files: File[],
-  supabase: Awaited<ReturnType<typeof createClient>>
-): Promise<{
+async function uploadImages(files: File[]): Promise<{
   success: boolean;
   urls?: string[];
   paths?: string[];
@@ -55,10 +53,12 @@ async function uploadImages(
     const fileName = `${folderId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
     const arrayBuffer = await file.arrayBuffer();
+    // Convert ArrayBuffer to Uint8Array for better compatibility
+    const uint8Array = new Uint8Array(arrayBuffer);
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
-      .upload(fileName, arrayBuffer, {
+      .upload(fileName, uint8Array, {
         contentType: file.type,
         cacheControl: "3600",
         upsert: false,
@@ -73,7 +73,7 @@ async function uploadImages(
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
+    } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(data.path);
 
     uploadedUrls.push(publicUrl);
     uploadedPaths.push(data.path);
@@ -86,20 +86,16 @@ async function uploadImages(
   };
 }
 
-async function deleteImages(
-  paths: string[],
-  supabase: Awaited<ReturnType<typeof createClient>>
-): Promise<void> {
+async function deleteImages(paths: string[]): Promise<void> {
   if (!paths || paths.length === 0) {
     return;
   }
 
-  await supabase.storage.from(BUCKET_NAME).remove(paths);
+  await supabaseAdmin.storage.from(BUCKET_NAME).remove(paths);
 }
 
 async function handleImageUploadAndCleanup(
-  imageFiles: File[] | undefined,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  imageFiles: File[] | undefined
 ): Promise<{
   success: boolean;
   urls: string[];
@@ -116,7 +112,7 @@ async function handleImageUploadAndCleanup(
     return { success: true, urls: [], paths: [] };
   }
 
-  const uploadResult = await uploadImages(imageFiles, supabase);
+  const uploadResult = await uploadImages(imageFiles);
 
   if (!uploadResult.success) {
     return {
@@ -157,14 +153,14 @@ export async function createMeetingRoom(
   data: CreateMeetingRoomInput,
   imageFiles?: File[]
 ) {
-  // Verify admin access and get Supabase client
-  const { supabase, error: authError } = await requireAdmin();
-  if (authError || !supabase) {
+  // Verify admin access
+  const { error: authError } = await requireAdmin();
+  if (authError) {
     return {
       data: null,
       error: authError || {
         code: "FORBIDDEN",
-        message: "You must be an admin to perform this action",
+        message: messages.common.messages.adminRequired,
         details: "",
         hint: "",
         name: "AuthError",
@@ -172,10 +168,7 @@ export async function createMeetingRoom(
     };
   }
 
-  const imageUploadResult = await handleImageUploadAndCleanup(
-    imageFiles,
-    supabase
-  );
+  const imageUploadResult = await handleImageUploadAndCleanup(imageFiles);
 
   if (!imageUploadResult.success) {
     return {
@@ -199,7 +192,7 @@ export async function createMeetingRoom(
 
   if (!validationResult.success) {
     if (uploadedImagePaths.length > 0) {
-      await deleteImages(uploadedImagePaths, supabase);
+      await deleteImages(uploadedImagePaths);
     }
     return {
       data: null,
@@ -209,15 +202,15 @@ export async function createMeetingRoom(
 
   const validatedData = validationResult.data;
 
-  const result = await supabase
+  const result = await supabaseAdmin
     .from("meeting_rooms")
-    .insert(validatedData)
+    .insert(validatedData as TablesInsert<"meeting_rooms">)
     .select()
     .single();
 
   if (result.error) {
     if (uploadedImagePaths.length > 0) {
-      await deleteImages(uploadedImagePaths, supabase);
+      await deleteImages(uploadedImagePaths);
     }
 
     const errorMessage = getCreateMeetingRoomErrorMessage(result.error.code);

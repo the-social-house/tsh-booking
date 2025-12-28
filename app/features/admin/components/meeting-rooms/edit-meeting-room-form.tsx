@@ -13,12 +13,12 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { deleteMeetingRoomImages } from "@/app/features/admin/actions/delete-meeting-room-images";
-import type { AdminAmenity } from "@/app/features/admin/actions/get-amenities";
 import { updateMeetingRoom } from "@/app/features/admin/actions/update-meeting-room";
 import { updateMeetingRoomAmenities } from "@/app/features/admin/actions/update-meeting-room-amenities";
 import { uploadMeetingRoomImages } from "@/app/features/admin/actions/upload-meeting-room-images";
 import { AmenitySelector } from "@/app/features/admin/components/meeting-rooms/amenity-selector";
 import { updateMeetingRoomSchema } from "@/app/features/admin/lib/meeting-room.schema";
+import type { AdminAmenity } from "@/app/features/amenities/actions/get-amenities";
 import type { MeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-rooms";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,12 +60,12 @@ type ImagePreview = {
   preview: string;
 };
 
-type EditMeetingRoomFormProps = {
+type EditMeetingRoomFormProps = Readonly<{
   meetingRoom: MeetingRoom;
   allAmenities: AdminAmenity[];
   currentAmenityIds: string[];
   onSuccess?: () => void;
-};
+}>;
 
 function generateFolderId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;

@@ -12,13 +12,14 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createMeetingRoom } from "@/app/features/admin/actions/create-meeting-room";
-import type { AdminAmenity } from "@/app/features/admin/actions/get-amenities";
 import { updateMeetingRoomAmenities } from "@/app/features/admin/actions/update-meeting-room-amenities";
 import { AmenitySelector } from "@/app/features/admin/components/meeting-rooms/amenity-selector";
 import {
+  type CreateMeetingRoomInput,
   createMeetingRoomSchema,
   meetingRoomImagesSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
+import type { AdminAmenity } from "@/app/features/amenities/actions/get-amenities";
 import { Button } from "@/components/ui/button";
 import {
   Dropzone,
@@ -34,7 +35,6 @@ import {
 } from "@/lib/form-errors";
 import messages from "@/lib/messages.json";
 import { hasData, hasError } from "@/lib/supabase-response";
-import type { TablesInsert } from "@/supabase/types/database";
 
 type FieldErrors = {
   meeting_room_name?: boolean;
@@ -55,17 +55,17 @@ type CreateMeetingRoomFormState = FormState<FieldErrors> & {
   values?: FormValues;
 };
 
-type CreateMeetingRoomFormProps = {
+type CreateMeetingRoomFormProps = Readonly<{
   allAmenities: AdminAmenity[];
   onSuccess?: () => void;
-};
+}>;
 
 type ImagePreview = {
   file: File;
   preview: string;
 };
 
-function parseFormData(formData: FormData): TablesInsert<"meeting_rooms"> {
+function parseFormData(formData: FormData): CreateMeetingRoomInput {
   return {
     meeting_room_name: formData.get("meeting_room_name") as string,
     meeting_room_capacity: formData.get("meeting_room_capacity")

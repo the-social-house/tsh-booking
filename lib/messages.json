@@ -14,37 +14,41 @@
       "id": {
         "required": "Amenity ID is required",
         "integer": "Amenity ID must be a whole number",
-        "positive": "Amenity ID must be a positive number"
+        "positive": "Amenity ID must be a positive number",
+        "uuid": "Amenity ID must be a valid UUID"
       }
     },
     "ui": {
       "create": {
-        "title": "Add New Amenity",
-        "nameLabel": "Amenity Name",
-        "namePlaceholder": "e.g., Wi-Fi, Projector, Coffee",
+        "title": "Add new amenity",
+        "description": "Create a new amenity by filling out the form below.",
+        "nameLabel": "Amenity name",
+        "namePlaceholder": "Enter amenity name",
         "priceLabel": "Price",
-        "pricePlaceholder": "0.00",
+        "pricePlaceholder": "Enter price",
         "priceHelper": "Leave empty if this amenity is free",
-        "submitButton": "Add Amenity",
+        "submitButton": "Add amenity",
         "submitButtonLoading": "Adding..."
       },
       "update": {
-        "title": "Edit Amenity",
-        "nameLabel": "Amenity Name",
+        "title": "Edit amenity",
+        "description": "Update the details of this amenity.",
+        "nameLabel": "Amenity name",
         "namePlaceholder": "Enter amenity name",
         "priceLabel": "Price",
-        "pricePlaceholder": "0.00",
+        "pricePlaceholder": "Enter price",
         "priceHelper": "Leave empty if this amenity is free",
-        "submitButton": "Save Changes",
+        "submitButton": "Save changes",
         "submitButtonLoading": "Saving..."
       },
       "delete": {
         "button": "Delete",
         "buttonLoading": "Deleting...",
-        "dialogTitle": "Delete Amenity",
-        "dialogDescription": "Are you sure you want to delete this amenity? This action cannot be undone and will remove this amenity from all associated bookings and meeting rooms.",
+        "dialogTitle": "Delete amenity",
+        "dialogDescription": "Are you sure you want to delete this amenity? This action cannot be undone. Note: This amenity cannot be deleted if it's currently being used in bookings or meeting rooms.",
         "dialogCancel": "Cancel",
-        "dialogConfirm": "Delete Amenity"
+        "dialogConfirm": "Delete amenity",
+        "dialogConfirmLoading": "Deleting..."
       },
       "list": {
         "title": "Amenities",
@@ -77,6 +81,7 @@
         "delete": {
           "23503": "This amenity cannot be deleted because it's currently being used in bookings or meeting rooms.",
           "23514": "Unable to delete this amenity. Please try again later.",
+          "notFound": "The amenity you're trying to delete doesn't exist or has been removed.",
           "unknown": "Something went wrong while deleting the amenity. Please try again."
         },
         "toast": {
@@ -273,6 +278,7 @@
       "pickADate": "Pick a date",
       "authenticationRequired": "Authentication required",
       "pleaseLogIn": "Please log in to view this page.",
+      "adminRequired": "You must be an admin to perform this action",
       "userNotFound": "User not found",
       "userProfileNotSetUp": "Your account exists but user profile is not set up. Please contact an administrator.",
       "unableToLoadUserData": "Unable to load user data. Please try again.",
@@ -280,12 +286,15 @@
       "roomDoesNotExist": "The requested room does not exist."
     },
     "words": {
-      "people": "people"
+      "people": "people",
+      "free": "Free",
+      "none": "None"
     },
     "units": {
       "squareMeters": "m²",
       "hourlyRate": "DKK/hr",
-      "dkk": "DKK"
+      "dkk": "DKK",
+      "currency": "DKK"
     }
   },
   "admin": {
@@ -306,7 +315,20 @@
             "capacity": "Capacity",
             "size": "Size",
             "hourlyRate": "Hourly rate",
+            "amenities": "Amenities",
             "availability": "Unavailability"
+          }
+        },
+        "amenities": {
+          "title": "Amenities",
+          "addAmenity": "New amenity",
+          "errorTitle": "Failed to load amenities",
+          "error": "Something went wrong while loading the amenities. Please try again later.",
+          "emptyTitle": "No amenities",
+          "empty": "There are no amenities available at this time.",
+          "table": {
+            "name": "Name",
+            "price": "Price"
           }
         }
       }
@@ -335,7 +357,8 @@
         },
         "id": {
           "integer": "Room ID must be a whole number",
-          "positive": "Room ID must be a positive number"
+          "positive": "Room ID must be a positive number",
+          "uuid": "Room ID must be a valid UUID"
         },
         "images": {
           "required": "At least one image is required",

@@ -136,7 +136,16 @@ export type UpdateRoomUnavailabilityInput = z.infer<
  * Schema for validating meeting room IDs (used for update/delete)
  */
 export const meetingRoomIdSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(messages.admin.meetingRooms.validation.id.uuid),
 });
 
 export type MeetingRoomIdInput = z.infer<typeof meetingRoomIdSchema>;
+
+/**
+ * Schema for validating unavailability IDs (used for update/delete)
+ */
+export const unavailabilityIdSchema = z.object({
+  id: z.uuid(messages.admin.meetingRooms.validation.id.uuid),
+});
+
+export type UnavailabilityIdInput = z.infer<typeof unavailabilityIdSchema>;

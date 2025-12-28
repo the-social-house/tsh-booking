@@ -11,7 +11,9 @@ import {
   createBookingConflictError,
   createOverlappingDatesError,
 } from "@/app/features/admin/lib/unavailability-validation";
-import { supabase } from "@/lib/supabase";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import messages from "@/lib/messages.json";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
@@ -27,6 +29,21 @@ export async function createRoomUnavailability(
     unavailability_reason?: string | null;
   }
 ) {
+  // Verify admin access
+  const { error: authError } = await requireAdmin();
+  if (authError) {
+    return {
+      data: null,
+      error: authError || {
+        code: "FORBIDDEN",
+        message: messages.common.messages.adminRequired,
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   // 1. Validate meeting room ID
   const idValidation = meetingRoomIdSchema.safeParse({ id: meetingRoomId });
   if (!idValidation.success) {
@@ -88,7 +105,7 @@ export async function createRoomUnavailability(
   }
 
   // 5. Perform database operation
-  const result = await supabase
+  const result = await supabaseAdmin
     .from("room_unavailabilities")
     .insert({
       meeting_room_id: meetingRoomId,

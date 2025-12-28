@@ -1,6 +1,8 @@
 "use server";
 
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import messages from "@/lib/messages.json";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const BUCKET_NAME = "meeting-room-images";
 
@@ -15,13 +17,12 @@ export async function uploadMeetingRoomImages(
   folderId: string,
   formData: FormData
 ): Promise<UploadResult> {
-  // Verify admin access and get Supabase client
-  const { supabase, error: authError } = await requireAdmin();
-  if (authError || !supabase) {
+  // Verify admin access
+  const { error: authError } = await requireAdmin();
+  if (authError) {
     return {
       success: false,
-      error:
-        authError?.message || "You must be an admin to perform this action",
+      error: authError?.message || messages.common.messages.adminRequired,
     };
   }
 
@@ -34,11 +35,11 @@ export async function uploadMeetingRoomImages(
   const uploadedUrls: string[] = [];
   const uploadedPaths: string[] = [];
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
   for (const file of files) {
     // Validate file type
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.has(file.type)) {
       return {
         success: false,
         error: `Invalid file type: ${file.name}. Only JPG, PNG, and WebP images are allowed.`,
@@ -52,7 +53,7 @@ export async function uploadMeetingRoomImages(
     // Convert File to ArrayBuffer for upload
     const arrayBuffer = await file.arrayBuffer();
 
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
       .upload(fileName, arrayBuffer, {
         contentType: file.type,
@@ -70,7 +71,7 @@ export async function uploadMeetingRoomImages(
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path);
+    } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(data.path);
 
     uploadedUrls.push(publicUrl);
     uploadedPaths.push(data.path);

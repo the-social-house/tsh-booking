@@ -141,4 +141,7 @@ async function main() {
   await seedUsers();
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

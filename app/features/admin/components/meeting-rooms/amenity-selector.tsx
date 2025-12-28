@@ -2,18 +2,18 @@
 
 import { CheckIcon } from "lucide-react";
 import { useCallback, useMemo } from "react";
-import type { AdminAmenity } from "@/app/features/admin/actions/get-amenities";
+import type { AdminAmenity } from "@/app/features/amenities/actions/get-amenities";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import messages from "@/lib/messages.json";
 import { cn } from "@/lib/utils";
 
-type AmenitySelectorProps = {
+type AmenitySelectorProps = Readonly<{
   amenities: AdminAmenity[];
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   disabled?: boolean;
-};
+}>;
 
 export function AmenitySelector({
   amenities,

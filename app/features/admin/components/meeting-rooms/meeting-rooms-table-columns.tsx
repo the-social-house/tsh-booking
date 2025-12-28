@@ -1,8 +1,16 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Coins, DoorOpen, Ruler, Users } from "lucide-react";
+import {
+  CheckCircle2,
+  Coins,
+  DoorOpen,
+  Ruler,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { MeetingRoomActions } from "@/app/features/admin/components/meeting-rooms/meeting-room-actions";
+import { RoomAmenitiesCell } from "@/app/features/admin/components/meeting-rooms/room-amenities-cell";
 import { RoomAvailabilityCell } from "@/app/features/admin/components/meeting-rooms/room-availability-cell";
 import { TableHeaderCell } from "@/app/features/admin/components/meeting-rooms/table-header-cell";
 import type { MeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-rooms";
@@ -52,6 +60,15 @@ export const meetingRoomsColumns: ColumnDef<MeetingRoom>[] = [
       const price = row.getValue("meeting_room_price_per_hour") as number;
       return `${price} ${messages.common.units.hourlyRate}`;
     },
+  },
+  {
+    id: "amenities",
+    header: () => (
+      <TableHeaderCell icon={Sparkles}>
+        {messages.admin.ui.tabs.meetingRooms.table.amenities}
+      </TableHeaderCell>
+    ),
+    cell: ({ row }) => <RoomAmenitiesCell meetingRoom={row.original} />,
   },
   {
     id: "availability",

@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import messages from "@/lib/messages.json";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResult } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 
@@ -23,14 +25,14 @@ export type UpdateMeetingRoomAmenitiesInput = z.infer<
 export async function updateMeetingRoomAmenities(
   data: UpdateMeetingRoomAmenitiesInput
 ) {
-  // Verify admin access and get Supabase client
-  const { supabase, error: authError } = await requireAdmin();
-  if (authError || !supabase) {
+  // Verify admin access
+  const { error: authError } = await requireAdmin();
+  if (authError) {
     return {
       success: false,
       error: authError || {
         code: "FORBIDDEN",
-        message: "You must be an admin to perform this action",
+        message: messages.common.messages.adminRequired,
         details: "",
         hint: "",
         name: "AuthError",
@@ -50,7 +52,7 @@ export async function updateMeetingRoomAmenities(
   const { meeting_room_id, amenity_ids } = validationResult.data;
 
   // 1. Delete existing links
-  const deleteResult = await supabase
+  const deleteResult = await supabaseAdmin
     .from("meeting_room_amenities")
     .delete()
     .eq("meeting_room_id", meeting_room_id);
@@ -72,7 +74,7 @@ export async function updateMeetingRoomAmenities(
     amenity_id,
   }));
 
-  const insertResult = await supabase
+  const insertResult = await supabaseAdmin
     .from("meeting_room_amenities")
     .insert(entries);
 

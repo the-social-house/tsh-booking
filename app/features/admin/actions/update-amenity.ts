@@ -1,12 +1,12 @@
 "use server";
 
 import type { PostgrestError } from "@supabase/supabase-js";
-import { getUpdateMeetingRoomErrorMessage } from "@/app/features/admin/lib/error-messages";
 import {
-  meetingRoomIdSchema,
-  type UpdateMeetingRoomInput,
-  updateMeetingRoomSchema,
-} from "@/app/features/admin/lib/meeting-room.schema";
+  amenityIdSchema,
+  type UpdateAmenityInput,
+  updateAmenitySchema,
+} from "@/app/features/admin/lib/amenity.schema";
+import { getUpdateAmenityErrorMessage } from "@/app/features/admin/lib/error-messages";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import messages from "@/lib/messages.json";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -15,12 +15,9 @@ import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
 
 /**
- * Update a meeting room by ID
+ * Update an amenity by ID
  */
-export async function updateMeetingRoom(
-  id: string,
-  data: UpdateMeetingRoomInput
-) {
+export async function updateAmenity(id: string, data: UpdateAmenityInput) {
   // Verify admin access
   const { error: authError } = await requireAdmin();
   if (authError) {
@@ -37,7 +34,7 @@ export async function updateMeetingRoom(
   }
 
   // 1. Validate ID
-  const idValidation = meetingRoomIdSchema.safeParse({ id });
+  const idValidation = amenityIdSchema.safeParse({ id });
   if (!idValidation.success) {
     return {
       data: null,
@@ -46,7 +43,7 @@ export async function updateMeetingRoom(
   }
 
   // 2. Validate update data
-  const dataValidation = updateMeetingRoomSchema.safeParse(data);
+  const dataValidation = updateAmenitySchema.safeParse(data);
   if (!dataValidation.success) {
     return {
       data: null,
@@ -58,15 +55,15 @@ export async function updateMeetingRoom(
   const validatedData = dataValidation.data;
 
   const result = await supabaseAdmin
-    .from("meeting_rooms")
+    .from("amenities")
     .update(validatedData)
-    .eq("meeting_room_id", id)
+    .eq("amenity_id", id)
     .select()
     .single();
 
   // 4. Handle database errors
   if (result.error) {
-    const errorMessage = getUpdateMeetingRoomErrorMessage(result.error.code);
+    const errorMessage = getUpdateAmenityErrorMessage(result.error.code);
     return {
       data: null,
       error: { ...result.error, message: errorMessage },
@@ -77,7 +74,7 @@ export async function updateMeetingRoom(
   if (!result.data) {
     const notFoundError: PostgrestError = {
       code: "PGRST116",
-      message: messages.admin.meetingRooms.messages.error.update.notFound,
+      message: messages.amenities.messages.error.update.notFound,
       details: "",
       hint: "",
     } as PostgrestError;
@@ -85,5 +82,5 @@ export async function updateMeetingRoom(
     return { data: null, error: notFoundError };
   }
 
-  return toSupabaseMutationResponse<Tables<"meeting_rooms">>(result);
+  return toSupabaseMutationResponse<Tables<"amenities">>(result);
 }

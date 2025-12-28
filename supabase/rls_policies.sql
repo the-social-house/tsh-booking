@@ -298,9 +298,68 @@ USING (true)
 WITH CHECK (true);
 
 -- ============================================================================
+-- 9. ROOM_UNAVAILABILITIES TABLE
+-- ============================================================================
+
+ALTER TABLE public.room_unavailabilities ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Room unavailabilities are viewable by everyone" ON public.room_unavailabilities;
+DROP POLICY IF EXISTS "Only service role can modify room unavailabilities" ON public.room_unavailabilities;
+
+-- Everyone can read room unavailabilities (needed for calendar/availability display)
+CREATE POLICY "Room unavailabilities are viewable by everyone"
+ON public.room_unavailabilities FOR SELECT
+TO authenticated, anon
+USING (true);
+
+-- Only service role can modify room unavailabilities
+CREATE POLICY "Only service role can modify room unavailabilities"
+ON public.room_unavailabilities FOR ALL
+TO service_role
+USING (true)
+WITH CHECK (true);
+
+-- ============================================================================
+-- 10. STORAGE: MEETING-ROOM-IMAGES BUCKET
+-- ============================================================================
+
+-- Drop existing policies if they exist (for idempotency)
+DROP POLICY IF EXISTS "All authenticated users can read meeting room images" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can mutate meeting room images" ON storage.objects;
+DROP POLICY IF EXISTS "Service role can mutate meeting room images" ON storage.objects;
+
+-- All authenticated users can read images from the bucket
+CREATE POLICY "All authenticated users can read meeting room images"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (bucket_id = 'meeting-room-images');
+
+-- Only admins can insert/update/delete images in the bucket
+-- Uses is_admin() function to avoid infinite recursion
+CREATE POLICY "Admins can mutate meeting room images"
+ON storage.objects FOR ALL
+TO authenticated
+USING (
+  bucket_id = 'meeting-room-images'
+  AND public.is_admin()
+)
+WITH CHECK (
+  bucket_id = 'meeting-room-images'
+  AND public.is_admin()
+);
+
+-- Service role can create, update, and delete images (for admin actions using supabaseAdmin)
+-- FOR ALL covers INSERT (create), UPDATE, DELETE, and SELECT operations
+CREATE POLICY "Service role can mutate meeting room images"
+ON storage.objects FOR ALL
+TO service_role
+USING (bucket_id = 'meeting-room-images')
+WITH CHECK (bucket_id = 'meeting-room-images');
+
+-- ============================================================================
 -- DONE!
 -- ============================================================================
--- All RLS policies have been created for all tables.
+-- All RLS policies have been created for all tables and storage buckets.
 -- You can verify in Supabase Dashboard → Authentication → Policies
 -- ============================================================================
 

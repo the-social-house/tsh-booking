@@ -1,8 +1,10 @@
 "use server";
 
 import { getDeleteRoomUnavailabilityErrorMessage } from "@/app/features/admin/lib/error-messages";
-import { meetingRoomIdSchema } from "@/app/features/admin/lib/meeting-room.schema";
-import { supabase } from "@/lib/supabase";
+import { unavailabilityIdSchema } from "@/app/features/admin/lib/meeting-room.schema";
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import messages from "@/lib/messages.json";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResult } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
 
@@ -10,8 +12,25 @@ import { createValidationError } from "@/lib/validation";
  * Delete a room unavailability period
  */
 export async function deleteRoomUnavailability(unavailabilityId: string) {
+  // Verify admin access
+  const { error: authError } = await requireAdmin();
+  if (authError) {
+    return {
+      success: false,
+      error: authError || {
+        code: "FORBIDDEN",
+        message: messages.common.messages.adminRequired,
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   // 1. Validate ID
-  const idValidation = meetingRoomIdSchema.safeParse({ id: unavailabilityId });
+  const idValidation = unavailabilityIdSchema.safeParse({
+    id: unavailabilityId,
+  });
   if (!idValidation.success) {
     return {
       success: false,
@@ -20,7 +39,7 @@ export async function deleteRoomUnavailability(unavailabilityId: string) {
   }
 
   // 2. Perform deletion
-  const result = await supabase
+  const result = await supabaseAdmin
     .from("room_unavailabilities")
     .delete()
     .eq("unavailability_id", unavailabilityId);
