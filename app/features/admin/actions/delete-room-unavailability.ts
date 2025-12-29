@@ -3,7 +3,6 @@
 import { getDeleteRoomUnavailabilityErrorMessage } from "@/app/features/admin/lib/error-messages";
 import { unavailabilityIdSchema } from "@/app/features/admin/lib/meeting-room.schema";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
-import messages from "@/lib/messages.json";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResult } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
@@ -17,13 +16,7 @@ export async function deleteRoomUnavailability(unavailabilityId: string) {
   if (authError) {
     return {
       success: false,
-      error: authError || {
-        code: "FORBIDDEN",
-        message: messages.common.messages.adminRequired,
-        details: "",
-        hint: "",
-        name: "AuthError",
-      },
+      error: authError,
     };
   }
 

@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import Heading from "@/components/ui/heading";
 
-type TableActionHeaderProps = {
+type TableActionHeaderProps = Readonly<{
   title: string;
-  actionSlot: ReactNode;
-};
+  actionSlot?: ReactNode;
+}>;
 
 function TableActionHeader({ title, actionSlot }: TableActionHeaderProps) {
   return (

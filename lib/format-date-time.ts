@@ -48,3 +48,24 @@ export function getTodayDK(): Date {
   // This ensures consistent behavior when comparing dates
   return new Date(`${dateKey}T00:00:00`);
 }
+
+// Format booking date and time range for display
+// Returns formatted string like "DD/MM/YYYY at HH:mm - HH:mm"
+export function formatBookingDateTime(
+  bookingDate: string,
+  bookingStartTime: string,
+  bookingEndTime: string
+): string {
+  const formattedDate = formatDate(new Date(bookingDate));
+  const formattedTime = `${formatTime(bookingStartTime)} - ${formatTime(bookingEndTime)}`;
+  return `${formattedDate} at ${formattedTime}`;
+}
+
+// Format booking time range for display
+// Returns formatted string like "HH:mm - HH:mm"
+export function formatBookingTimeRange(
+  bookingStartTime: string,
+  bookingEndTime: string
+): string {
+  return `${formatTime(bookingStartTime)} - ${formatTime(bookingEndTime)}`;
+}
