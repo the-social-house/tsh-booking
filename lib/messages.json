@@ -200,7 +200,8 @@
     "messages": {
       "success": {
         "create": "Booking created successfully!",
-        "update": "Booking updated successfully!"
+        "update": "Booking updated successfully!",
+        "cancel": "Booking cancelled successfully!"
       },
       "error": {
         "create": {
@@ -329,6 +330,34 @@
           "table": {
             "name": "Name",
             "price": "Price"
+          }
+        },
+        "bookings": {
+          "title": "Bookings",
+          "errorTitle": "Failed to load bookings",
+          "error": "Something went wrong while loading the bookings. Please try again later.",
+          "emptyTitle": "No bookings",
+          "empty": "There are no bookings available at this time.",
+          "table": {
+            "date": "Date",
+            "time": "Time",
+            "room": "Room",
+            "user": "User",
+            "people": "People",
+            "price": "Price",
+            "status": "Status",
+            "buffer": "Buffer"
+          },
+          "actions": {
+            "cancel": "Cancel booking",
+            "alreadyCancelled": "Already cancelled"
+          },
+          "cancel": {
+            "dialogTitle": "Cancel booking",
+            "dialogDescription": "Are you sure you want to cancel this booking? This action cannot be undone.",
+            "dialogCancel": "Cancel",
+            "dialogConfirm": "Cancel booking",
+            "dialogConfirmLoading": "Cancelling..."
           }
         }
       }
