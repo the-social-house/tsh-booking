@@ -3,17 +3,8 @@
 /**
  * Release helper script
  *
- * Creates a GitHub pull request from a release branch to `main` using the version
+ * Creates a GitHub pull request from `develop` to `main` using the version
  * from this project's package.json.
- *
- * Process:
- * 1. Creates a release branch from `develop`
- * 2. Merges `main` into the release branch (to sync history and prevent conflicts)
- * 3. Bumps the version in package.json
- * 4. Pushes the release branch and creates a PR to `main`
- *
- * This workflow prevents merge conflicts by ensuring the release branch contains
- * both main's history (including previous release commits) and develop's new features.
  *
  * Requirements for developers:
  * - GitHub CLI installed: https://cli.github.com
@@ -217,37 +208,29 @@ async function main(): Promise<void> {
 
     const releaseBranch = `release/v${version}`;
 
-    // Create release branch from develop
+    // Create release branch from develop and switch to it
     console.log(`Creating release branch '${releaseBranch}' from 'develop'...`);
     run(`git checkout -b ${releaseBranch} develop`);
 
-    // Merge main into release branch to bring in any previous release commits
-    // This prevents merge conflicts when the PR is created
+    // Merge main into release branch to sync history
+    // Always prefer release branch's version (--ours) for conflicts
     console.log("Merging 'main' into release branch to sync history...");
+    console.log(
+      "Note: Conflicts will be resolved in favor of the release branch (develop's changes)"
+    );
     try {
+      // Use --strategy-option=ours to always prefer release branch in conflicts
       run(
-        `git merge main --no-edit -m "chore: merge main into release branch"`
+        `git merge main -X ours --no-edit -m "chore: merge main into release branch"`
       );
     } catch {
-      // If merge fails, check if it's just a version conflict in package.json
-      const status = run("git status --porcelain");
-      if (status.includes("package.json")) {
-        console.log("Resolving version conflict in package.json...");
-        // Keep develop's version (we're about to bump it anyway)
-        run("git checkout --ours package.json");
-        run("git add package.json");
-        run(
-          `git commit --no-edit -m "chore: merge main into release branch (resolved version conflict)"`
-        );
-      } else {
-        // Other conflicts - let user resolve manually
-        console.error(
-          "Merge conflict detected. Please resolve conflicts manually and run:"
-        );
-        console.error("  git add .");
-        console.error("  git commit --no-edit");
-        throw new Error("Merge conflict requires manual resolution");
-      }
+      // If merge fails, resolve all conflicts in favor of release branch
+      console.log("Resolving conflicts in favor of release branch...");
+      run("git checkout --ours .");
+      run("git add .");
+      run(
+        `git commit --no-edit -m "chore: merge main into release branch (resolved conflicts in favor of release branch)"`
+      );
     }
 
     // Now bump the version on the release branch
