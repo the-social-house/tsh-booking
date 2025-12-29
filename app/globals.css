@@ -250,3 +250,12 @@
     100% 50px;
   background-attachment: local, local, scroll, scroll;
 }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

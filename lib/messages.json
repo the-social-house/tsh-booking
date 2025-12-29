@@ -554,5 +554,65 @@
         }
       }
     }
+  },
+  "users": {
+    "validation": {
+      "companyName": {
+        "required": "Company name is required",
+        "minLength": "Company name must be at least 2 characters",
+        "maxLength": "Company name cannot exceed 50 characters"
+      },
+      "email": {
+        "required": "Email is required",
+        "invalid": "Please enter a valid email address"
+      },
+      "password": {
+        "minLength": "Password must be at least 8 characters",
+        "maxLength": "Password cannot exceed 100 characters",
+        "mismatch": "Passwords do not match"
+      }
+    },
+    "messages": {
+      "error": {
+        "update": {
+          "noFields": "No fields to update",
+          "notFound": "User profile not found"
+        }
+      }
+    }
+  },
+  "profile": {
+    "ui": {
+      "empty": "Unable to load your profile information.",
+      "emptyTitle": "Profile not found",
+      "update": {
+        "title": "Update Profile",
+        "companyNameLabel": "Company Name",
+        "companyNamePlaceholder": "Enter company name",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Enter email",
+        "emailHelper": "You'll need to confirm your new email address.",
+        "passwordLabel": "Password",
+        "passwordHelper": "Click the button below to change your password.",
+        "changePasswordButton": "Change Password",
+        "newPasswordLabel": "New Password",
+        "newPasswordPlaceholder": "Enter new password",
+        "confirmPasswordLabel": "Confirm Password",
+        "confirmPasswordPlaceholder": "Confirm new password",
+        "submitButton": "Update Profile",
+        "submitButtonLoading": "Updating..."
+      }
+    },
+    "messages": {
+      "success": {
+        "update": "Profile updated successfully!"
+      },
+      "error": {
+        "update": {
+          "noChanges": "No changes detected. Please update at least one field.",
+          "unknown": "Something went wrong while updating your profile. Please try again."
+        }
+      }
+    }
   }
 }

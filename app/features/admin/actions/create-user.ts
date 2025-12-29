@@ -12,7 +12,10 @@ import type { TablesInsert } from "@/supabase/types/database";
 const createUserSchema = z.object({
   email: z.string().email("Invalid email address").trim(),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  username: z.string().min(2, "Username must be at least 2 characters").trim(),
+  companyName: z
+    .string()
+    .min(2, "Company name must be at least 2 characters")
+    .trim(),
   roleId: z.string().uuid("Invalid role ID"),
   subscriptionId: z.string().uuid("Invalid subscription ID"),
 });
@@ -39,7 +42,7 @@ export async function createUser(data: CreateUserInput) {
     };
   }
 
-  const { email, password, username, roleId, subscriptionId } =
+  const { email, password, companyName, roleId, subscriptionId } =
     validationResult.data;
 
   // Step 1: Create user in Supabase Auth (using admin client)
@@ -71,7 +74,7 @@ export async function createUser(data: CreateUserInput) {
     .insert({
       user_id: userId,
       user_email: email,
-      user_username: username,
+      user_company_name: companyName,
       user_role_id: roleId,
       user_subscription_id: subscriptionId,
       user_current_monthly_bookings: 0,

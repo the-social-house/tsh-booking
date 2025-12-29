@@ -367,7 +367,7 @@ function BookingBlocks({
               gridRowEnd: position.gridRowEnd,
             }}
           >
-            <div className="font-medium">{booking.users.user_username}</div>
+            <div className="font-medium">{booking.users.user_company_name}</div>
             <div className="text-xs">
               {formatTime(booking.booking_start_time)} -
               {formatTime(booking.booking_end_time)}

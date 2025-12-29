@@ -109,11 +109,7 @@ CREATE POLICY "Users can update their own data"
 ON public.users FOR UPDATE
 TO authenticated
 USING ((select auth.uid()) = user_id)
-WITH CHECK (
-  (select auth.uid()) = user_id
-  AND user_role_id = (SELECT user_role_id FROM public.users WHERE user_id = (select auth.uid()))
-  AND user_subscription_id = (SELECT user_subscription_id FROM public.users WHERE user_id = (select auth.uid()))
-);
+WITH CHECK ((select auth.uid()) = user_id);
 
 -- ============================================================================
 -- 4. AMENITIES TABLE

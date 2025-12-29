@@ -11,7 +11,7 @@ async function buildBookingQuery() {
   return supabase
     .from("bookings")
     .select(
-      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, users ( user_id, user_username )"
+      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, users ( user_id, user_company_name )"
     );
 }
 
@@ -27,7 +27,7 @@ export async function getBookingSlotsWithUser() {
   const result = await supabase
     .from("bookings")
     .select(
-      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, users ( user_id, user_username )"
+      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, users ( user_id, user_company_name )"
     )
     .eq("booking_payment_status", "paid")
     .gte("booking_date", todayIso)
