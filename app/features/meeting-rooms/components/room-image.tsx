@@ -23,6 +23,10 @@ type RoomImageProps = {
    * Alt text for accessibility
    */
   alt?: string;
+  /**
+   * Image source URL
+   */
+  src: string;
 };
 
 /**
@@ -30,14 +34,13 @@ type RoomImageProps = {
  * Uses room ID as seed to ensure consistent images per room.
  */
 export function RoomImage({
-  roomId,
   width = 800,
   height = 600,
   className,
   alt = "Meeting room",
+  src,
 }: RoomImageProps) {
   // Use room ID as seed for consistent images
-  const imageUrl = `https://picsum.photos/seed/room-${roomId}/${width}/${height}`;
 
   return (
     <div className={className}>
@@ -45,7 +48,7 @@ export function RoomImage({
         alt={alt}
         className="h-full w-full rounded-lg object-cover"
         height={height}
-        src={imageUrl}
+        src={src}
         width={width}
       />
     </div>

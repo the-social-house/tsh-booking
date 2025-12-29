@@ -17,9 +17,10 @@ async function buildUserQuery(userId: string) {
       user_email,
       user_subscription_id,
       user_current_monthly_bookings,
+      user_company_name,
       subscriptions (
         subscription_discount_rate
-      )
+      )      
     `
     )
     .eq("user_id", userId)
@@ -86,6 +87,7 @@ export async function getUser(userId: string) {
     user_current_monthly_bookings:
       userWithSubscriptionResult.data.user_current_monthly_bookings ?? 0,
     subscription_discount_rate: subscription?.subscription_discount_rate ?? 0,
+    user_company_name: userWithSubscriptionResult.data.user_company_name,
   };
 
   return {

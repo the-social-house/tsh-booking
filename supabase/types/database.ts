@@ -278,31 +278,31 @@ export type Database = {
       };
       users: {
         Row: {
+          user_company_name: string;
           user_created_at: string;
           user_current_monthly_bookings: number | null;
           user_email: string;
           user_id: string;
           user_role_id: string;
           user_subscription_id: string;
-          user_username: string;
         };
         Insert: {
+          user_company_name: string;
           user_created_at?: string;
           user_current_monthly_bookings?: number | null;
           user_email: string;
           user_id: string;
           user_role_id: string;
           user_subscription_id: string;
-          user_username: string;
         };
         Update: {
+          user_company_name?: string;
           user_created_at?: string;
           user_current_monthly_bookings?: number | null;
           user_email?: string;
           user_id?: string;
           user_role_id?: string;
           user_subscription_id?: string;
-          user_username?: string;
         };
         Relationships: [
           {

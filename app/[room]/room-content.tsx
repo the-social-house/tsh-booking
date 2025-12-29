@@ -67,14 +67,23 @@ function RoomContentWithAmenities({
   // Handle amenities errors (non-critical, can show empty list)
   const roomAmenities = hasData(amenitiesResult) ? amenitiesResult.data : [];
 
+  const meetingRoomImages = meetingRoom.meeting_room_images ?? [];
+
+  console.log(meetingRoomImages);
+
   return (
     <TwoColumnLayout
       left={<RoomDescription amenities={roomAmenities} room={meetingRoom} />}
       leftClassName="md:sticky md:top-0 md:self-start"
       right={
         <div className="space-y-4">
-          <RoomImage roomId={meetingRoom.meeting_room_id} />
-          <RoomImage roomId={meetingRoom.meeting_room_id} />
+          {meetingRoomImages.map((image) => (
+            <RoomImage
+              key={image}
+              roomId={meetingRoom.meeting_room_id}
+              src={image}
+            />
+          ))}
         </div>
       }
       variant="left-narrow"
