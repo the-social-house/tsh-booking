@@ -1,0 +1,503 @@
+---
+globs: *.ts
+alwaysApply: false
+---
+## GET Server Actions
+
+These guidelines are specifically for **GET/READ** server actions that fetch data from Supabase.
+
+Whenever you are tasked with creating a new **GET** Server Action file, use the following guideline/principles 
+
+## Basic Requirements
+
+* Always declare `"use server"` in the first line of every Server Action file.
+
+* Always create a separate file for each server action in the following directory structure: `app/features/<feature-name>/actions/<action-name>.ts`
+
+* **Use `requireAuth()` for private data**, or import the Supabase client directly for public data.
+
+* **Validate input parameters with Zod** when accepting user input (IDs, filters, pagination).
+
+## Authentication Protocol
+
+GET server actions may or may not require authentication depending on the data being accessed.
+
+### When to Use Authentication
+
+**Use `requireAuth()` for:**
+- User-specific data (bookings, profile, settings)
+- Private/sensitive information
+- Data that requires user context
+
+**Skip authentication for:**
+- Public listings (meeting rooms, amenities)
+- Public information that anyone can view
+- Data shown to unauthenticated users
+
+### 1. Private Data Pattern (with auth)
+
+```typescript
+"use server";
+
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+export async function getUserBookings() {
+  // 1. Verify authentication and get Supabase client
+  const { user, supabase, error: authError } = await requireAuth();
+  if (authError || !supabase || !user) {
+    return {
+      data: null,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to view your bookings",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  // 2. Query using user context
+  const result = await supabase
+    .from("bookings")
+    .select()
+    .eq("booking_user_id", user.id);
+
+  return toSupabaseQueryResponse<Tables<"bookings">[]>(result);
+}
+```
+
+### 2. Public Data Pattern (no auth)
+
+```typescript
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+export async function getMeetingRooms() {
+  const supabase = await createClient();
+  const result = await supabase.from("meeting_rooms").select();
+  return toSupabaseQueryResponse<Tables<"meeting_rooms">[]>(result);
+}
+```
+
+### 3. Key Points
+
+- **Private data**: Use `requireAuth()` to get client and user
+- **Public data**: Import `createClient` from `@/lib/supabase/server`
+- **Reuse the returned `supabase` client** when using auth
+- **Use `user.id`** for user-specific queries when authenticated
+
+## Zod Validation Protocol
+
+Server-side validation is **recommended** for GET operations that accept user input. This prevents malformed queries and potential injection attacks.
+
+### 1. Create Query Schemas for the Feature
+
+Create schemas in the feature's lib folder: `app/features/<feature-name>/lib/<entity>.schema.ts`
+
+```typescript
+import { z } from "zod";
+import messages from "@/lib/messages.json";
+
+/**
+ * Schema for validating IDs (used for single record fetches)
+ */
+export const getAmenityByIdSchema = z.object({
+  id: z
+    .number()
+    .int(messages.amenities.validation.id.integer)
+    .positive(messages.amenities.validation.id.positive),
+});
+
+/**
+ * Schema for pagination parameters
+ */
+export const paginationSchema = z.object({
+  page: z.number().int().positive().default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+});
+
+/**
+ * Schema for filtering/searching
+ */
+export const amenitiesFilterSchema = z.object({
+  search: z.string().max(100).optional(),
+  minPrice: z.number().min(0).optional(),
+  maxPrice: z.number().max(99_999.99).optional(),
+});
+
+export type GetAmenityByIdInput = z.infer<typeof getAmenityByIdSchema>;
+export type PaginationInput = z.infer<typeof paginationSchema>;
+export type AmenitiesFilterInput = z.infer<typeof amenitiesFilterSchema>;
+```
+
+### 2. When to Validate GET Operations
+
+**Always validate:**
+- IDs for single record fetches
+- User-provided search/filter parameters
+- Pagination parameters (page, limit)
+
+**Skip validation for:**
+- Simple "get all" queries with no parameters
+- Internal queries with hardcoded parameters
+
+### 3. Implementation Examples
+
+**Simple GET - Public Data (no auth, no validation):**
+```typescript
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+export async function getAmenities() {
+  const supabase = await createClient();
+  const result = await supabase.from("amenities").select();
+  return toSupabaseQueryResponse<Tables<"amenities">[]>(result);
+}
+```
+
+**GET by ID - Private Data (with auth and validation):**
+```typescript
+"use server";
+
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import { createValidationError } from "@/lib/validation";
+import type { Tables } from "@/supabase/types/database";
+import { getBookingByIdSchema } from "../lib/booking.schema";
+
+export async function getBookingById(id: string) {
+  // 1. Verify authentication and get Supabase client
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return { data: null, error: authError };
+  }
+
+  // 2. Validate ID
+  const validationResult = getBookingByIdSchema.safeParse({ id });
+  if (!validationResult.success) {
+    return {
+      data: null,
+      error: createValidationError(validationResult.error),
+    };
+  }
+
+  // 3. Query database
+  const result = await supabase
+    .from("bookings")
+    .select()
+    .eq("booking_id", id)
+    .single();
+
+  return toSupabaseQueryResponse<Tables<"bookings">>(result);
+}
+```
+
+**GET User's Data (with auth, using user context):**
+```typescript
+"use server";
+
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+export async function getUserBookings() {
+  // 1. Verify authentication and get Supabase client + user
+  const { user, supabase, error: authError } = await requireAuth();
+  if (authError || !supabase || !user) {
+    return { data: null, error: authError };
+  }
+
+  // 2. Query using user context
+  const result = await supabase
+    .from("bookings")
+    .select()
+    .eq("booking_user_id", user.id);
+
+  return toSupabaseQueryResponse<Tables<"bookings">[]>(result);
+}
+```
+
+**GET with pagination - Public Data (validate pagination params):**
+```typescript
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import { createValidationError } from "@/lib/validation";
+import type { Tables } from "@/supabase/types/database";
+import { paginationSchema, type PaginationInput } from "../lib/amenity.schema";
+
+export async function getAmenitiesPaginated(params: PaginationInput) {
+  // Validate pagination params
+  const validationResult = paginationSchema.safeParse(params);
+  if (!validationResult.success) {
+    return {
+      data: null,
+      error: createValidationError(validationResult.error),
+    };
+  }
+
+  const { page, limit } = validationResult.data;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const supabase = await createClient();
+  const result = await supabase
+    .from("amenities")
+    .select()
+    .range(from, to);
+
+  return toSupabaseQueryResponse<Tables<"amenities">[]>(result);
+}
+```
+
+**GET with filters - Public Data (validate filter params):**
+```typescript
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import { createValidationError } from "@/lib/validation";
+import type { Tables } from "@/supabase/types/database";
+import { amenitiesFilterSchema, type AmenitiesFilterInput } from "../lib/amenity.schema";
+
+export async function searchAmenities(filters: AmenitiesFilterInput) {
+  // Validate filter params
+  const validationResult = amenitiesFilterSchema.safeParse(filters);
+  if (!validationResult.success) {
+    return {
+      data: null,
+      error: createValidationError(validationResult.error),
+    };
+  }
+
+  const { search, minPrice, maxPrice } = validationResult.data;
+
+  const supabase = await createClient();
+  let query = supabase.from("amenities").select();
+
+  if (search) {
+    query = query.ilike("amenity_name", `%${search}%`);
+  }
+  if (minPrice !== undefined) {
+    query = query.gte("amenity_price", minPrice);
+  }
+  if (maxPrice !== undefined) {
+    query = query.lte("amenity_price", maxPrice);
+  }
+
+  const result = await query;
+  return toSupabaseQueryResponse<Tables<"amenities">[]>(result);
+}
+```
+
+## Supabase Response Pattern
+
+All server actions that interact with Supabase MUST use the standardized `SupabaseResponse<T>` pattern for type-safe, consistent error handling.
+
+### Server Action Implementation
+
+1. **Import required utilities:**
+   ```typescript
+   // For private data (requires authentication):
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   
+   // For public data (no authentication):
+   import { createClient } from "@/lib/supabase/server";
+   
+   // Common imports:
+   import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+   import { createValidationError } from "@/lib/validation"; // Only if validating
+   import type { Tables } from "@/supabase/types/database";
+   ```
+
+2. **Structure for private data (with auth):**
+   ```typescript
+   "use server";
+
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+   import type { Tables } from "@/supabase/types/database";
+
+   export async function getUserBookings() {
+     const { user, supabase, error: authError } = await requireAuth();
+     if (authError || !supabase || !user) {
+       return { data: null, error: authError };
+     }
+
+     const result = await supabase
+       .from("bookings")
+       .select()
+       .eq("booking_user_id", user.id);
+     return toSupabaseQueryResponse<Tables<"bookings">[]>(result);
+   }
+   ```
+
+3. **Structure for public data (no auth):**
+   ```typescript
+   "use server";
+
+   import { createClient } from "@/lib/supabase/server";
+   import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+   import type { Tables } from "@/supabase/types/database";
+
+   export async function getMeetingRooms() {
+     const supabase = await createClient();
+     const result = await supabase.from("meeting_rooms").select();
+     return toSupabaseQueryResponse<Tables<"meeting_rooms">[]>(result);
+   }
+   ```
+
+4. **Key points:**
+   - **Private data**: Use `requireAuth()` to get the client and user
+   - **Public data**: Use `createClient()` from `@/lib/supabase/server`
+   - Always wrap Supabase query results with `toSupabaseQueryResponse<T>()`
+   - Use `Tables<"table_name">` for single records or `Tables<"table_name">[]` for arrays
+   - Validate user input with Zod when accepting IDs, filters, or pagination
+   - Return the transformed response directly
+
+### Using Server Actions in Pages (Server Components) with Suspense
+
+1. **Call the server action WITHOUT awaiting (for streaming):**
+   ```typescript
+   import { Suspense } from "react";
+   import { getAmenities } from "@/app/features/amenities/actions/get-amenities";
+   import AmenitiesList from "@/app/features/amenities/components/amenities-list";
+   import AmenitiesListSkeleton from "@/app/features/amenities/components/amenities-list-skeleton";
+
+   export default function Home() {
+     // Don't await - pass the Promise to enable streaming
+     const amenitiesPromise = getAmenities();
+     
+     return (
+       <div>
+         <h1>The Social House</h1>
+         {/* Suspense boundary enables streaming - static content renders immediately */}
+         <Suspense fallback={<AmenitiesListSkeleton />}>
+           <AmenitiesList promise={amenitiesPromise} />
+         </Suspense>
+       </div>
+     );
+   }
+   ```
+
+2. **Key points:**
+   - **Don't await** the server action - pass the Promise directly to enable streaming
+   - Use React's `use()` hook in client components to unwrap the Promise
+   - Create loading skeleton components for better UX (not just "Loading...")
+   - Suspense boundaries enable progressive streaming - static content renders immediately
+   - Multiple Suspense boundaries can be used for independent loading sections
+
+### Handling Responses in Components with Suspense
+
+1. **Create a loading skeleton component:**
+   ```typescript
+   // app/features/amenities/components/amenities-list-skeleton.tsx
+   import { Skeleton } from "@/components/ui/skeleton";
+
+   export default function AmenitiesListSkeleton() {
+     return (
+       <div className="space-y-4">
+         {[1, 2, 3].map((i) => (
+           <div key={i} className="space-y-2">
+             <Skeleton className="h-6 w-48" />
+             <Skeleton className="h-4 w-24" />
+           </div>
+         ))}
+       </div>
+     );
+   }
+   ```
+
+2. **Create the component that uses React's `use()` hook:**
+   ```typescript
+   "use client";
+
+   import { use } from "react";
+   import type { SupabaseResponse } from "@/lib/supabase-response";
+   import { hasData, hasError } from "@/lib/supabase-response";
+   import type { Tables } from "@/supabase/types/database";
+
+   type ComponentProps = {
+     promise: Promise<SupabaseResponse<Tables<"amenities">[]>>;
+   };
+
+   export default function Component({ promise }: ComponentProps) {
+     // use() hook unwraps the Promise and triggers Suspense
+     const result = use(promise);
+
+     // Check for errors first (including validation errors)
+     if (hasError(result)) {
+       return <div>Error: {result.error.message}</div>;
+     }
+
+     // TypeScript now knows result.data exists and is not null
+     if (!hasData(result) || result.data.length === 0) {
+       return <div>No data found</div>;
+     }
+
+     // Safe to use result.data - TypeScript has narrowed the type
+     return (
+       <div>
+         {result.data.map((item) => (
+           <div key={item.id}>{item.name}</div>
+         ))}
+       </div>
+     );
+   }
+   ```
+
+3. **Key points:**
+   - Component must be a **client component** (`"use client"`) to use `use()` hook
+   - Use React's `use()` hook to unwrap Promises - this triggers Suspense
+   - Always use `hasError()` and `hasData()` type guards for type-safe handling
+   - Check errors before checking data (handles both validation and query errors)
+   - TypeScript automatically narrows types after using the guards
+   - Create skeleton components that match your content structure for better UX
+   - The `use()` hook will suspend the component until the Promise resolves
+
+### Error Handling for GET Operations
+
+1. **Common error codes:**
+   - `UNAUTHENTICATED` - User not logged in (from `requireAuth()`)
+   - `FORBIDDEN` - User not authorized/not admin (from `requireAdmin()`)
+   - `VALIDATION_ERROR` - Zod validation failed (invalid ID, filter params, etc.)
+   - `PGRST116` - No rows returned (record not found with `.single()`)
+
+2. **Error handling in components:**
+   ```typescript
+   if (hasError(result)) {
+     // Handle auth errors
+     if (result.error.code === "UNAUTHENTICATED") {
+       return <div>Please log in to view this content</div>;
+     }
+     // Handle validation errors
+     if (result.error.code === "VALIDATION_ERROR") {
+       return <div>Invalid request: {result.error.message}</div>;
+     }
+     // Handle not found
+     if (result.error.code === "PGRST116") {
+       return <div>Record not found</div>;
+     }
+     return <div>Error: {result.error.message}</div>;
+   }
+   ```
+
+## Benefits
+
+* **Secure**: Authentication for private data, validation prevents injection attacks
+* **Efficient**: Single Supabase client per request when using auth
+* **Flexible**: Public data doesn't require unnecessary auth checks
+* **Type-safe**: TypeScript automatically narrows types with `hasData()` and `hasError()`
+* **Consistent**: Same pattern across all server actions
+* **Reusable**: `toSupabaseQueryResponse()` works with any Supabase query
+* **Clean**: No need for custom response types per action

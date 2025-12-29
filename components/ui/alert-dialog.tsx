@@ -11,6 +11,7 @@ import {
   Title,
   Trigger,
 } from "@radix-ui/react-alert-dialog";
+import type { VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -113,18 +114,37 @@ function AlertDialogDescription({
 
 function AlertDialogAction({
   className,
+  variant,
+  size,
+  asChild,
   ...props
-}: ComponentProps<typeof Action>) {
-  return <Action className={cn(buttonVariants(), className)} {...props} />;
+}: ComponentProps<typeof Action> &
+  VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+  return (
+    <Action
+      asChild={asChild}
+      className={
+        asChild ? className : cn(buttonVariants({ variant, size }), className)
+      }
+      {...props}
+    />
+  );
 }
 
 function AlertDialogCancel({
   className,
+  variant = "outline",
+  size,
+  asChild,
   ...props
-}: ComponentProps<typeof Cancel>) {
+}: ComponentProps<typeof Cancel> &
+  VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
   return (
     <Cancel
-      className={cn(buttonVariants({ variant: "outline" }), className)}
+      asChild={asChild}
+      className={
+        asChild ? className : cn(buttonVariants({ variant, size }), className)
+      }
       {...props}
     />
   );

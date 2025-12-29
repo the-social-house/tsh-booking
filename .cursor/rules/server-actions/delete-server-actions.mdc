@@ -1,0 +1,463 @@
+---
+globs: *.ts
+alwaysApply: false
+---
+## DELETE Server Actions
+
+These guidelines are specifically for **DELETE** server actions that remove records from Supabase.
+
+Whenever you are tasked with creating a new **DELETE** Server Action file, use the following guideline/principles
+
+## Basic Requirements
+
+* Always declare `"use server"` in the first line of every Server Action file.
+
+* Always create a separate file for each server action in the following directory structure: `app/features/<feature-name>/actions/delete-<entity-name>.ts`
+
+* **Always use `requireAuth()` or `requireAdmin()`** for authentication and to get the Supabase client.
+
+* **Always validate the ID with Zod** before performing database operations.
+
+## Authentication Protocol
+
+All DELETE server actions MUST verify authentication before performing any database operations.
+
+### 1. Import and Use Auth Helpers
+
+```typescript
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+// OR for admin-only actions:
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+```
+
+### 2. Authentication Check Pattern
+
+```typescript
+export async function deleteEntity(id: number) {
+  // 1. Verify authentication and get Supabase client (ALWAYS first)
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      success: false,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to perform this action",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  // 2. Validate ID with Zod
+  // 3. Perform database operation using the returned supabase client
+  // ...
+}
+```
+
+### 3. Key Points
+
+- **`requireAuth()`** returns `{ user, supabase, error }` - use for user actions
+- **`requireAdmin()`** returns `{ user, supabase, error }` - use for admin-only actions
+- **Reuse the returned `supabase` client** - don't create a new one
+- **Auth check comes BEFORE validation** - no point validating if user isn't authenticated
+- **One Supabase client per request** - efficient connection pooling
+
+## Zod Validation Protocol
+
+Server-side validation is **mandatory** for DELETE operations. Validate the ID before deletion.
+
+### 1. Create ID Schema for the Feature
+
+Create schemas in the feature's lib folder: `app/features/<feature-name>/lib/<entity>.schema.ts`
+
+```typescript
+import { z } from "zod";
+import messages from "@/lib/messages.json";
+
+/**
+ * Schema for validating IDs (used for delete/update)
+ */
+export const deleteAmenitySchema = z.object({
+  id: z
+    .number()
+    .int(messages.amenities.validation.id.integer)
+    .positive(messages.amenities.validation.id.positive),
+});
+
+export type DeleteAmenityInput = z.infer<typeof deleteAmenitySchema>;
+```
+
+**Key points:**
+- Validate that ID is a positive integer
+- Use the same schema for update ID validation
+- Import messages for user-friendly errors
+
+### 2. Implement Authentication and Validation in Server Action
+
+```typescript
+"use server";
+
+import { requireAuth } from "@/app/features/auth/lib/require-auth";
+import { toSupabaseMutationResult } from "@/lib/supabase-response";
+import { createValidationError } from "@/lib/validation";
+import { deleteAmenitySchema } from "../lib/amenity.schema";
+import { getDeleteErrorMessage } from "../lib/error-messages";
+
+export async function deleteAmenity(id: number) {
+  // 1. Verify authentication and get Supabase client (ALWAYS first)
+  const { supabase, error: authError } = await requireAuth();
+  if (authError || !supabase) {
+    return {
+      success: false,
+      error: authError || {
+        code: "UNAUTHENTICATED",
+        message: "You must be logged in to delete an amenity",
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  // 2. Validate ID
+  const validationResult = deleteAmenitySchema.safeParse({ id });
+  if (!validationResult.success) {
+    return {
+      success: false,
+      error: createValidationError(validationResult.error),
+    };
+  }
+
+  // 3. Perform deletion
+  const result = await supabase
+    .from("amenities")
+    .delete()
+    .eq("amenity_id", id);
+
+  // 4. Handle database errors
+  if (result.error) {
+    const errorMessage = getDeleteErrorMessage(result.error.code);
+    return {
+      success: false,
+      error: { ...result.error, message: errorMessage },
+    };
+  }
+
+  return toSupabaseMutationResult(result);
+}
+```
+
+## Supabase Response Pattern for DELETE Operations
+
+Supabase DELETE operations return `{ data, error, status, statusText }` where:
+- `data` contains the deleted record(s) **ONLY if** `.select()` is used
+- `data` is `null` if `.select()` is **NOT** used (even on successful delete)
+- `error` is `null` on success, or a `PostgrestError` on failure
+- `status` and `statusText` are HTTP response properties (e.g., `status: 200, statusText: "OK"`)
+- If no rows match the filter, `data` is `null` and `error` is `null` (successful but no deletions)
+
+**Choose based on your use case:**
+- **With `.select()`**: Returns the deleted record(s) - use when you need the data (e.g., for undo functionality, logging)
+- **Without `.select()`**: Returns success/failure only - use when you don't need the deleted data back (most common case)
+
+### Server Action Implementation
+
+1. **Import required utilities:**
+   ```typescript
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   // OR for admin-only actions:
+   import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+   import { toSupabaseMutationResult } from "@/lib/supabase-response";
+   import { createValidationError } from "@/lib/validation";
+   import { deleteAmenitySchema } from "../lib/amenity.schema";
+   ```
+
+2. **Option A: DELETE without `.select()` for success/failure only (most common):**
+   ```typescript
+   "use server";
+
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   import { toSupabaseMutationResult } from "@/lib/supabase-response";
+   import { createValidationError } from "@/lib/validation";
+   import { deleteAmenitySchema } from "../lib/amenity.schema";
+   import { getDeleteErrorMessage } from "../lib/error-messages";
+
+   export async function deleteAmenity(id: number) {
+     // 1. Verify authentication and get Supabase client
+     const { supabase, error: authError } = await requireAuth();
+     if (authError || !supabase) {
+       return { success: false, error: authError };
+     }
+
+     // 2. Validate ID
+     const validationResult = deleteAmenitySchema.safeParse({ id });
+     if (!validationResult.success) {
+       return {
+         success: false,
+         error: createValidationError(validationResult.error),
+       };
+     }
+
+     // 3. Perform deletion
+     const result = await supabase
+       .from("amenities")
+       .delete()
+       .eq("amenity_id", id);
+
+     if (result.error) {
+       const errorMessage = getDeleteErrorMessage(result.error.code);
+       return {
+         success: false,
+         error: { ...result.error, message: errorMessage },
+       };
+     }
+     
+     return toSupabaseMutationResult(result);
+   }
+   ```
+   **Use when:** You only need to know if deletion succeeded (most common case - you'll refresh the list separately)
+
+3. **Option B: DELETE with `.select()` to return the deleted record:**
+   ```typescript
+   "use server";
+
+   import { requireAuth } from "@/app/features/auth/lib/require-auth";
+   import { toSupabaseMutationResponse } from "@/lib/supabase-response";
+   import { createValidationError } from "@/lib/validation";
+   import type { Tables } from "@/supabase/types/database";
+   import { deleteAmenitySchema } from "../lib/amenity.schema";
+   import { getDeleteErrorMessage } from "../lib/error-messages";
+
+   export async function deleteAmenityWithData(id: number) {
+     // 1. Verify authentication and get Supabase client
+     const { supabase, error: authError } = await requireAuth();
+     if (authError || !supabase) {
+       return { data: null, error: authError };
+     }
+
+     // 2. Validate ID
+     const validationResult = deleteAmenitySchema.safeParse({ id });
+     if (!validationResult.success) {
+       return {
+         data: null,
+         error: createValidationError(validationResult.error),
+       };
+     }
+
+     // 3. Perform deletion
+     const result = await supabase
+       .from("amenities")
+       .delete()
+       .eq("amenity_id", id)
+       .select()
+       .single();
+
+     if (result.error) {
+       const errorMessage = getDeleteErrorMessage(result.error.code);
+       return {
+         data: null,
+         error: { ...result.error, message: errorMessage },
+       };
+     }
+     
+     return toSupabaseMutationResponse<Tables<"amenities">>(result);
+   }
+   ```
+   **Use when:** You need the deleted record (e.g., for undo functionality, logging, audit trails)
+
+4. **For bulk deletes (multiple records):**
+   ```typescript
+   export async function deleteAmenities(ids: number[]) {
+     // Validate all IDs
+     for (const id of ids) {
+       const validationResult = deleteAmenitySchema.safeParse({ id });
+       if (!validationResult.success) {
+         return {
+           success: false,
+           error: createValidationError(validationResult.error),
+         };
+       }
+     }
+
+     const result = await supabase
+       .from("amenities")
+       .delete()
+       .in("amenity_id", ids);
+     
+     return toSupabaseMutationResult(result);
+   }
+   ```
+
+5. **Key points:**
+   - **Always verify authentication first** with `requireAuth()` or `requireAdmin()`
+   - **Reuse the returned `supabase` client** - don't import or create a new one
+   - **Then validate the ID** before any database operation
+   - Always include the record ID as a parameter
+   - Use `.eq()` to filter by the primary key, or `.in()` for multiple records
+   - **Choose based on use case:**
+     - Use `.select()` + `toSupabaseMutationResponse<T>()` when you need the deleted record(s)
+     - Skip `.select()` + use `toSupabaseMutationResult()` when you only need success/failure (most common)
+   - Use `.single()` if you expect one record, or omit it for arrays
+
+### Using DELETE Server Actions in Components
+
+1. **Without `.select()` - when you only need success/failure (most common):**
+   ```typescript
+   "use client";
+
+   import { useState } from "react";
+   import { deleteAmenity } from "@/app/features/amenities/actions/delete-amenity";
+   import { toast } from "sonner";
+   import {
+     AlertDialog,
+     AlertDialogAction,
+     AlertDialogCancel,
+     AlertDialogContent,
+     AlertDialogDescription,
+     AlertDialogFooter,
+     AlertDialogHeader,
+     AlertDialogTitle,
+     AlertDialogTrigger,
+   } from "@/components/ui/alert-dialog";
+   import { Button } from "@/components/ui/button";
+
+   export default function DeleteAmenityButton({ amenityId }: { amenityId: number }) {
+     const [loading, setLoading] = useState(false);
+
+     async function handleDelete() {
+       setLoading(true);
+       
+       const result = await deleteAmenity(amenityId);
+
+       if (!result.success) {
+         // Handles both validation errors and database errors
+         toast.error(`Failed to delete amenity: ${result.error.message}`);
+         setLoading(false);
+         return;
+       }
+
+       toast.success("Amenity deleted successfully!");
+       setLoading(false);
+     }
+
+     return (
+       <AlertDialog>
+         <AlertDialogTrigger asChild>
+           <Button disabled={loading}>Delete</Button>
+         </AlertDialogTrigger>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+             <AlertDialogDescription>
+               This action cannot be undone. This will permanently delete the amenity.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <AlertDialogFooter>
+             <AlertDialogCancel>Cancel</AlertDialogCancel>
+             <AlertDialogAction onClick={handleDelete} disabled={loading}>
+               {loading ? "Deleting..." : "Delete"}
+             </AlertDialogAction>
+           </AlertDialogFooter>
+         </AlertDialogContent>
+       </AlertDialog>
+     );
+   }
+   ```
+
+2. **With `.select()` - when you need the deleted record (e.g., for undo):**
+   ```typescript
+   "use client";
+
+   import { useState } from "react";
+   import { deleteAmenityWithData } from "@/app/features/amenities/actions/delete-amenity";
+   import { hasError, hasData } from "@/lib/supabase-response";
+   import { toast } from "sonner";
+
+   export default function DeleteAmenityButton({ amenityId }: { amenityId: number }) {
+     const [loading, setLoading] = useState(false);
+     const [deletedAmenity, setDeletedAmenity] = useState(null);
+
+     async function handleDelete() {
+       setLoading(true);
+       
+       const result = await deleteAmenityWithData(amenityId);
+
+       if (hasError(result)) {
+         toast.error(`Failed to delete amenity: ${result.error.message}`);
+         setLoading(false);
+         return;
+       }
+
+       if (hasData(result)) {
+         setDeletedAmenity(result.data);
+         toast.success("Amenity deleted!", {
+           action: {
+             label: "Undo",
+             onClick: () => {
+               // Restore deletedAmenity
+             },
+           },
+         });
+       }
+       
+       setLoading(false);
+     }
+
+     // ... AlertDialog component
+   }
+   ```
+
+3. **Key points:**
+   - DELETE actions should **always require user confirmation** (AlertDialog)
+   - Error handling works the same for validation and database errors
+   - Validation errors have `code: "VALIDATION_ERROR"` if you need to distinguish
+   - Use loading states to prevent duplicate submissions
+   - Provide clear confirmation messages about the permanent nature of deletion
+
+### Error Handling
+
+1. **Error message helper (in `lib/error-messages.ts`):**
+   ```typescript
+   import messages from "@/lib/messages.json";
+
+   export function getDeleteErrorMessage(errorCode: string | undefined): string {
+     if (!errorCode) {
+       return messages.amenities.messages.error.delete.unknown;
+     }
+
+     const errorMessages: Record<string, string> = {
+       "PGRST116": messages.amenities.messages.error.delete.notFound,
+       "23503": messages.amenities.messages.error.delete["23503"], // FK violation (in use)
+       "23514": messages.amenities.messages.error.delete["23514"], // Check violation
+     };
+
+     return errorMessages[errorCode] || messages.amenities.messages.error.delete.unknown;
+   }
+   ```
+
+2. **Common error codes for DELETE operations:**
+   - `UNAUTHENTICATED` - User not logged in (from `requireAuth()`)
+   - `FORBIDDEN` - User not authorized/not admin (from `requireAdmin()`)
+   - `VALIDATION_ERROR` - Zod validation failed (custom code for invalid ID)
+   - `PGRST116` - No rows returned (record not found)
+   - `23503` - Foreign key violation (record is referenced by other records)
+   - `23514` - Check violation (constraint check failed)
+
+3. **Best practices for error handling:**
+   - ✅ **Always verify authentication first** with `requireAuth()` or `requireAdmin()`
+   - ✅ **Then validate the ID with Zod**
+   - ✅ **Use `error.code`** to identify specific error types
+   - ✅ **Handle "in use" cases** (23503) - records referenced by other tables
+   - ✅ **Use centralized messages** from `@/lib/messages.json`
+   - ❌ **Avoid string matching on `error.message`** - messages can change
+   - ❌ **Never import `supabase` directly** - always use the client from auth helpers
+
+## Benefits
+
+* **Secure**: Authentication verified before any operation
+* **Efficient**: Single Supabase client per request (connection pooling)
+* **Type-safe**: Zod validates that IDs are proper integers
+* **User-friendly**: Validation messages are clear and actionable
+* **Consistent**: Same auth + validation pattern across all DELETE operations
+* **Safe**: Always require confirmation before deletion

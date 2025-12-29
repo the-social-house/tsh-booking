@@ -1,5 +1,5 @@
 create table subscriptions (
-  subscription_id bigint primary key generated always as identity,
+  subscription_id uuid primary key default gen_random_uuid(),
   subscription_name text not null unique,
   subscription_monthly_price numeric(10, 2) not null,
   subscription_max_monthly_bookings int,

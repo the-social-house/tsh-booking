@@ -53,13 +53,15 @@ max_client_conn = 100
 enabled = true
 # Specifies an ordered list of schema files that describe your database.
 # Supports glob patterns relative to supabase directory: "./schemas/*.sql"
+# Order matters: base tables first, then tables with foreign keys, then junction tables
 schema_paths = [
   "./schemas/roles.sql",
   "./schemas/subscriptions.sql",
-  "./schemas/users.sql",
   "./schemas/amenities.sql",
   "./schemas/meeting_rooms.sql",
+  "./schemas/users.sql",
   "./schemas/bookings.sql",
+  "./schemas/room_unavailabilities.sql",
   "./schemas/booking_amenities.sql",
   "./schemas/meeting_room_amenities.sql"
 ]
@@ -69,7 +71,6 @@ enabled = true
 sql_paths = [
   './seeds/roles.sql',
   './seeds/subscriptions.sql',
-  './seeds/users.sql',
   './seeds/amenities.sql',
   './seeds/meeting_rooms.sql',
   './seeds/meeting_room_amenities.sql',
@@ -120,12 +121,11 @@ enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
-# Uncomment to configure local storage buckets
-# [storage.buckets.images]
-# public = false
-# file_size_limit = "50MiB"
-# allowed_mime_types = ["image/png", "image/jpeg"]
-# objects_path = "./images"
+# Storage buckets
+[storage.buckets.meeting-room-images]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
 
 # Uncomment to allow connections via S3 compatible clients
 # [storage.s3_protocol]

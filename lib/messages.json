@@ -1,0 +1,618 @@
+{
+  "amenities": {
+    "validation": {
+      "name": {
+        "required": "Amenity name is required",
+        "minLength": "Amenity name must be at least 2 characters",
+        "maxLength": "Amenity name cannot exceed 100 characters"
+      },
+      "price": {
+        "min": "Price cannot be negative",
+        "max": "Price cannot exceed 99,999.99",
+        "invalid": "Please enter a valid price"
+      },
+      "id": {
+        "required": "Amenity ID is required",
+        "integer": "Amenity ID must be a whole number",
+        "positive": "Amenity ID must be a positive number",
+        "uuid": "Amenity ID must be a valid UUID"
+      }
+    },
+    "ui": {
+      "create": {
+        "title": "Add new amenity",
+        "description": "Create a new amenity by filling out the form below.",
+        "nameLabel": "Amenity name",
+        "namePlaceholder": "Enter amenity name",
+        "priceLabel": "Price",
+        "pricePlaceholder": "Enter price",
+        "priceHelper": "Leave empty if this amenity is free",
+        "submitButton": "Add amenity",
+        "submitButtonLoading": "Adding..."
+      },
+      "update": {
+        "title": "Edit amenity",
+        "description": "Update the details of this amenity.",
+        "nameLabel": "Amenity name",
+        "namePlaceholder": "Enter amenity name",
+        "priceLabel": "Price",
+        "pricePlaceholder": "Enter price",
+        "priceHelper": "Leave empty if this amenity is free",
+        "submitButton": "Save changes",
+        "submitButtonLoading": "Saving..."
+      },
+      "delete": {
+        "button": "Delete",
+        "buttonLoading": "Deleting...",
+        "dialogTitle": "Delete amenity",
+        "dialogDescription": "Are you sure you want to delete this amenity? This action cannot be undone. Note: This amenity cannot be deleted if it's currently being used in bookings or meeting rooms.",
+        "dialogCancel": "Cancel",
+        "dialogConfirm": "Delete amenity",
+        "dialogConfirmLoading": "Deleting..."
+      },
+      "list": {
+        "title": "Amenities",
+        "empty": "No amenities available",
+        "error": "Failed to load amenities"
+      }
+    },
+    "messages": {
+      "success": {
+        "create": "Amenity added successfully!",
+        "update": "Amenity updated successfully!",
+        "delete": "Amenity deleted successfully!"
+      },
+      "error": {
+        "create": {
+          "23505": "An amenity with this name already exists. Please choose a different name.",
+          "23503": "Unable to create amenity. Please check your input and try again.",
+          "23502": "Please fill in all required fields.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "unknown": "Something went wrong while creating the amenity. Please try again."
+        },
+        "update": {
+          "PGRST116": "The amenity you're trying to update doesn't exist or has been removed.",
+          "23505": "An amenity with this name already exists. Please choose a different name.",
+          "23503": "Unable to update amenity. Please check your input and try again.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "notFound": "The amenity you're trying to update doesn't exist or has been removed.",
+          "unknown": "Something went wrong while updating the amenity. Please try again."
+        },
+        "delete": {
+          "23503": "This amenity cannot be deleted because it's currently being used in bookings or meeting rooms.",
+          "23514": "Unable to delete this amenity. Please try again later.",
+          "notFound": "The amenity you're trying to delete doesn't exist or has been removed.",
+          "unknown": "Something went wrong while deleting the amenity. Please try again."
+        },
+        "toast": {
+          "createFailed": "Failed to create amenity",
+          "updateFailed": "Failed to update amenity",
+          "deleteFailed": "Failed to delete amenity"
+        }
+      }
+    }
+  },
+  "bookings": {
+    "validation": {
+      "date": {
+        "required": "Booking date is required",
+        "invalid": "Please enter a valid date"
+      },
+      "startTime": {
+        "required": "Start time is required",
+        "invalid": "Please enter a valid start time"
+      },
+      "endTime": {
+        "required": "End time is required",
+        "invalid": "Please enter a valid end time",
+        "afterStart": "End time must be after start time"
+      },
+      "numberOfPeople": {
+        "required": "Number of people is required",
+        "min": "At least 1 person is required",
+        "max": "Number of people cannot exceed room capacity",
+        "integer": "Number of people must be a whole number"
+      },
+      "totalPrice": {
+        "required": "Total price is required",
+        "min": "Total price cannot be negative",
+        "max": "Total price cannot exceed 99,999.99"
+      },
+      "discount": {
+        "min": "Discount cannot be negative",
+        "max": "Discount cannot exceed 100%"
+      },
+      "paymentStatus": {
+        "required": "Payment status is required",
+        "invalid": "Please select a valid payment status"
+      },
+      "id": {
+        "required": "Booking ID is required",
+        "integer": "Booking ID must be a whole number",
+        "positive": "Booking ID must be a positive number"
+      }
+    },
+    "ui": {
+      "create": {
+        "title": "Book Meeting Room",
+        "roomNameLabel": "Room",
+        "roomCapacityLabel": "Capacity",
+        "roomSizeLabel": "Size",
+        "roomPriceLabel": "Price per Hour",
+        "dateLabel": "Booking Date",
+        "datePlaceholder": "Select date",
+        "startTimeLabel": "Start Time",
+        "startTimePlaceholder": "Select start time",
+        "endTimeLabel": "End Time",
+        "endTimePlaceholder": "Select end time",
+        "numberOfPeopleLabel": "Number of People",
+        "numberOfPeoplePlaceholder": "Enter number of people",
+        "amenitiesLabel": "Additional Amenities",
+        "amenitiesHelper": "Select amenities to add to your booking",
+        "roomAmenitiesLabel": "Room Amenities",
+        "roomAmenitiesHelper": "These amenities are included with the room",
+        "totalPriceLabel": "Total Price",
+        "totalPricePlaceholder": "0.00",
+        "discountLabel": "Discount (%)",
+        "discountPlaceholder": "0",
+        "discountHelper": "Enter discount percentage",
+        "paymentStatusLabel": "Payment Status",
+        "submitButton": "Book Now",
+        "submitButtonLoading": "Booking...",
+        "stripeButton": "Pay with Stripe",
+        "stripeButtonLoading": "Processing payment...",
+        "noSlotsToday": "No available time slots for today. Please choose another date.",
+        "endTimeHelper": "Minimum booking duration is 30 minutes. Last booking ends at 22:00."
+      },
+      "update": {
+        "title": "Edit Booking",
+        "dateLabel": "Booking Date",
+        "datePlaceholder": "Select date",
+        "startTimeLabel": "Start Time",
+        "startTimePlaceholder": "Select start time",
+        "endTimeLabel": "End Time",
+        "endTimePlaceholder": "Select end time",
+        "numberOfPeopleLabel": "Number of People",
+        "numberOfPeoplePlaceholder": "Enter number of people",
+        "totalPriceLabel": "Total Price",
+        "totalPricePlaceholder": "0.00",
+        "discountLabel": "Discount",
+        "discountPlaceholder": "0.00",
+        "discountHelper": "Enter discount amount",
+        "paymentStatusLabel": "Payment Status",
+        "submitButton": "Update Booking",
+        "submitButtonLoading": "Updating..."
+      },
+      "list": {
+        "title": "Bookings",
+        "empty": "No bookings available",
+        "error": "Failed to load bookings"
+      },
+      "overview": {
+        "title": "Booking overview",
+        "pickDate": "Pick a date",
+        "meetingRoomsErrorTitle": "An error has occurred",
+        "meetingRoomsErrorDescription": "There was an error while loading meeting rooms. Please try again later or contact us if the problem persists.",
+        "bookingsErrorTitle": "An error has occurred",
+        "bookingsErrorDescription": "There was an error while loading bookings. Please try again later or contact us if the problem persists."
+      }
+    },
+    "messages": {
+      "success": {
+        "create": "Booking created successfully!",
+        "update": "Booking updated successfully!",
+        "cancel": "Booking cancelled successfully!"
+      },
+      "error": {
+        "create": {
+          "23505": "A booking with these details already exists. Please check your input.",
+          "23503": "Unable to create booking. Please check that the user and meeting room exist.",
+          "23502": "Please fill in all required fields.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "subscriptionLimitExceeded": "You have reached your monthly booking limit. Please upgrade your subscription to book more meetings.",
+          "timeSlotConflict": "This time slot is already booked. Please select a different time.",
+          "invalidTimeSlot": "The selected time slot is not available. Please select a time between 9:00 and 22:00.",
+          "pastTimeSlot": "Cannot book time slots in the past. Please select a future time.",
+          "capacityExceeded": "The number of people exceeds the room capacity. Please reduce the number of attendees.",
+          "invalidAmenity": "One or more selected amenities are not available for this room.",
+          "priceMismatch": "There was an error calculating the booking price. Please try again.",
+          "verifyAmenities": "Unable to verify amenities. Please try again.",
+          "calculateAmenityPrices": "Unable to calculate amenity prices. Please try again.",
+          "verifyBookingAvailability": "Unable to verify booking availability. Please try again.",
+          "verifySubscriptionLimits": "Unable to verify subscription limits. Please try again.",
+          "fetchRoomPricing": "Unable to fetch room pricing. Please try again.",
+          "calculateDiscount": "Unable to calculate discount. Please try again.",
+          "invalidBookingEndTime": "Invalid booking end time provided",
+          "verifyBufferAvailability": "Unable to verify buffer availability. Please try again.",
+          "fetchUserData": "Unable to fetch user data. Please try again.",
+          "verifyRoomDetails": "Unable to verify room details. Please try again.",
+          "unknown": "Something went wrong while creating the booking. Please try again."
+        },
+        "update": {
+          "PGRST116": "The booking you're trying to update doesn't exist or has been removed.",
+          "23505": "A booking with these details already exists. Please check your input.",
+          "23503": "Unable to update booking. Please check that the user and meeting room exist.",
+          "23514": "The information you entered is invalid. Please check and try again.",
+          "notFound": "The booking you're trying to update doesn't exist or has been removed.",
+          "unknown": "Something went wrong while updating the booking. Please try again."
+        },
+        "payment": {
+          "notSucceeded": "Payment could not be confirmed. Please contact support if you were charged.",
+          "updateFailed": "Payment was successful but we couldn't update your booking. Please contact support.",
+          "bookingNotFound": "Booking not found. Please contact support if you were charged.",
+          "confirmFailed": "Unable to confirm payment. Please contact support if you were charged.",
+          "initFailed": "Unable to initialize payment. Please try again."
+        },
+        "amenities": {
+          "addFailed": "Booking was created but we couldn't add the selected amenities. Please contact support to add them manually."
+        },
+        "rollback": {
+          "failed": "Unable to complete booking. Please try again."
+        },
+        "cancel": {
+          "failed": "Unable to cancel booking. Please try again."
+        }
+      }
+    }
+  },
+  "common": {
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "update": "Update",
+      "close": "Close",
+      "confirm": "Confirm"
+    },
+    "ui": {
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all"
+    },
+    "messages": {
+      "loading": "Loading...",
+      "error": "An error occurred",
+      "success": "Operation completed successfully",
+      "notFound": "Item not found",
+      "unauthorized": "You don't have permission to perform this action",
+      "pickADate": "Pick a date",
+      "authenticationRequired": "Authentication required",
+      "pleaseLogIn": "Please log in to view this page.",
+      "adminRequired": "You must be an admin to perform this action",
+      "userNotFound": "User not found",
+      "userProfileNotSetUp": "Your account exists but user profile is not set up. Please contact an administrator.",
+      "unableToLoadUserData": "Unable to load user data. Please try again.",
+      "roomNotFound": "Room not found",
+      "roomDoesNotExist": "The requested room does not exist."
+    },
+    "words": {
+      "people": "people",
+      "free": "Free",
+      "none": "None"
+    },
+    "units": {
+      "squareMeters": "m²",
+      "hourlyRate": "DKK/hr",
+      "dkk": "DKK",
+      "currency": "DKK"
+    }
+  },
+  "admin": {
+    "ui": {
+      "table": {
+        "actions": "Actions"
+      },
+      "tabs": {
+        "meetingRooms": {
+          "title": "Meeting rooms",
+          "addMeetingRoom": "Add new room",
+          "errorTitle": "Failed to load meeting rooms",
+          "error": "Something went wrong while loading the meeting rooms. Please try again later.",
+          "emptyTitle": "No meeting rooms",
+          "empty": "There are no meeting rooms available at this time.",
+          "table": {
+            "name": "Name",
+            "capacity": "Capacity",
+            "size": "Size",
+            "hourlyRate": "Hourly rate",
+            "amenities": "Amenities",
+            "availability": "Unavailability"
+          }
+        },
+        "amenities": {
+          "title": "Amenities",
+          "addAmenity": "New amenity",
+          "errorTitle": "Failed to load amenities",
+          "error": "Something went wrong while loading the amenities. Please try again later.",
+          "emptyTitle": "No amenities",
+          "empty": "There are no amenities available at this time.",
+          "table": {
+            "name": "Name",
+            "price": "Price"
+          }
+        },
+        "bookings": {
+          "title": "Bookings",
+          "errorTitle": "Failed to load bookings",
+          "error": "Something went wrong while loading the bookings. Please try again later.",
+          "emptyTitle": "No bookings",
+          "empty": "There are no bookings available at this time.",
+          "table": {
+            "date": "Date",
+            "time": "Time",
+            "room": "Room",
+            "user": "User",
+            "people": "People",
+            "price": "Price",
+            "status": "Status",
+            "buffer": "Buffer"
+          },
+          "actions": {
+            "cancel": "Cancel booking",
+            "alreadyCancelled": "Already cancelled"
+          },
+          "cancel": {
+            "dialogTitle": "Cancel booking",
+            "dialogDescription": "Are you sure you want to cancel this booking? This action cannot be undone.",
+            "dialogCancel": "Cancel",
+            "dialogConfirm": "Cancel booking",
+            "dialogConfirmLoading": "Cancelling..."
+          }
+        }
+      }
+    },
+    "meetingRooms": {
+      "title": "Meeting rooms",
+      "addMeetingRoom": "New room",
+      "validation": {
+        "name": {
+          "required": "Room name is required",
+          "minLength": "Room name must be at least 2 characters",
+          "maxLength": "Room name cannot exceed 100 characters"
+        },
+        "capacity": {
+          "integer": "Capacity must be a whole number",
+          "min": "Capacity must be at least 1",
+          "max": "Capacity cannot exceed 1,000"
+        },
+        "pricePerHour": {
+          "min": "Price is required",
+          "max": "Price cannot exceed 99,999.99"
+        },
+        "size": {
+          "min": "Size must be at least 1",
+          "max": "Size cannot exceed 99,999.99"
+        },
+        "id": {
+          "integer": "Room ID must be a whole number",
+          "positive": "Room ID must be a positive number",
+          "uuid": "Room ID must be a valid UUID"
+        },
+        "images": {
+          "required": "At least one image is required",
+          "invalid": "One or more images are invalid. Please check the file type and size.",
+          "maxCount": "You can upload at most 10 images for a meeting room."
+        },
+        "availability": {
+          "startDate": {
+            "required": "Please select a date range for the unavailability period",
+            "invalid": "Please enter a valid start date"
+          },
+          "endDate": {
+            "required": "Please select an end date for the unavailability period",
+            "invalid": "Please enter a valid end date",
+            "afterStart": "End date must be on or after the start date"
+          },
+          "dates": {
+            "required": "Please select a date range for the unavailability period"
+          }
+        }
+      },
+      "ui": {
+        "create": {
+          "title": "Add new meeting room",
+          "description": "Create a new meeting room by filling out the form below.",
+          "nameLabel": "Room name",
+          "namePlaceholder": "e.g., Room of Innovation",
+          "capacityLabel": "Capacity",
+          "capacityPlaceholder": "e.g., 10",
+          "capacityHelper": "Maximum number of people",
+          "pricePerHourLabel": "Price per hour (DKK)",
+          "pricePerHourPlaceholder": "e.g., 500",
+          "sizeLabel": "Size (m²)",
+          "sizePlaceholder": "e.g., 25",
+          "amenitiesLabel": "Select amenities",
+          "amenitiesHelper": "To add new amenities, go to the Amenities tab.",
+          "imagesLabel": "Room images",
+          "imagesHelper": "JPG, PNG, or WebP. Max 5MB each, up to 10 images.",
+          "uploadingImages": "Uploading images...",
+          "submitButton": "Create Room",
+          "submitButtonLoading": "Creating..."
+        },
+        "update": {
+          "title": "Edit meeting room",
+          "description": "Update the details of this meeting room.",
+          "nameLabel": "Room name",
+          "namePlaceholder": "e.g., Room of Innovation",
+          "capacityLabel": "Capacity",
+          "capacityPlaceholder": "e.g., 10",
+          "capacityHelper": "Maximum number of people",
+          "pricePerHourLabel": "Price per hour (DKK)",
+          "pricePerHourPlaceholder": "e.g., 500",
+          "sizeLabel": "Size (m²)",
+          "sizePlaceholder": "e.g., 25",
+          "imagesLabel": "Room images",
+          "imagesHelper": "JPG, PNG, or WebP. Max 5MB each, up to 10 images.",
+          "amenitiesLabel": "Select amenities",
+          "amenitiesHelper": "To add new amenities, go to the Amenities tab.",
+          "amenitiesEmpty": "No amenities available.",
+          "imagesCurrentLabel": "Current images",
+          "imagesNewLabel": "New images to upload",
+          "uploadingImages": "Uploading images...",
+          "submitButton": "Save changes",
+          "submitButtonLoading": "Saving..."
+        },
+        "delete": {
+          "dialogTitle": "Delete meeting room",
+          "dialogDescription": "Are you sure you want to delete this meeting room? This action cannot be undone and will remove the room from the system.",
+          "dialogCancel": "Cancel",
+          "dialogConfirm": "Delete room",
+          "dialogConfirmLoading": "Deleting..."
+        },
+        "availability": {
+          "dialogTitle": "Add unavailability period",
+          "dialogDescription": "Select a date range and optionally provide a reason for making this room unavailable.",
+          "dateRangeLabel": "Unavailable dates",
+          "dateRangePlaceholder": "Select date range",
+          "dateRangeHelper": "Select a start date, then an end date. Click a single date for a one-day unavailability.",
+          "reasonLabel": "Reason (optional)",
+          "reasonPlaceholder": "e.g., Maintenance, Renovation, Event",
+          "submitButton": "Add unavailability",
+          "submitButtonLoading": "Adding...",
+          "addButton": "Add unavailability",
+          "badgeTooltip": "Click to edit/remove",
+          "editDialogTitle": "Edit unavailability period",
+          "editDialogDescription": "Update the date range and reason for this unavailability period.",
+          "editSubmitButton": "Save changes",
+          "editSubmitButtonLoading": "Saving...",
+          "deleteDialogTitle": "Delete unavailability period",
+          "deleteDialogDescription": "Are you sure you want to delete this unavailability period?",
+          "deleteDialogConfirm": "Delete",
+          "deleteDialogConfirmLoading": "Deleting..."
+        }
+      },
+      "messages": {
+        "success": {
+          "create": "Meeting room created successfully!",
+          "update": "Meeting room updated successfully!",
+          "delete": "Meeting room deleted successfully!",
+          "availabilityUpdate": "Room availability updated successfully!",
+          "unavailabilityCreate": "Unavailability period added successfully!",
+          "unavailabilityUpdate": "Unavailability period updated successfully!",
+          "unavailabilityDelete": "Unavailability period deleted successfully!"
+        },
+        "error": {
+          "create": {
+            "23505": "A meeting room with this name already exists. Please choose a different name.",
+            "23503": "Unable to create meeting room. Please check your input and try again.",
+            "23502": "Please fill in all required fields.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "unknown": "Something went wrong while creating the meeting room. Please try again.",
+            "imagesUploadFailed": "Failed to upload images for the meeting room.",
+            "amenitiesFailed": "Meeting room was created, but amenities could not be added."
+          },
+          "update": {
+            "PGRST116": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "23505": "A meeting room with this name already exists. Please choose a different name.",
+            "23503": "Unable to update meeting room. Please check your input and try again.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "notFound": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "unknown": "Something went wrong while updating the meeting room. Please try again.",
+            "imagesUploadFailed": "Failed to upload images while updating the meeting room.",
+            "amenitiesFailed": "Meeting room was updated, but amenities could not be updated."
+          },
+          "delete": {
+            "23503": "This meeting room cannot be deleted because it has existing bookings. Please cancel or reassign the bookings first.",
+            "23514": "Unable to delete this meeting room. Please try again later.",
+            "notFound": "The meeting room you're trying to delete doesn't exist or has been removed.",
+            "unknown": "Something went wrong while deleting the meeting room. Please try again."
+          },
+          "availabilityUpdate": {
+            "PGRST116": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "23503": "Unable to update room availability. Please check your input and try again.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "notFound": "The meeting room you're trying to update doesn't exist or has been removed.",
+            "unknown": "Something went wrong while updating room availability. Please try again."
+          },
+          "unavailabilityCreate": {
+            "23505": "An unavailability period with these dates already exists for this room.",
+            "23503": "Unable to create unavailability period. Please check your input and try again.",
+            "23502": "Please fill in all required fields.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "overlappingDates": "This date range overlaps with an existing unavailability period for this room.",
+            "bookingConflict": "Cannot make room unavailable during this period because there are existing bookings.",
+            "unknown": "Something went wrong while creating the unavailability period. Please try again."
+          },
+          "unavailabilityUpdate": {
+            "PGRST116": "The unavailability period you're trying to update doesn't exist or has been removed.",
+            "23505": "An unavailability period with these dates already exists for this room.",
+            "23503": "Unable to update unavailability period. Please check your input and try again.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "notFound": "The unavailability period you're trying to update doesn't exist or has been removed.",
+            "overlappingDates": "This date range overlaps with another unavailability period for this room.",
+            "bookingConflict": "Cannot update unavailability period because the new dates conflict with existing bookings.",
+            "unknown": "Something went wrong while updating the unavailability period. Please try again."
+          },
+          "unavailabilityDelete": {
+            "PGRST116": "The unavailability period you're trying to delete doesn't exist or has been removed.",
+            "23503": "Unable to delete this unavailability period. Please try again later.",
+            "23514": "Unable to delete this unavailability period. Please try again later.",
+            "notFound": "The unavailability period you're trying to delete doesn't exist or has been removed.",
+            "unknown": "Something went wrong while deleting the unavailability period. Please try again."
+          }
+        }
+      }
+    }
+  },
+  "users": {
+    "validation": {
+      "companyName": {
+        "required": "Company name is required",
+        "minLength": "Company name must be at least 2 characters",
+        "maxLength": "Company name cannot exceed 50 characters"
+      },
+      "email": {
+        "required": "Email is required",
+        "invalid": "Please enter a valid email address"
+      },
+      "password": {
+        "minLength": "Password must be at least 8 characters",
+        "maxLength": "Password cannot exceed 100 characters",
+        "mismatch": "Passwords do not match"
+      }
+    },
+    "messages": {
+      "error": {
+        "update": {
+          "noFields": "No fields to update",
+          "notFound": "User profile not found"
+        }
+      }
+    }
+  },
+  "profile": {
+    "ui": {
+      "empty": "Unable to load your profile information.",
+      "emptyTitle": "Profile not found",
+      "update": {
+        "title": "Update Profile",
+        "companyNameLabel": "Company Name",
+        "companyNamePlaceholder": "Enter company name",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Enter email",
+        "emailHelper": "You'll need to confirm your new email address.",
+        "passwordLabel": "Password",
+        "passwordHelper": "Click the button below to change your password.",
+        "changePasswordButton": "Change Password",
+        "newPasswordLabel": "New Password",
+        "newPasswordPlaceholder": "Enter new password",
+        "confirmPasswordLabel": "Confirm Password",
+        "confirmPasswordPlaceholder": "Confirm new password",
+        "submitButton": "Update Profile",
+        "submitButtonLoading": "Updating..."
+      }
+    },
+    "messages": {
+      "success": {
+        "update": "Profile updated successfully!"
+      },
+      "error": {
+        "update": {
+          "noChanges": "No changes detected. Please update at least one field.",
+          "unknown": "Something went wrong while updating your profile. Please try again."
+        }
+      }
+    }
+  }
+}

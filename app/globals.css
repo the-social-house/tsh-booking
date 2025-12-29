@@ -194,3 +194,68 @@
     cursor: pointer;
   }
 }
+
+@utility container {
+  @apply max-w-[1440px] px-4 mx-auto;
+}
+
+@layer utilities {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    @apply appearance-none;
+  }
+}
+
+/* Scroll shadows for overflow containers */
+@utility scroll-shadow-x {
+  --scroll-shadow-color: var(--color-card);
+  /* Left */
+  background:
+    linear-gradient(to right, var(--scroll-shadow-color) 30%, transparent)
+    center left,
+    /* Right */
+    linear-gradient(to left, var(--scroll-shadow-color) 30%, transparent) center
+    right,
+    /* Shadow Left */
+    linear-gradient(to right, var(--color-border), transparent) center left,
+    /* Shadow Right */
+    linear-gradient(to left, var(--color-border), transparent) center right;
+  background-repeat: no-repeat;
+  background-size:
+    80px 100%,
+    80px 100%,
+    50px 100%,
+    50px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+@utility scroll-shadow-y {
+  --scroll-shadow-color: var(--color-card);
+  /* Top */
+  background:
+    linear-gradient(to bottom, var(--scroll-shadow-color) 30%, transparent)
+    center top,
+    /* Bottom */
+    linear-gradient(to top, var(--scroll-shadow-color) 30%, transparent) center
+    bottom,
+    /* Shadow Top */
+    linear-gradient(to bottom, var(--color-border), transparent) center top,
+    /* Shadow Bottom */
+    linear-gradient(to top, var(--color-border), transparent) center bottom;
+  background-repeat: no-repeat;
+  background-size:
+    100% 80px,
+    100% 80px,
+    100% 50px,
+    100% 50px;
+  background-attachment: local, local, scroll, scroll;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -1,0 +1,49 @@
+"use client";
+
+import { use } from "react";
+import type { UserWithSubscription } from "@/app/features/users/actions/get-user";
+import { TwoColumnLayout } from "@/components/layout/two-column-layout";
+import EmptyFallback from "@/components/ui/empty-fallback";
+import ErrorFallback from "@/components/ui/error-fallback";
+import messages from "@/lib/messages.json";
+import type { SupabaseResponse } from "@/lib/supabase-response";
+import { hasData, hasError } from "@/lib/supabase-response";
+import { ProfileForm } from "./profile-form";
+
+type ProfileContentProps = {
+  userPromise: Promise<SupabaseResponse<UserWithSubscription>>;
+};
+
+export default function ProfileContent({ userPromise }: ProfileContentProps) {
+  const user = use(userPromise);
+
+  // 1. Check for errors FIRST
+  if (hasError(user)) {
+    return (
+      <ErrorFallback
+        description={user.error.message}
+        title={messages.common.messages.error}
+      />
+    );
+  }
+
+  // 2. Check for empty data SECOND
+  if (!hasData(user)) {
+    return (
+      <EmptyFallback
+        description={messages.profile.ui.empty}
+        title={messages.profile.ui.emptyTitle}
+      />
+    );
+  }
+
+  // 3. Render content when data exists
+  return (
+    <TwoColumnLayout
+      className="container mx-auto"
+      left={<h1 className="font-semibold text-xl">Profile</h1>}
+      right={<ProfileForm user={user.data} />}
+      variant="left-narrow"
+    />
+  );
+}
