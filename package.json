@@ -10,7 +10,8 @@
     "prepare": "husky",
     "release": "tsx scripts/create-release.ts",
     "seed": "npx supabase db reset && tsx scripts/seed-users.ts",
-    "supabase:typegen": "npx supabase gen types typescript --local > supabase/types/database.ts"
+    "supabase:typegen": "npx supabase gen types typescript --local > supabase/types/database.ts",
+    "supabase:migration": "tsx scripts/create-migration.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

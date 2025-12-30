@@ -27,7 +27,7 @@ async function buildAdminBookingQuery() {
       booking_receipt_url,
       users (
         user_id,
-        user_username,
+        user_company_name,
         user_email
       ),
       meeting_rooms (
@@ -72,7 +72,7 @@ export async function getAllBookings() {
       booking_receipt_url,
       users (
         user_id,
-        user_username,
+        user_company_name,
         user_email
       ),
       meeting_rooms (
@@ -95,9 +95,13 @@ export async function getAllBookings() {
   const bookingsResponse = toSupabaseQueryResponse<AdminBooking[]>(result);
 
   // If bookings query failed, return the error
-  if (bookingsResponse.error || !bookingsResponse.data) {
+  if (bookingsResponse.error) {
     return bookingsResponse;
   }
+
+  // Ensure data is always an array (normalize null to empty array)
+  // This handles the case where Supabase returns null instead of an empty array
+  const bookings: AdminBooking[] = bookingsResponse.data ?? [];
 
   // Create a map of buffers for quick lookup: key = "roomId|startTime"
   const buffersMap = new Map<
@@ -121,11 +125,12 @@ export async function getAllBookings() {
   }
 
   // Attach buffers map to the response data
+  // Always return a valid response with an array (never null)
   return {
-    ...bookingsResponse,
-    data: bookingsResponse.data.map((booking) => ({
+    data: bookings.map((booking) => ({
       ...booking,
       _buffersMap: buffersMap,
     })),
+    error: null,
   };
 }
