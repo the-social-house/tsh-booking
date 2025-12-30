@@ -61,10 +61,15 @@ function ensureCleanWorkingTree(): void {
 //   }
 // }
 
-function updateDevelopFromOrigin(): void {
-  console.log("Updating local 'develop' from 'origin/develop'...");
+function updateBranchesFromOrigin(): void {
+  console.log("Fetching latest from origin...");
   run("git fetch origin");
+
+  console.log("Updating local 'develop' from 'origin/develop'...");
   run("git pull origin develop");
+
+  console.log("Updating local 'main' from 'origin/main'...");
+  run("git fetch origin main:main");
 }
 
 function getPackageVersion(): string {
@@ -181,7 +186,7 @@ async function main(): Promise<void> {
     // Basic safety checks
     ensureCleanWorkingTree();
     // ensureOnDevelopBranch();
-    updateDevelopFromOrigin();
+    updateBranchesFromOrigin();
 
     // Ensure GitHub CLI is available
     try {
@@ -201,16 +206,40 @@ async function main(): Promise<void> {
 
     console.log(`Bumping version: ${currentVersion} → ${version}`);
 
-    setPackageVersion(version);
+    const releaseBranch = `release/v${version}`;
 
-    // Commit the version bump on local develop (no direct push to protected branch)
+    // Create release branch from develop and switch to it
+    console.log(`Creating release branch '${releaseBranch}' from 'develop'...`);
+    run(`git checkout -b ${releaseBranch} develop`);
+
+    // Merge main into release branch to sync history
+    // Always prefer release branch's version (--ours) for conflicts
+    console.log("Merging 'main' into release branch to sync history...");
+    console.log(
+      "Note: Conflicts will be resolved in favor of the release branch (develop's changes)"
+    );
+    try {
+      // Use --strategy-option=ours to always prefer release branch in conflicts
+      run(
+        `git merge main -X ours --no-edit -m "chore: merge main into release branch"`
+      );
+    } catch {
+      // If merge fails, resolve all conflicts in favor of release branch
+      console.log("Resolving conflicts in favor of release branch...");
+      run("git checkout --ours .");
+      run("git add .");
+      run(
+        `git commit --no-edit -m "chore: merge main into release branch (resolved conflicts in favor of release branch)"`
+      );
+    }
+
+    // Now bump the version on the release branch
+    setPackageVersion(version);
     run("git add package.json");
     run(`git commit -m "chore: bump version to v${version}"`);
 
-    const releaseBranch = `release/v${version}`;
-
-    // Create and push a dedicated release branch from develop
-    run(`git branch ${releaseBranch} develop`);
+    // Push the release branch
+    console.log(`Pushing release branch '${releaseBranch}' to origin...`);
     run(`git push origin ${releaseBranch}`);
 
     const title = `release: v${version}`;
@@ -253,8 +282,18 @@ async function main(): Promise<void> {
     run(createArgs);
 
     console.log(`Release pull request created for v${version}.`);
+
+    // Switch back to develop branch
+    console.log("Switching back to 'develop' branch...");
+    run("git checkout develop");
   } catch (error) {
     console.error(String(error instanceof Error ? error.message : error));
+    // Try to switch back to develop on error
+    try {
+      run("git checkout develop");
+    } catch {
+      // Ignore checkout errors
+    }
     process.exit(1);
   }
 }
