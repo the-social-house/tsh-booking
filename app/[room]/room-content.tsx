@@ -69,8 +69,6 @@ function RoomContentWithAmenities({
 
   const meetingRoomImages = meetingRoom.meeting_room_images ?? [];
 
-  console.log(meetingRoomImages);
-
   return (
     <TwoColumnLayout
       left={<RoomDescription amenities={roomAmenities} room={meetingRoom} />}
