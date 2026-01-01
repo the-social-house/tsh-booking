@@ -1,0 +1,29 @@
+"use server";
+
+import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import { createClient } from "@/lib/supabase/server";
+import { toSupabaseQueryResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
+
+/**
+ * Fetches all subscriptions (admin only)
+ */
+export async function getAllSubscriptions() {
+  // Verify admin access
+  const { error: authError } = await requireAdmin();
+  if (authError) {
+    return {
+      data: null,
+      error: authError,
+    };
+  }
+
+  const supabase = await createClient();
+
+  const result = await supabase
+    .from("subscriptions")
+    .select("*")
+    .order("subscription_monthly_price", { ascending: true });
+
+  return toSupabaseQueryResponse<Tables<"subscriptions">[]>(result);
+}

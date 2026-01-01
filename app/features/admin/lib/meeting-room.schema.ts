@@ -42,8 +42,10 @@ export const updateMeetingRoomSchema = z.object({
   meeting_room_price_per_hour:
     createMeetingRoomSchema.shape.meeting_room_price_per_hour.optional(),
   meeting_room_size: createMeetingRoomSchema.shape.meeting_room_size.optional(),
-  meeting_room_images:
-    createMeetingRoomSchema.shape.meeting_room_images.optional(),
+  meeting_room_images: z
+    .array(z.url())
+    .max(10, messages.admin.meetingRooms.validation.images.maxCount)
+    .optional(),
 });
 
 /**

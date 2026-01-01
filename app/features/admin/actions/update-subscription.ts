@@ -1,12 +1,11 @@
 "use server";
 
 import type { PostgrestError } from "@supabase/supabase-js";
-import { getUpdateMeetingRoomErrorMessage } from "@/app/features/admin/lib/error-messages";
 import {
-  meetingRoomIdSchema,
-  type UpdateMeetingRoomInput,
-  updateMeetingRoomSchema,
-} from "@/app/features/admin/lib/meeting-room.schema";
+  subscriptionIdSchema,
+  type UpdateSubscriptionInput,
+  updateSubscriptionSchema,
+} from "@/app/features/admin/lib/subscription.schema";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import messages from "@/lib/messages.json";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -15,11 +14,22 @@ import { createValidationError } from "@/lib/validation";
 import type { Tables } from "@/supabase/types/database";
 
 /**
- * Update a meeting room by ID
+ * Get error message for subscription update errors
  */
-export async function updateMeetingRoom(
+function getUpdateSubscriptionErrorMessage(errorCode: string): string {
+  const errorMessages = messages.admin.subscriptions.messages.error.update;
+  return (
+    errorMessages[errorCode as keyof typeof errorMessages] ||
+    errorMessages.unknown
+  );
+}
+
+/**
+ * Update a subscription by ID
+ */
+export async function updateSubscription(
   id: string,
-  data: UpdateMeetingRoomInput
+  data: UpdateSubscriptionInput
 ) {
   // Verify admin access
   const { error: authError } = await requireAdmin();
@@ -31,7 +41,7 @@ export async function updateMeetingRoom(
   }
 
   // 1. Validate ID
-  const idValidation = meetingRoomIdSchema.safeParse({ id });
+  const idValidation = subscriptionIdSchema.safeParse({ id });
   if (!idValidation.success) {
     return {
       data: null,
@@ -40,7 +50,7 @@ export async function updateMeetingRoom(
   }
 
   // 2. Validate update data
-  const dataValidation = updateMeetingRoomSchema.safeParse(data);
+  const dataValidation = updateSubscriptionSchema.safeParse(data);
   if (!dataValidation.success) {
     return {
       data: null,
@@ -52,15 +62,15 @@ export async function updateMeetingRoom(
   const validatedData = dataValidation.data;
 
   const result = await supabaseAdmin
-    .from("meeting_rooms")
+    .from("subscriptions")
     .update(validatedData)
-    .eq("meeting_room_id", id)
+    .eq("subscription_id", id)
     .select()
     .single();
 
   // 4. Handle database errors
   if (result.error) {
-    const errorMessage = getUpdateMeetingRoomErrorMessage(result.error.code);
+    const errorMessage = getUpdateSubscriptionErrorMessage(result.error.code);
     return {
       data: null,
       error: { ...result.error, message: errorMessage },
@@ -71,7 +81,7 @@ export async function updateMeetingRoom(
   if (!result.data) {
     const notFoundError: PostgrestError = {
       code: "PGRST116",
-      message: messages.admin.meetingRooms.messages.error.update.notFound,
+      message: messages.admin.subscriptions.messages.error.update.notFound,
       details: "",
       hint: "",
     } as PostgrestError;
@@ -79,5 +89,5 @@ export async function updateMeetingRoom(
     return { data: null, error: notFoundError };
   }
 
-  return toSupabaseMutationResponse<Tables<"meeting_rooms">>(result);
+  return toSupabaseMutationResponse<Tables<"subscriptions">>(result);
 }

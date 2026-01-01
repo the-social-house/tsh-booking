@@ -20,7 +20,7 @@ import messages from "@/lib/messages.json";
 // Type definitions for nested booking data
 type BookingUser = {
   user_id: string;
-  user_username: string;
+  user_company_name: string;
   user_email: string;
 };
 
@@ -34,7 +34,7 @@ function isBookingUser(user: unknown): user is BookingUser {
   return (
     typeof user === "object" &&
     user !== null &&
-    "user_username" in user &&
+    "user_company_name" in user &&
     "user_email" in user
   );
 }
@@ -149,7 +149,7 @@ export const bookingsColumns: ColumnDef<AdminBooking>[] = [
       }
       return (
         <div className="grid">
-          <span>{user.user_username}</span>
+          <span>{user.user_company_name}</span>
           <span className="text-muted-foreground text-xs">
             {user.user_email}
           </span>

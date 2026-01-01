@@ -68,12 +68,20 @@ export async function uploadMeetingRoomImages(
       };
     }
 
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(data.path);
+    // Generate signed URL for private bucket (expires in 1 year = 31,536,000 seconds)
+    const { data: signedUrlData, error: signedUrlError } =
+      await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(data.path, 31_536_000);
 
-    uploadedUrls.push(publicUrl);
+    if (signedUrlError || !signedUrlData) {
+      return {
+        success: false,
+        error: `Failed to generate signed URL for ${file.name}: ${signedUrlError?.message ?? "Unknown error"}`,
+      };
+    }
+
+    uploadedUrls.push(signedUrlData.signedUrl);
     uploadedPaths.push(data.path);
   }
 
