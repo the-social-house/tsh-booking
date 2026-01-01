@@ -18,6 +18,10 @@ export function AdminNav() {
       label: messages.admin.ui.tabs.bookings.title,
     },
     {
+      href: "/admin/users",
+      label: messages.admin.ui.tabs.users.title,
+    },
+    {
       href: "/admin/amenities",
       label: messages.admin.ui.tabs.amenities.title,
     },

@@ -337,12 +337,12 @@
           "errorTitle": "Failed to load bookings",
           "error": "Something went wrong while loading the bookings. Please try again later.",
           "emptyTitle": "No bookings",
-          "empty": "There are no bookings available at this time.",
+          "empty": "There are no bookings yet.",
           "table": {
             "date": "Date",
             "time": "Time",
             "room": "Room",
-            "user": "User",
+            "user": "Company",
             "people": "People",
             "price": "Price",
             "status": "Status",
@@ -358,6 +358,54 @@
             "dialogCancel": "Cancel",
             "dialogConfirm": "Cancel booking",
             "dialogConfirmLoading": "Cancelling..."
+          }
+        },
+        "users": {
+          "title": "Users",
+          "errorTitle": "Failed to load users",
+          "error": "Something went wrong while loading the users. Please try again later.",
+          "emptyTitle": "No users",
+          "empty": "There are no users yet.",
+          "table": {
+            "company": "Company",
+            "email": "Email",
+            "subscription": "Subscription",
+            "monthlyBookings": "Monthly bookings",
+            "createdAt": "Created at",
+            "status": "Status",
+            "banned": "Banned",
+            "active": "Active"
+          },
+          "actions": {
+            "ban": "Ban user",
+            "unban": "Unban user",
+            "updateSubscription": "Update subscription",
+            "banSuccess": "User has been banned successfully",
+            "unbanSuccess": "User has been unbanned successfully",
+            "banError": "Failed to ban user",
+            "unbanError": "Failed to unban user"
+          },
+          "ban": {
+            "dialogBanTitle": "Ban user",
+            "dialogBanDescription": "Are you sure you want to ban this user? They will not be able to access the system.",
+            "dialogUnbanTitle": "Unban user",
+            "dialogUnbanDescription": "Are you sure you want to unban this user? They will be able to access the system again.",
+            "dialogCancel": "Cancel",
+            "dialogBanConfirm": "Ban user",
+            "dialogUnbanConfirm": "Unban user",
+            "dialogBanConfirmLoading": "Banning...",
+            "dialogUnbanConfirmLoading": "Unbanning..."
+          },
+          "subscription": {
+            "dialogTitle": "Update subscription",
+            "dialogDescription": "Select a new subscription for this user:",
+            "dialogSelectPlaceholder": "Select a subscription",
+            "dialogNoSelection": "Please select a subscription",
+            "dialogCancel": "Cancel",
+            "dialogConfirm": "Update subscription",
+            "dialogConfirmLoading": "Updating...",
+            "dialogSuccess": "Subscription updated successfully",
+            "dialogError": "Failed to update subscription"
           }
         }
       }

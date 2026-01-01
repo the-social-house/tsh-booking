@@ -29,7 +29,16 @@ export function BookingsTableContent({ promise }: BookingsTableContentProps) {
     );
   }
 
-  if (!hasData(result) || result.data.length === 0) {
+  if (!hasData(result)) {
+    return (
+      <EmptyFallback
+        description={messages.admin.ui.tabs.bookings.empty}
+        title={messages.admin.ui.tabs.bookings.emptyTitle}
+      />
+    );
+  }
+
+  if (result.data.length === 0) {
     return (
       <EmptyFallback
         description={messages.admin.ui.tabs.bookings.empty}

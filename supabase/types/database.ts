@@ -283,6 +283,7 @@ export type Database = {
           user_current_monthly_bookings: number | null;
           user_email: string;
           user_id: string;
+          user_is_banned: boolean;
           user_role_id: string;
           user_subscription_id: string;
         };
@@ -292,6 +293,7 @@ export type Database = {
           user_current_monthly_bookings?: number | null;
           user_email: string;
           user_id: string;
+          user_is_banned?: boolean;
           user_role_id: string;
           user_subscription_id: string;
         };
@@ -301,6 +303,7 @@ export type Database = {
           user_current_monthly_bookings?: number | null;
           user_email?: string;
           user_id?: string;
+          user_is_banned?: boolean;
           user_role_id?: string;
           user_subscription_id?: string;
         };
