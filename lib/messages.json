@@ -407,6 +407,20 @@
             "dialogSuccess": "Subscription updated successfully",
             "dialogError": "Failed to update subscription"
           }
+        },
+        "subscriptions": {
+          "title": "Subscription models",
+          "addSubscription": "New subscription model",
+          "errorTitle": "Failed to load subscription models",
+          "error": "Something went wrong while loading the subscription models. Please try again later.",
+          "emptyTitle": "No subscription models",
+          "empty": "There are no subscription models available at this time.",
+          "table": {
+            "name": "Name",
+            "monthlyPrice": "Monthly price",
+            "maxMonthlyBookings": "Max monthly bookings",
+            "discountRate": "Discount rate"
+          }
         }
       }
     },
@@ -598,6 +612,102 @@
             "23514": "Unable to delete this unavailability period. Please try again later.",
             "notFound": "The unavailability period you're trying to delete doesn't exist or has been removed.",
             "unknown": "Something went wrong while deleting the unavailability period. Please try again."
+          }
+        }
+      }
+    },
+    "subscriptions": {
+      "validation": {
+        "name": {
+          "required": "Subscription model name is required",
+          "minLength": "Subscription model name must be at least 2 characters",
+          "maxLength": "Subscription model name cannot exceed 100 characters"
+        },
+        "monthlyPrice": {
+          "required": "Monthly price is required",
+          "min": "Monthly price cannot be negative",
+          "max": "Monthly price cannot exceed 99,999.99"
+        },
+        "maxMonthlyBookings": {
+          "integer": "Max monthly bookings must be a whole number",
+          "min": "Max monthly bookings cannot be negative"
+        },
+        "discountRate": {
+          "required": "Discount rate is required",
+          "min": "Discount rate cannot be negative",
+          "max": "Discount rate cannot exceed 100%"
+        },
+        "id": {
+          "required": "Subscription model ID is required",
+          "uuid": "Subscription model ID must be a valid UUID"
+        }
+      },
+      "ui": {
+        "create": {
+          "title": "Add new subscription model",
+          "description": "Create a new subscription model by filling out the form below.",
+          "nameLabel": "Subscription model name",
+          "namePlaceholder": "Enter subscription model name",
+          "monthlyPriceLabel": "Monthly price (DKK)",
+          "monthlyPricePlaceholder": "e.g., 500",
+          "maxMonthlyBookingsLabel": "Max monthly bookings",
+          "maxMonthlyBookingsPlaceholder": "e.g., 10",
+          "maxMonthlyBookingsHelper": "Leave empty for unlimited bookings",
+          "discountRateLabel": "Discount rate (%)",
+          "discountRatePlaceholder": "e.g., 10",
+          "submitButton": "Create subscription model",
+          "submitButtonLoading": "Creating..."
+        },
+        "update": {
+          "title": "Edit subscription model",
+          "description": "Update the details of this subscription model.",
+          "nameLabel": "Subscription model name",
+          "namePlaceholder": "Enter subscription model name",
+          "monthlyPriceLabel": "Monthly price (DKK)",
+          "monthlyPricePlaceholder": "e.g., 500",
+          "maxMonthlyBookingsLabel": "Max monthly bookings",
+          "maxMonthlyBookingsPlaceholder": "e.g., 10",
+          "maxMonthlyBookingsHelper": "Leave empty for unlimited bookings",
+          "discountRateLabel": "Discount rate (%)",
+          "discountRatePlaceholder": "e.g., 10",
+          "submitButton": "Save changes",
+          "submitButtonLoading": "Saving..."
+        },
+        "delete": {
+          "dialogTitle": "Delete subscription model",
+          "dialogDescription": "Are you sure you want to delete this subscription model? This action cannot be undone. Note: This subscription model cannot be deleted if it's currently assigned to users.",
+          "dialogCancel": "Cancel",
+          "dialogConfirm": "Delete subscription model",
+          "dialogConfirmLoading": "Deleting..."
+        }
+      },
+      "messages": {
+        "success": {
+          "create": "Subscription model created successfully!",
+          "update": "Subscription model updated successfully!",
+          "delete": "Subscription model deleted successfully!"
+        },
+        "error": {
+          "create": {
+            "23505": "A subscription model with this name already exists. Please choose a different name.",
+            "23503": "Unable to create subscription model. Please check your input and try again.",
+            "23502": "Please fill in all required fields.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "unknown": "Something went wrong while creating the subscription model. Please try again."
+          },
+          "update": {
+            "PGRST116": "The subscription model you're trying to update doesn't exist or has been removed.",
+            "23505": "A subscription model with this name already exists. Please choose a different name.",
+            "23503": "Unable to update subscription model. Please check your input and try again.",
+            "23514": "The information you entered is invalid. Please check and try again.",
+            "notFound": "The subscription model you're trying to update doesn't exist or has been removed.",
+            "unknown": "Something went wrong while updating the subscription model. Please try again."
+          },
+          "delete": {
+            "23503": "This subscription model cannot be deleted because it's currently assigned to users.",
+            "23514": "Unable to delete this subscription model. Please try again later.",
+            "notFound": "The subscription model you're trying to delete doesn't exist or has been removed.",
+            "unknown": "Something went wrong while deleting the subscription model. Please try again."
           }
         }
       }

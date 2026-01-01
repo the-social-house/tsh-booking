@@ -25,6 +25,10 @@ export function AdminNav() {
       href: "/admin/amenities",
       label: messages.admin.ui.tabs.amenities.title,
     },
+    {
+      href: "/admin/subscriptions",
+      label: messages.admin.ui.tabs.subscriptions.title,
+    },
   ];
 
   return (
