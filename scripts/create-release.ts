@@ -64,17 +64,22 @@ function ensureCleanWorkingTree(): void {
 function updateBranchesFromOrigin(): void {
   console.log("Fetching latest from origin...");
   run("git fetch origin");
-
-  console.log("Updating local 'develop' from 'origin/develop'...");
-  run("git pull origin develop");
-
-  console.log("Updating local 'main' from 'origin/main'...");
-  run("git fetch origin main:main");
+  // Note: We'll update local branches when we checkout them
 }
 
-function getPackageVersion(): string {
+function getPackageVersion(branch = "HEAD"): string {
+  // Read version from a specific branch to ensure we get the correct source of truth
   const pkgPath = path.join(__dirname, "..", "package.json");
-  const raw = fs.readFileSync(pkgPath, "utf8");
+  let raw: string;
+
+  if (branch === "HEAD") {
+    // Read from current working directory
+    raw = fs.readFileSync(pkgPath, "utf8");
+  } else {
+    // Read from specific branch
+    raw = run(`git show ${branch}:package.json`);
+  }
+
   const pkg = JSON.parse(raw) as { version?: unknown };
 
   if (typeof pkg.version !== "string" || pkg.version.length === 0) {
@@ -197,9 +202,19 @@ async function main(): Promise<void> {
       );
     }
 
-    const currentVersion = getPackageVersion();
+    // Ensure we're on develop branch to read the correct version (source of truth)
+    console.log("Switching to 'develop' branch to read version...");
+    run("git checkout develop");
 
-    console.log(`Current version: v${currentVersion}`);
+    // Ensure local develop is exactly in sync with origin/develop
+    // Since we have a clean working tree, we can safely reset
+    console.log("Updating local 'develop' to match 'origin/develop'...");
+    run("git reset --hard origin/develop");
+
+    // Read version from develop branch (source of truth)
+    const currentVersion = getPackageVersion("develop");
+
+    console.log(`Current version (from develop): v${currentVersion}`);
 
     const bumpType = await promptBumpType(currentVersion);
     const version = bumpVersion(currentVersion, bumpType);
@@ -212,24 +227,54 @@ async function main(): Promise<void> {
     console.log(`Creating release branch '${releaseBranch}' from 'develop'...`);
     run(`git checkout -b ${releaseBranch} develop`);
 
-    // Merge main into release branch to sync history
-    // Always prefer release branch's version (--ours) for conflicts
+    // Merge main into release branch to sync history and avoid conflicts in PR
+    // We'll restore package.json from develop after the merge to keep develop as source of truth
     console.log("Merging 'main' into release branch to sync history...");
     console.log(
-      "Note: Conflicts will be resolved in favor of the release branch (develop's changes)"
+      "Note: package.json will be restored from develop after merge to maintain version source of truth"
     );
     try {
-      // Use --strategy-option=ours to always prefer release branch in conflicts
+      // Merge main into release branch
       run(
-        `git merge main -X ours --no-edit -m "chore: merge main into release branch"`
+        `git merge main --no-edit -m "chore: merge main into release branch"`
       );
     } catch {
-      // If merge fails, resolve all conflicts in favor of release branch
-      console.log("Resolving conflicts in favor of release branch...");
+      // If merge fails due to conflicts, resolve them
+      console.log("Merge conflicts detected. Resolving...");
+
+      // For other conflicts (excluding package.json), use release branch's version (develop's changes)
+      console.log(
+        "Resolving conflicts in favor of release branch (develop's changes)..."
+      );
+      // Resolve all conflicts first, then we'll restore package.json separately
       run("git checkout --ours .");
       run("git add .");
+
+      // For package.json, always use develop's version (source of truth)
+      // This must come after --ours to ensure it's not overwritten
+      console.log("Restoring package.json from develop (source of truth)...");
+      run("git checkout develop -- package.json");
+      run("git add package.json");
+
+      // Complete the merge
       run(
-        `git commit --no-edit -m "chore: merge main into release branch (resolved conflicts in favor of release branch)"`
+        `git commit --no-edit -m "chore: merge main into release branch (resolved conflicts, kept develop's package.json)"`
+      );
+    }
+
+    // After merge, ensure package.json has develop's version (source of truth)
+    // This ensures we have the correct base version even if merge succeeded without conflicts
+    const versionAfterMerge = getPackageVersion("HEAD");
+    if (versionAfterMerge !== currentVersion) {
+      console.log(
+        `Restoring package.json from develop (source of truth): ${versionAfterMerge} → ${currentVersion}`
+      );
+      run("git checkout develop -- package.json");
+      run("git add package.json");
+      run(`git commit -m "chore: restore package.json version from develop"`);
+    } else {
+      console.log(
+        "package.json already has correct version from develop, skipping restore"
       );
     }
 
