@@ -26,13 +26,7 @@ export async function updateMeetingRoom(
   if (authError) {
     return {
       data: null,
-      error: authError || {
-        code: "FORBIDDEN",
-        message: messages.common.messages.adminRequired,
-        details: "",
-        hint: "",
-        name: "AuthError",
-      },
+      error: authError,
     };
   }
 

@@ -6,7 +6,6 @@ import {
   createMeetingRoomSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
-import messages from "@/lib/messages.json";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
@@ -39,10 +38,10 @@ async function uploadImages(files: File[]): Promise<{
   const uploadedUrls: string[] = [];
   const uploadedPaths: string[] = [];
   const folderId = generateFolderId();
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
   for (const file of files) {
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.has(file.type)) {
       return {
         success: false,
         error: `Invalid file type: ${file.name}. Only JPG, PNG, and WebP images are allowed.`,
@@ -71,11 +70,20 @@ async function uploadImages(files: File[]): Promise<{
       };
     }
 
-    const {
-      data: { publicUrl },
-    } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(data.path);
+    // Generate signed URL for private bucket (expires in 1 year = 31,536,000 seconds)
+    const { data: signedUrlData, error: signedUrlError } =
+      await supabaseAdmin.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(data.path, 31_536_000);
 
-    uploadedUrls.push(publicUrl);
+    if (signedUrlError || !signedUrlData) {
+      return {
+        success: false,
+        error: `Failed to generate signed URL for ${file.name}: ${signedUrlError?.message ?? "Unknown error"}`,
+      };
+    }
+
+    uploadedUrls.push(signedUrlData.signedUrl);
     uploadedPaths.push(data.path);
   }
 
@@ -158,13 +166,7 @@ export async function createMeetingRoom(
   if (authError) {
     return {
       data: null,
-      error: authError || {
-        code: "FORBIDDEN",
-        message: messages.common.messages.adminRequired,
-        details: "",
-        hint: "",
-        name: "AuthError",
-      },
+      error: authError,
     };
   }
 
