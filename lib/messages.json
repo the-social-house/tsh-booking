@@ -196,6 +196,20 @@
         "bookingsErrorTitle": "An error has occurred",
         "bookingsErrorDescription": "There was an error while loading bookings. Please try again later or contact us if the problem persists.",
         "roomUnavailable": "Room is unavailable"
+      },
+      "upcomingBookings": {
+        "eyebrow": "Upcoming bookings for",
+        "errorTitle": "Error",
+        "errorDescription": "Failed to load your upcoming bookings",
+        "emptyTitle": "No upcoming bookings",
+        "emptyDescription": "You don't have any upcoming bookings at the moment.",
+        "table": {
+          "room": "Room",
+          "date": "Date",
+          "people": "People",
+          "from": "From",
+          "to": "To"
+        }
       }
     },
     "messages": {
