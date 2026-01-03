@@ -25,7 +25,6 @@ export default function RootLayout({
         <HeaderWrapper />
         <main className="my-10">{children}</main>
         <Toaster />
-        ''
       </body>
     </html>
   );

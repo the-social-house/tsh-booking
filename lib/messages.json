@@ -194,7 +194,8 @@
         "meetingRoomsErrorTitle": "An error has occurred",
         "meetingRoomsErrorDescription": "There was an error while loading meeting rooms. Please try again later or contact us if the problem persists.",
         "bookingsErrorTitle": "An error has occurred",
-        "bookingsErrorDescription": "There was an error while loading bookings. Please try again later or contact us if the problem persists."
+        "bookingsErrorDescription": "There was an error while loading bookings. Please try again later or contact us if the problem persists.",
+        "roomUnavailable": "Room is unavailable"
       }
     },
     "messages": {
@@ -289,7 +290,8 @@
     "words": {
       "people": "people",
       "free": "Free",
-      "none": "None"
+      "none": "None",
+      "reason": "Reason"
     },
     "units": {
       "squareMeters": "m²",

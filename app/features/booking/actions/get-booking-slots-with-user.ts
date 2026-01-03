@@ -11,7 +11,7 @@ async function buildBookingQuery() {
   return supabase
     .from("bookings")
     .select(
-      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, users ( user_id, user_company_name )"
+      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, booking_is_type_of_booking, users ( user_id, user_company_name )"
     );
 }
 
@@ -24,12 +24,16 @@ export async function getBookingSlotsWithUser() {
   const today = new Date();
   const todayIso = today.toISOString().slice(0, 10); // YYYY-MM-DD
 
+  // Query for paid bookings OR buffer bookings (buffers have status "confirmed")
+  // Using .in() to include both "paid" and "confirmed" statuses, which covers:
+  // - Paid bookings (status: "paid", type: "booking")
+  // - Buffer slots (status: "confirmed", type: "buffer")
   const result = await supabase
     .from("bookings")
     .select(
-      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, users ( user_id, user_company_name )"
+      "booking_id, booking_user_id, booking_meeting_room_id, booking_start_time, booking_end_time, booking_date, booking_payment_status, booking_is_type_of_booking, users ( user_id, user_company_name )"
     )
-    .eq("booking_payment_status", "paid")
+    .in("booking_payment_status", ["paid", "confirmed"])
     .gte("booking_date", todayIso)
     .order("booking_date")
     .order("booking_start_time");
