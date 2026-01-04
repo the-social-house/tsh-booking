@@ -33,7 +33,7 @@ function Heading({ className, size, as, eyebrow, ...props }: HeadingProps) {
 
   if (eyebrow) {
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col">
         <span className="font-normal text-muted-foreground text-xs uppercase tracking-wider">
           {eyebrow}
         </span>

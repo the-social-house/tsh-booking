@@ -1,8 +1,11 @@
 import type { RoomAmenity } from "@/app/features/meeting-rooms/actions/get-room-amenities";
+import { Badge } from "@/components/ui/badge";
+import Heading from "@/components/ui/heading";
+import messages from "@/lib/messages.json";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/supabase/types/database";
 
-type RoomDescriptionProps = {
+type RoomDescriptionProps = Readonly<{
   /**
    * Meeting room data
    */
@@ -15,7 +18,7 @@ type RoomDescriptionProps = {
    * Additional className for styling
    */
   className?: string;
-};
+}>;
 
 /**
  * Room description component displaying room details.
@@ -29,33 +32,38 @@ export function RoomDescription({
   const meetingRoomOf = room.meeting_room_name.split(" of ")[1];
   const specifications = [
     {
-      label: "Size",
-      value: `${room.meeting_room_size}m²`,
+      label: messages.admin.meetingRooms.ui.description.size,
+      value: `${room.meeting_room_size} ${messages.common.units.squareMeters}`,
     },
     {
-      label: "Capacity",
-      value: `${room.meeting_room_capacity} people`,
+      label: messages.admin.meetingRooms.ui.description.capacity,
+      value: `${room.meeting_room_capacity} ${messages.common.words.people}`,
     },
     {
-      label: "Price",
-      value: `${room.meeting_room_price_per_hour.toFixed(2)} DKK/hour`,
+      label: messages.admin.meetingRooms.ui.description.price,
+      value: `${room.meeting_room_price_per_hour.toFixed(2)} ${messages.common.units.dkk}/hour`,
     },
   ];
   return (
     <div className={cn(className, "flex flex-col gap-8")}>
       <div className="flex flex-col items-start justify-between gap-4 min-[949px]:flex-row min-[949px]:items-center">
-        <div className="flex flex-col items-start gap-2">
-          <span className="text-muted-foreground text-sm">Room of</span>
-          <h1 className="font-bold text-3xl uppercase">{meetingRoomOf}</h1>
-        </div>
-        <div className="flex flex-row items-start gap-2 md:flex-col min-[949px]:items-end">
-          {specifications.map((specification, index) => (
-            <span className="flex items-center gap-2" key={specification.label}>
-              {specification.value}
-              {index < specifications.length - 1 && (
-                <span className="md:hidden">|</span>
-              )}
-            </span>
+        <Heading
+          as="h1"
+          eyebrow={messages.admin.meetingRooms.ui.description.roomOf}
+          size="h1"
+        >
+          {meetingRoomOf}
+        </Heading>
+        <div className="flex flex-row items-start gap-2 md:flex-col md:items-end">
+          {specifications.map((specification) => (
+            <Badge
+              className="text-sm"
+              key={specification.label}
+              pill
+              variant="outline"
+            >
+              {specification.label} - {specification.value}
+            </Badge>
           ))}
         </div>
       </div>

@@ -72,15 +72,11 @@ function RoomContentWithAmenities({
   return (
     <TwoColumnLayout
       left={<RoomDescription amenities={roomAmenities} room={meetingRoom} />}
-      leftClassName="md:sticky md:top-0 md:self-start"
+      leftClassName="md:sticky md:top-[calc(var(--header-height)+calc(var(--spacing)*4))] md:self-start"
       right={
-        <div className="space-y-4">
+        <div className="space-y-4 pb-20">
           {meetingRoomImages.map((image) => (
-            <RoomImage
-              key={image}
-              roomId={meetingRoom.meeting_room_id}
-              src={image}
-            />
+            <RoomImage className="rounded-lg" key={image} src={image} />
           ))}
         </div>
       }

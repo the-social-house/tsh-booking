@@ -190,6 +190,7 @@
       },
       "overview": {
         "title": "Booking overview",
+        "eyebrow": "The daily",
         "pickDate": "Pick a date",
         "meetingRoomsErrorTitle": "An error has occurred",
         "meetingRoomsErrorDescription": "There was an error while loading meeting rooms. Please try again later or contact us if the problem persists.",
@@ -488,6 +489,24 @@
         }
       },
       "ui": {
+        "carousel": {
+          "eyebrow": "Discover our",
+          "title": "Meeting rooms",
+          "errorTitle": "Failed to load rooms",
+          "error": "Something went wrong while loading the meeting rooms. Please try again later.",
+          "emptyTitle": "No rooms found",
+          "empty": "There are no meeting rooms available at this time."
+        },
+        "card": {
+          "originalPriceLabel": "Regular price",
+          "memberPriceLabel": "Your price"
+        },
+        "description": {
+          "roomOf": "Room of",
+          "size": "Size",
+          "capacity": "Capacity",
+          "price": "Price"
+        },
         "create": {
           "title": "Add new meeting room",
           "description": "Create a new meeting room by filling out the form below.",
@@ -786,6 +805,21 @@
           "noChanges": "No changes detected. Please update at least one field.",
           "unknown": "Something went wrong while updating your profile. Please try again."
         }
+      }
+    }
+  },
+  "header": {
+    "ui": {
+      "menu": "Menu",
+      "logoAlt": "The Social House Booking",
+      "myBookings": "My bookings",
+      "account": "Account",
+      "logOut": "Log out",
+      "signingOut": "Signing out..."
+    },
+    "messages": {
+      "error": {
+        "signOutFailed": "Failed to sign out. Please try again."
       }
     }
   }

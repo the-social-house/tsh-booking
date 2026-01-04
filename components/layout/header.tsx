@@ -6,13 +6,13 @@ import {
   ChevronsUpDown,
   LogOut,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { signOut } from "@/app/features/auth/actions/sign-out";
 import type { UserWithSubscription } from "@/app/features/users/actions/get-user";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,19 +21,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import messages from "@/lib/messages.json";
+import { Button } from "../ui/button";
 
-type HeaderProps = {
+type HeaderProps = Readonly<{
   user: UserWithSubscription | null;
-};
-
-function getInitials(companyName: string): string {
-  return companyName
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+}>;
 
 export function Header({ user }: HeaderProps) {
   const router = useRouter();
@@ -44,7 +37,7 @@ export function Header({ user }: HeaderProps) {
     const result = await signOut();
 
     if (result.error) {
-      toast.error("Failed to sign out. Please try again.");
+      toast.error(messages.header.messages.error.signOutFailed);
       setIsSigningOut(false);
       return;
     }
@@ -53,30 +46,22 @@ export function Header({ user }: HeaderProps) {
     router.refresh();
   }
 
-  const userAvatarUrl = undefined; // TODO: Add avatar URL when available
-  const userInitials = user ? getInitials(user.user_company_name) : "";
-
   return (
-    <header className="border-b bg-background">
+    <header className="sticky top-0 z-50 h-(--header-height) border-b bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <a className="flex items-center gap-2" href="/">
-          <h1 className="font-semibold text-lg">The Social House Booking</h1>
-        </a>
+        <Link href="/">
+          <Image
+            alt={messages.header.ui.logoAlt}
+            height={100}
+            src="/tsh-logo.svg"
+            width={200}
+          />
+        </Link>
         {user ? (
           <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  className="flex w-full items-center gap-3 rounded-md p-2 hover:bg-accent"
-                  type="button"
-                >
-                  <Avatar>
-                    <AvatarImage
-                      alt={user.user_company_name}
-                      src={userAvatarUrl}
-                    />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                  </Avatar>
+                <Button className="h-fit px-1.5 hover:bg-muted" variant="ghost">
                   <div className="flex flex-1 flex-col items-start text-left">
                     <span className="font-medium text-sm">
                       {user.user_company_name}
@@ -86,32 +71,23 @@ export function Header({ user }: HeaderProps) {
                     </span>
                   </div>
                   <ChevronsUpDown className="size-4 text-muted-foreground" />
-                </button>
+                </Button>
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="font-medium text-sm">
-                      {user.user_company_name}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {user.user_email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
+                <DropdownMenuLabel>{messages.header.ui.menu}</DropdownMenuLabel>
 
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem>
                   <CalendarIcon className="mr-2 size-4" />
-                  <span>My Bookings</span>
+                  <span>{messages.header.ui.myBookings}</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <Link href="/profile">
                     <CheckCircle2 className="mr-2 size-4" />
-                    <span>Account</span>
+                    <span>{messages.header.ui.account}</span>
                   </Link>
                 </DropdownMenuItem>
 
@@ -123,7 +99,11 @@ export function Header({ user }: HeaderProps) {
                   variant="destructive"
                 >
                   <LogOut className="mr-2 size-4" />
-                  <span>{isSigningOut ? "Signing out..." : "Log out"}</span>
+                  <span>
+                    {isSigningOut
+                      ? messages.header.ui.signingOut
+                      : messages.header.ui.logOut}
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

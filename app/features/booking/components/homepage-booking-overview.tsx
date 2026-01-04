@@ -60,6 +60,10 @@ export const BOOKING_HOURS = {
 
 export const TIME_SLOT_INTERVAL = 30; // minutes
 
+// Fixed header height for room name cells (in pixels)
+// This ensures consistent time label positioning regardless of room name length
+export const ROOM_HEADER_HEIGHT = 80; // pixels
+
 // Calculate row position and span for a booking block
 export function calculateBookingPosition(
   startTime: string,
@@ -204,7 +208,11 @@ export function HomepageBookingOverview({
   return (
     <section className="space-y-4">
       {/* Header */}
-      <Heading as="h2" size="h2">
+      <Heading
+        as="h1"
+        eyebrow={messages.bookings.ui.overview.eyebrow}
+        size="h1"
+      >
         {messages.bookings.ui.overview.title}
       </Heading>
 
@@ -301,7 +309,7 @@ function BookingGrid({
   const timeSlots = generateTimeSlots();
 
   return (
-    <Card className="relative px-2 py-4 md:px-6 md:py-6">
+    <Card className="relative px-2 py-4 pb-5! md:px-6 md:py-0">
       <div className="relative">
         <div
           className="scroll-shadow-x grid overflow-x-auto"
@@ -309,15 +317,19 @@ function BookingGrid({
             gridTemplateColumns: `52px repeat(${meetingRooms.length}, minmax(120px, 1fr))`,
             // Exclude the last time slot (22:00) from having its own row
             // It will be displayed as a label on the bottom border of the last row
-            gridTemplateRows: `auto repeat(${timeSlots.length - 1}, 28px)`,
+            // Header row uses fixed height for consistent time label positioning
+            gridTemplateRows: `${ROOM_HEADER_HEIGHT}px repeat(${timeSlots.length - 1}, 28px)`,
           }}
         >
           {/* Header Row */}
           <div className="sticky left-0 bg-card" />
           {meetingRooms.map((room) => (
             <div
-              className="z-10 flex items-center justify-center border-t border-r border-b nth-of-type-2:border-l px-2 pt-2 pb-4 text-center font-normal text-sm"
+              className="z-10 line-clamp-2 flex items-center justify-center border-b px-2 text-center font-medium text-sm"
               key={room.meeting_room_id}
+              style={{
+                height: `${ROOM_HEADER_HEIGHT}px`,
+              }}
             >
               {room.meeting_room_name}
             </div>
@@ -327,7 +339,9 @@ function BookingGrid({
           {timeSlots.slice(0, -1).map((time, index) =>
             meetingRooms.map((room, roomIndex) => (
               <div
-                className="relative border-r border-b"
+                className={`relative border-b ${
+                  roomIndex === meetingRooms.length - 1 ? "" : "border-r"
+                }`}
                 key={`${room.meeting_room_id}-${time}`}
                 style={{
                   gridColumn: roomIndex + 2,
@@ -363,20 +377,17 @@ function BookingGrid({
         {/* Time Labels - absolutely positioned on grid lines (top border of each row) */}
         <div className="pointer-events-none absolute top-0 left-0 z-20">
           {timeSlots.map((time, index) => {
-            // Calculate top position: header row with pb-4 padding (~94px) + (index * 28px row height) - 28px to move up one row
-            // Position at the top border of each row
+            // Calculate top position using fixed header height
+            // Position at the top border of each row (moved down one row)
             // For the last time slot (22:00), position it at the bottom border of the last row
-            // Header has px-2 pt-2 pb-4, so bottom padding is 16px (instead of 8px from p-2), adding 8px to header height
-            const headerHeight = 94; // Updated header height: 86px + 8px (from pb-4 instead of p-2)
             const isLastSlot = index === timeSlots.length - 1;
-            // Regular labels: headerHeight + (index - 1) * 28 (positioned at top border of each row)
+            // Regular labels: ROOM_HEADER_HEIGHT + index * 28 (positioned at top border of each row, moved down one row)
             // For 22:00: position at bottom of last row
             // Last row index is (timeSlots.length - 2) since we exclude 22:00 from having its own row
-            // Top of last row: headerHeight + (timeSlots.length - 2 - 1) * 28 = headerHeight + (timeSlots.length - 3) * 28
-            // Bottom of last row: top of last row + 28 = headerHeight + (timeSlots.length - 2) * 28
+            // Bottom of last row: ROOM_HEADER_HEIGHT + (timeSlots.length - 1) * 28
             const topPosition = isLastSlot
-              ? headerHeight + (timeSlots.length - 2) * 28 // Bottom border of last row
-              : headerHeight + index * 28 - 28; // Top border of row
+              ? ROOM_HEADER_HEIGHT + (timeSlots.length - 1) * 28 // Bottom border of last row
+              : ROOM_HEADER_HEIGHT + index * 28; // Top border of row
             return (
               <div
                 className="sticky left-0 z-20 flex w-[52px] items-center justify-center text-muted-foreground text-sm"

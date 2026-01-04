@@ -1,10 +1,7 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
-type RoomImageProps = {
-  /**
-   * Room ID or name to generate a consistent image seed
-   */
-  roomId: string;
+type RoomImageProps = Readonly<{
   /**
    * Image width in pixels
    * Defaults to 800
@@ -27,7 +24,7 @@ type RoomImageProps = {
    * Image source URL
    */
   src: string;
-};
+}>;
 
 /**
  * Room image component using Picsum Photos for placeholder images.
@@ -46,7 +43,7 @@ export function RoomImage({
     <div className={className}>
       <Image
         alt={alt}
-        className="h-full w-full rounded-lg object-cover"
+        className={cn("h-full w-full object-cover", className)}
         height={height}
         src={src}
         width={width}

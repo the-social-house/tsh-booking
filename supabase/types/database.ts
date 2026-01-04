@@ -186,6 +186,7 @@ export type Database = {
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
           meeting_room_size: number;
+          meeting_room_slug: string;
         };
         Insert: {
           meeting_room_capacity: number;
@@ -194,6 +195,7 @@ export type Database = {
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
           meeting_room_size: number;
+          meeting_room_slug: string;
         };
         Update: {
           meeting_room_capacity?: number;
@@ -202,6 +204,7 @@ export type Database = {
           meeting_room_name?: string;
           meeting_room_price_per_hour?: number;
           meeting_room_size?: number;
+          meeting_room_slug?: string;
         };
         Relationships: [];
       };

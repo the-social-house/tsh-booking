@@ -11,6 +11,11 @@ export const createMeetingRoomSchema = z.object({
     .min(2, messages.admin.meetingRooms.validation.name.minLength)
     .max(100, messages.admin.meetingRooms.validation.name.maxLength)
     .trim(),
+  meeting_room_slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(100, "Slug is too long")
+    .optional(),
   meeting_room_capacity: z
     .number()
     .int(messages.admin.meetingRooms.validation.capacity.integer)
@@ -37,6 +42,7 @@ export const createMeetingRoomSchema = z.object({
  */
 export const updateMeetingRoomSchema = z.object({
   meeting_room_name: createMeetingRoomSchema.shape.meeting_room_name.optional(),
+  meeting_room_slug: createMeetingRoomSchema.shape.meeting_room_slug.optional(),
   meeting_room_capacity:
     createMeetingRoomSchema.shape.meeting_room_capacity.optional(),
   meeting_room_price_per_hour:
