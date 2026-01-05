@@ -8,6 +8,7 @@ import { UserActions } from "@/app/features/admin/components/users/user-actions"
 import type { Subscription } from "@/app/features/admin/lib/subscription.schema";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format-date-time";
+import { formatPrice } from "@/lib/format-price";
 import messages from "@/lib/messages.json";
 
 // Type guards and helpers
@@ -68,7 +69,7 @@ export const usersColumns: ColumnDef<AdminUser>[] = [
         <div className="grid">
           <span>{subscription.subscription_name}</span>
           <span className="text-muted-foreground text-xs">
-            {subscription.subscription_monthly_price.toFixed(2)}{" "}
+            {formatPrice(subscription.subscription_monthly_price)}{" "}
             {messages.common.units.currency}/mo
           </span>
         </div>

@@ -23,9 +23,9 @@ type FieldErrors = {
 
 type CreateAmenityFormState = FormState<FieldErrors>;
 
-type CreateAmenityFormProps = {
+type CreateAmenityFormProps = Readonly<{
   onSuccess?: () => void;
-};
+}>;
 
 export default function CreateAmenityForm({
   onSuccess,

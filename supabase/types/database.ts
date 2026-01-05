@@ -181,27 +181,33 @@ export type Database = {
       meeting_rooms: {
         Row: {
           meeting_room_capacity: number;
+          meeting_room_description: string | null;
           meeting_room_id: string;
           meeting_room_images: string[] | null;
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
           meeting_room_size: number;
+          meeting_room_slug: string;
         };
         Insert: {
           meeting_room_capacity: number;
+          meeting_room_description?: string | null;
           meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
           meeting_room_size: number;
+          meeting_room_slug: string;
         };
         Update: {
           meeting_room_capacity?: number;
+          meeting_room_description?: string | null;
           meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name?: string;
           meeting_room_price_per_hour?: number;
           meeting_room_size?: number;
+          meeting_room_slug?: string;
         };
         Relationships: [];
       };

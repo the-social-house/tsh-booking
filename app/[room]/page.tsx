@@ -57,7 +57,7 @@ async function RoomContentWrapper({
     }
 
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto">
         <h1 className="font-bold text-2xl">{errorTitle}</h1>
         <p className="text-muted-foreground">{errorMessage}</p>
       </div>
@@ -71,7 +71,7 @@ async function RoomContentWrapper({
   // If room not found, return early
   if (hasError(roomResult) || !hasData(roomResult)) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto">
         <h1 className="font-bold text-2xl">
           {messages.common.messages.roomNotFound}
         </h1>

@@ -24,11 +24,13 @@ import { CalendarBooking } from "@/components/ui/calendar-booking";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { BOOKING_HOURS, TIME_SLOT_INTERVAL } from "@/lib/booking-time-slots";
 import {
   type FormState,
   formatErrorForToast,
   parseFieldErrors,
 } from "@/lib/form-errors";
+import { formatPrice } from "@/lib/format-price";
 import messages from "@/lib/messages.json";
 import { hasData, hasError } from "@/lib/supabase-response";
 import type { Tables } from "@/supabase/types/database";
@@ -444,7 +446,8 @@ export default function BookingForm({
                   {messages.bookings.ui.create.roomCapacityLabel}
                 </p>
                 <p className="font-semibold text-lg">
-                  {meetingRoom.meeting_room_capacity} people
+                  {meetingRoom.meeting_room_capacity}{" "}
+                  {messages.common.words.people}
                 </p>
               </div>
               <div>
@@ -452,7 +455,8 @@ export default function BookingForm({
                   {messages.bookings.ui.create.roomPriceLabel}
                 </p>
                 <p className="font-semibold text-lg">
-                  {meetingRoom.meeting_room_price_per_hour.toFixed(2)} DKK/hour
+                  {formatPrice(meetingRoom.meeting_room_price_per_hour)}{" "}
+                  {messages.common.units.hourlyRate}
                 </p>
               </div>
               <div>
@@ -460,7 +464,8 @@ export default function BookingForm({
                   {messages.bookings.ui.create.roomSizeLabel}
                 </p>
                 <p className="font-semibold text-lg">
-                  {meetingRoom.meeting_room_size}m²
+                  {meetingRoom.meeting_room_size}{" "}
+                  {messages.common.units.squareMeters}
                 </p>
               </div>
             </div>
@@ -469,7 +474,7 @@ export default function BookingForm({
             <CalendarBooking
               date={selectedDate}
               disabled={isPending}
-              endHour={22}
+              endHour={BOOKING_HOURS.END}
               endTime={endTime}
               existingBookings={existingBookings}
               maxCapacity={meetingRoom.meeting_room_capacity}
@@ -479,8 +484,8 @@ export default function BookingForm({
               onNumberOfPeopleChange={setNumberOfPeople}
               onTimeChange={(time) => setStartTime(time || "")}
               selectedTime={startTime}
-              startHour={9}
-              timeSlotInterval={30}
+              startHour={BOOKING_HOURS.START}
+              timeSlotInterval={TIME_SLOT_INTERVAL}
             />
 
             {/* Row 2: Amenities | Price Summary + Button */}
@@ -515,10 +520,13 @@ export default function BookingForm({
                           {amenity.amenity_price !== null &&
                           amenity.amenity_price > 0 ? (
                             <span className="ml-2 text-muted-foreground">
-                              +{amenity.amenity_price.toFixed(2)} DKK
+                              +{formatPrice(amenity.amenity_price)}{" "}
+                              {messages.common.units.currency}
                             </span>
                           ) : (
-                            <span className="ml-2 text-green-600">Free</span>
+                            <span className="ml-2 text-green-600">
+                              {messages.common.words.free}
+                            </span>
                           )}
                         </label>
                       </div>
@@ -539,17 +547,25 @@ export default function BookingForm({
                 <div className="space-y-2 rounded-lg border bg-muted/50 p-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Room</span>
-                    <span>{roomSubtotal.toFixed(2)} DKK</span>
+                    <span>
+                      {formatPrice(roomSubtotal)}{" "}
+                      {messages.common.units.currency}
+                    </span>
                   </div>
                   {amenitiesTotal > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Amenities</span>
-                      <span>{amenitiesTotal.toFixed(2)} DKK</span>
+                      <span>
+                        {formatPrice(amenitiesTotal)}{" "}
+                        {messages.common.units.currency}
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center justify-between border-t pt-2 text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>{subtotal.toFixed(2)} DKK</span>
+                    <span>
+                      {formatPrice(subtotal)} {messages.common.units.currency}
+                    </span>
                   </div>
                   {subscriptionDiscount > 0 && (
                     <div className="flex items-center justify-between text-green-600 text-sm">
@@ -557,7 +573,7 @@ export default function BookingForm({
                         Subscription discount ({subscriptionDiscount}%)
                       </span>
                       <span>
-                        -{((subtotal * subscriptionDiscount) / 100).toFixed(2)}{" "}
+                        -{formatPrice((subtotal * subscriptionDiscount) / 100)}{" "}
                         DKK
                       </span>
                     </div>
@@ -567,7 +583,7 @@ export default function BookingForm({
                       {messages.bookings.ui.create.totalPriceLabel}
                     </span>
                     <span className="font-bold text-2xl">
-                      {totalPrice.toFixed(2)} DKK
+                      {formatPrice(totalPrice)} {messages.common.units.currency}
                     </span>
                   </div>
                 </div>
