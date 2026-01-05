@@ -5,6 +5,7 @@ import { Calendar, Coins, Package, Percent } from "lucide-react";
 import { TableHeaderCell } from "@/app/features/admin/components/meeting-rooms/table-header-cell";
 import { SubscriptionActions } from "@/app/features/admin/components/subscriptions/subscription-actions";
 import type { Subscription } from "@/app/features/admin/lib/subscription.schema";
+import { formatPrice } from "@/lib/format-price";
 import messages from "@/lib/messages.json";
 
 export const subscriptionsColumns: ColumnDef<Subscription>[] = [
@@ -28,7 +29,7 @@ export const subscriptionsColumns: ColumnDef<Subscription>[] = [
       if (typeof price !== "number") {
         return "";
       }
-      return `${price.toFixed(2)} ${messages.common.units.currency}`;
+      return `${formatPrice(price)} ${messages.common.units.currency}`;
     },
   },
   {

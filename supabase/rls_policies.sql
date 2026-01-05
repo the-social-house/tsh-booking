@@ -1,9 +1,6 @@
 -- ============================================================================
 -- ROW LEVEL SECURITY POLICIES
 -- ============================================================================
--- Run this SQL script in Supabase Dashboard → SQL Editor after tables are created
--- This enables RLS and creates all policies for all tables
--- ============================================================================
 
 -- ============================================================================
 -- HELPER FUNCTION: Check if current user is admin (bypasses RLS)
@@ -81,6 +78,7 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view their own data" ON public.users;
 DROP POLICY IF EXISTS "Admins can view all users" ON public.users;
+DROP POLICY IF EXISTS "Users can view company names for bookings" ON public.users;
 DROP POLICY IF EXISTS "Only service role can modify users" ON public.users;
 DROP POLICY IF EXISTS "Users can update their own data" ON public.users;
 
@@ -96,6 +94,13 @@ CREATE POLICY "Admins can view all users"
 ON public.users FOR SELECT
 TO authenticated
 USING (public.is_admin());
+
+-- Allow authenticated users to read company names for booking display
+-- This enables the booking calendar to show who has booked each time slot
+CREATE POLICY "Users can view company names for bookings"
+ON public.users FOR SELECT
+TO authenticated
+USING (true);
 
 -- Only service role can insert/update/delete users (via admin actions)
 CREATE POLICY "Only service role can modify users"
@@ -352,11 +357,5 @@ TO service_role
 USING (bucket_id = 'meeting-room-images')
 WITH CHECK (bucket_id = 'meeting-room-images');
 
--- ============================================================================
--- DONE!
--- ============================================================================
--- All RLS policies have been created for all tables and storage buckets.
--- You can verify in Supabase Dashboard → Authentication → Policies
--- ============================================================================
 
 

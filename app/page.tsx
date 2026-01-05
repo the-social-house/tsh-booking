@@ -24,16 +24,6 @@ export default async function Home() {
     <div className="space-y-20">
       <TwoColumnLayout
         left={
-          <HomepageBookingOverview
-            bookingsPromise={bookingsPromise}
-            meetingRoomsPromise={meetingRoomsPromise}
-            unavailabilitiesPromise={unavailabilitiesPromise}
-          />
-        }
-        variant="full"
-      />
-      <TwoColumnLayout
-        left={
           <Heading
             as="h2"
             eyebrow={messages.bookings.ui.upcomingBookings.eyebrow}
@@ -44,6 +34,18 @@ export default async function Home() {
         }
         right={<UpcomingBookingsTable bookingsPromise={userBookingsPromise} />}
       />
+
+      <TwoColumnLayout
+        left={
+          <HomepageBookingOverview
+            bookingsPromise={bookingsPromise}
+            meetingRoomsPromise={meetingRoomsPromise}
+            unavailabilitiesPromise={unavailabilitiesPromise}
+          />
+        }
+        variant="full"
+      />
+
       <TwoColumnLayout
         left={
           <RoomsCarousel

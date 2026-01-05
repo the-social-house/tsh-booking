@@ -181,6 +181,7 @@ export type Database = {
       meeting_rooms: {
         Row: {
           meeting_room_capacity: number;
+          meeting_room_description: string | null;
           meeting_room_id: string;
           meeting_room_images: string[] | null;
           meeting_room_name: string;
@@ -190,6 +191,7 @@ export type Database = {
         };
         Insert: {
           meeting_room_capacity: number;
+          meeting_room_description?: string | null;
           meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name: string;
@@ -199,6 +201,7 @@ export type Database = {
         };
         Update: {
           meeting_room_capacity?: number;
+          meeting_room_description?: string | null;
           meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name?: string;

@@ -24,25 +24,33 @@ type HeadingProps = ComponentProps<"h1"> &
     eyebrow?: string;
   };
 
-function Heading({ className, size, as, eyebrow, ...props }: HeadingProps) {
+function Heading({
+  className,
+  size,
+  as,
+  eyebrow,
+  children,
+  ...props
+}: HeadingProps) {
   const Comp = as ?? "h2";
 
-  const headingElement = (
-    <Comp className={cn(headingVariants({ size }), className)} {...props} />
-  );
-
-  if (eyebrow) {
-    return (
-      <div className="flex flex-col">
+  return (
+    <Comp
+      className={cn(
+        headingVariants({ size }),
+        Boolean(eyebrow) && "flex flex-col",
+        className
+      )}
+      {...props}
+    >
+      {Boolean(eyebrow) && (
         <span className="font-normal text-muted-foreground text-xs uppercase tracking-wider">
           {eyebrow}
         </span>
-        {headingElement}
-      </div>
-    );
-  }
-
-  return headingElement;
+      )}
+      {children}
+    </Comp>
+  );
 }
 
 export default Heading;

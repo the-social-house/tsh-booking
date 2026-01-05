@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropzone";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   type FormState,
   formatErrorForToast,
@@ -41,6 +42,7 @@ type FieldErrors = {
   meeting_room_capacity?: boolean;
   meeting_room_price_per_hour?: boolean;
   meeting_room_size?: boolean;
+  meeting_room_description?: boolean;
   images?: boolean;
 };
 
@@ -49,6 +51,7 @@ type FormValues = {
   meeting_room_capacity: string;
   meeting_room_price_per_hour: string;
   meeting_room_size: string;
+  meeting_room_description: string;
 };
 
 type EditMeetingRoomFormState = FormState<FieldErrors> & {
@@ -79,6 +82,8 @@ function extractFormValues(formData: FormData): FormValues {
     meeting_room_price_per_hour:
       (formData.get("meeting_room_price_per_hour") as string) ?? "",
     meeting_room_size: (formData.get("meeting_room_size") as string) ?? "",
+    meeting_room_description:
+      (formData.get("meeting_room_description") as string) ?? "",
   };
 }
 
@@ -94,6 +99,11 @@ function parseFormData(values: FormValues) {
     meeting_room_size: values.meeting_room_size
       ? Number(values.meeting_room_size)
       : 0,
+    meeting_room_description:
+      values.meeting_room_description &&
+      values.meeting_room_description.trim() !== ""
+        ? values.meeting_room_description
+        : null,
   };
 }
 
@@ -497,6 +507,30 @@ export default function EditMeetingRoomForm({
           placeholder={messages.admin.meetingRooms.ui.update.sizePlaceholder}
           type="number"
         />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="edit-meeting-room-description">
+          {messages.admin.meetingRooms.ui.update.descriptionLabel}
+        </FieldLabel>
+        <Textarea
+          defaultValue={
+            state?.values?.meeting_room_description ??
+            meetingRoom.meeting_room_description ??
+            ""
+          }
+          disabled={isLoading}
+          error={state?.fieldErrors?.meeting_room_description}
+          id="edit-meeting-room-description"
+          name="meeting_room_description"
+          placeholder={
+            messages.admin.meetingRooms.ui.update.descriptionPlaceholder
+          }
+          rows={6}
+        />
+        <FieldDescription>
+          {messages.admin.meetingRooms.ui.update.descriptionHelper}
+        </FieldDescription>
       </Field>
 
       {/* Amenities selection */}

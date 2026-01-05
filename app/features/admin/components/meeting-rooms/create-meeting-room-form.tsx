@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropzone";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   type FormState,
   formatErrorForToast,
@@ -41,6 +42,7 @@ type FieldErrors = {
   meeting_room_capacity?: boolean;
   meeting_room_price_per_hour?: boolean;
   meeting_room_size?: boolean;
+  meeting_room_description?: boolean;
   images?: boolean;
 };
 
@@ -49,6 +51,7 @@ type FormValues = {
   meeting_room_capacity: string;
   meeting_room_price_per_hour: string;
   meeting_room_size: string;
+  meeting_room_description: string;
 };
 
 type CreateMeetingRoomFormState = FormState<FieldErrors> & {
@@ -66,6 +69,7 @@ type ImagePreview = {
 };
 
 function parseFormData(formData: FormData): CreateMeetingRoomInput {
+  const description = formData.get("meeting_room_description") as string;
   return {
     meeting_room_name: formData.get("meeting_room_name") as string,
     meeting_room_capacity: formData.get("meeting_room_capacity")
@@ -77,6 +81,8 @@ function parseFormData(formData: FormData): CreateMeetingRoomInput {
     meeting_room_size: formData.get("meeting_room_size")
       ? Number(formData.get("meeting_room_size"))
       : 0,
+    meeting_room_description:
+      description && description.trim() !== "" ? description : null,
   };
 }
 
@@ -88,6 +94,8 @@ function extractFormValues(formData: FormData): FormValues {
     meeting_room_price_per_hour:
       (formData.get("meeting_room_price_per_hour") as string) ?? "",
     meeting_room_size: (formData.get("meeting_room_size") as string) ?? "",
+    meeting_room_description:
+      (formData.get("meeting_room_description") as string) ?? "",
   };
 }
 
@@ -344,6 +352,26 @@ export default function CreateMeetingRoomForm({
           placeholder={messages.admin.meetingRooms.ui.create.sizePlaceholder}
           type="number"
         />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="create-meeting-room-description">
+          {messages.admin.meetingRooms.ui.create.descriptionLabel}
+        </FieldLabel>
+        <Textarea
+          defaultValue={state?.values?.meeting_room_description}
+          disabled={isLoading}
+          error={state?.fieldErrors?.meeting_room_description}
+          id="create-meeting-room-description"
+          name="meeting_room_description"
+          placeholder={
+            messages.admin.meetingRooms.ui.create.descriptionPlaceholder
+          }
+          rows={6}
+        />
+        <FieldDescription>
+          {messages.admin.meetingRooms.ui.create.descriptionHelper}
+        </FieldDescription>
       </Field>
 
       <Field>

@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import messages from "@/lib/messages.json";
 
-type AmenityActionsProps = {
+type AmenityActionsProps = Readonly<{
   amenity: AdminAmenity;
-};
+}>;
 
 export function AmenityActions({ amenity }: AmenityActionsProps) {
   const [editSheetOpen, setEditSheetOpen] = useState(false);

@@ -12,42 +12,47 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Heading from "@/components/ui/heading";
+import { formatPrice } from "@/lib/format-price";
 import messages from "@/lib/messages.json";
 
 type RoomCardProps = Readonly<{
   room: MeetingRoom;
-  subscriptionDiscountRate: number;
+  subscriptionDiscountRate: number | null;
+  imageAspectRatio: string;
 }>;
 
-export function RoomCard({ room, subscriptionDiscountRate }: RoomCardProps) {
+export function RoomCard({
+  room,
+  subscriptionDiscountRate,
+  imageAspectRatio = "3/4",
+}: RoomCardProps) {
   const images = room.meeting_room_images ?? [];
   const originalPrice = room.meeting_room_price_per_hour;
-  const discountRate = subscriptionDiscountRate / 100;
+  const hasDiscount =
+    subscriptionDiscountRate !== null && subscriptionDiscountRate > 0;
+  const discountRate = hasDiscount ? subscriptionDiscountRate / 100 : 0;
   const memberPrice = originalPrice * (1 - discountRate);
 
   return (
-    <Card className="group p-0">
+    <Card className="group overflow-hidden p-0">
       <Carousel className="w-full" opts={{ watchDrag: false, align: "start" }}>
         <CardContent className="px-0">
           {/* Image Carousel */}
           {images.length > 0 && (
             <div className="relative">
-              <Link href={`/${room.meeting_room_slug}`}>
-                <CarouselContent>
-                  {images.map((image) => (
-                    <CarouselItem key={image}>
-                      <div className="relative aspect-3/4 w-full overflow-hidden rounded-t-lg">
-                        <RoomImage
-                          alt={room.meeting_room_name}
-                          className="h-full w-full duration-300 ease-in-out group-hover:scale-101 group-hover:transition-transform"
-                          src={image}
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Link>
-              {/* Carousel buttons outside Link to prevent navigation */}
+              <CarouselContent>
+                {images.map((image) => (
+                  <CarouselItem key={image}>
+                    <RoomImage
+                      alt={room.meeting_room_name}
+                      className="h-full w-full duration-300 ease-in-out group-hover:scale-101 group-hover:transition-transform"
+                      imageAspectRatio={imageAspectRatio}
+                      src={image}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {/* Carousel buttons */}
               {images.length > 1 && (
                 <div className="pointer-events-none absolute right-4 bottom-4 z-10 flex justify-end gap-2">
                   <div className="pointer-events-auto">
@@ -83,15 +88,28 @@ export function RoomCard({ room, subscriptionDiscountRate }: RoomCardProps) {
 
               {/* Price */}
               <div className="flex items-end justify-between gap-4">
-                <Price
-                  label={messages.admin.meetingRooms.ui.card.originalPriceLabel}
-                  original
-                  price={originalPrice.toFixed(2)}
-                />
-                <Price
-                  label={messages.admin.meetingRooms.ui.card.memberPriceLabel}
-                  price={memberPrice.toFixed(2)}
-                />
+                {hasDiscount ? (
+                  <>
+                    <Price
+                      label={
+                        messages.admin.meetingRooms.ui.card.originalPriceLabel
+                      }
+                      original
+                      price={formatPrice(originalPrice)}
+                    />
+                    <Price
+                      label={
+                        messages.admin.meetingRooms.ui.card.memberPriceLabel
+                      }
+                      price={formatPrice(memberPrice)}
+                    />
+                  </>
+                ) : (
+                  <Price
+                    label={messages.admin.meetingRooms.ui.card.priceLabel}
+                    price={formatPrice(originalPrice)}
+                  />
+                )}
               </div>
             </div>
           </Link>

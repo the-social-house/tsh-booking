@@ -24,7 +24,7 @@ export function RoomContent({
   // Check for errors first
   if (hasError(roomResult)) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto">
         <h1 className="font-bold text-2xl">Error loading room</h1>
         <p className="text-muted-foreground">{roomResult.error.message}</p>
       </div>
@@ -33,7 +33,7 @@ export function RoomContent({
 
   if (!hasData(roomResult)) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto">
         <h1 className="font-bold text-2xl">Room not found</h1>
         <p className="text-muted-foreground">
           The requested room does not exist.
@@ -76,7 +76,12 @@ function RoomContentWithAmenities({
       right={
         <div className="space-y-4 pb-20">
           {meetingRoomImages.map((image) => (
-            <RoomImage className="rounded-lg" key={image} src={image} />
+            <RoomImage
+              className="rounded-lg"
+              imageAspectRatio="16/9"
+              key={image}
+              src={image}
+            />
           ))}
         </div>
       }

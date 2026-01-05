@@ -35,6 +35,11 @@ export const createMeetingRoomSchema = z.object({
     .max(10, messages.admin.meetingRooms.validation.images.maxCount)
     .default([])
     .optional(),
+  meeting_room_description: z
+    .string()
+    .max(2000, messages.admin.meetingRooms.validation.description.maxLength)
+    .nullable()
+    .optional(),
 });
 
 /**
@@ -52,6 +57,8 @@ export const updateMeetingRoomSchema = z.object({
     .array(z.url())
     .max(10, messages.admin.meetingRooms.validation.images.maxCount)
     .optional(),
+  meeting_room_description:
+    createMeetingRoomSchema.shape.meeting_room_description.optional(),
 });
 
 /**

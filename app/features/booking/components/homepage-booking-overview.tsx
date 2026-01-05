@@ -36,6 +36,8 @@ import {
   formatDate,
   formatDateKey,
   formatTime,
+  getDisabledDatesBeforeToday,
+  getTodayDK,
   isSameDayDK,
 } from "@/lib/format-date-time";
 import messages from "@/lib/messages.json";
@@ -52,13 +54,11 @@ type BookingOverviewProps = Readonly<{
   onDateChange?: (date: Date) => void;
 }>;
 
-// Configuration constants for booking system
-export const BOOKING_HOURS = {
-  START: 9, // 09:00
-  END: 22, // 22:00
-} as const;
-
-export const TIME_SLOT_INTERVAL = 30; // minutes
+import {
+  BOOKING_HOURS,
+  generateTimeSlots,
+  TIME_SLOT_INTERVAL,
+} from "@/lib/booking-time-slots";
 
 // Fixed header height for room name cells (in pixels)
 // This ensures consistent time label positioning regardless of room name length
@@ -146,37 +146,16 @@ export function calculateBookingPosition(
   };
 }
 
-// Generate time slots for the day
-export function generateTimeSlots(): string[] {
-  const slots: string[] = [];
-  const totalMinutes = (BOOKING_HOURS.END - BOOKING_HOURS.START) * 60;
-  const numberOfSlots = totalMinutes / TIME_SLOT_INTERVAL;
-
-  // Generate slots from 09:00 to 22:00 (inclusive)
-  // This includes all time slots for booking calculations
-  for (let i = 0; i <= numberOfSlots; i++) {
-    const hours = Math.floor(
-      BOOKING_HOURS.START + (i * TIME_SLOT_INTERVAL) / 60
-    );
-    const minutes = (i * TIME_SLOT_INTERVAL) % 60;
-    slots.push(
-      `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
-    );
-  }
-
-  return slots;
-}
-
 export function HomepageBookingOverview({
   bookingsPromise,
   meetingRoomsPromise,
   unavailabilitiesPromise,
   onDateChange,
 }: BookingOverviewProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(getTodayDK());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const today = new Date();
+  const today = getTodayDK();
   const isSelectedToday = isSameDayDK(selectedDate, today);
 
   const handlePreviousDay = () => {
@@ -231,7 +210,7 @@ export function HomepageBookingOverview({
             </PopoverTrigger>
             <PopoverContent align="end" className="w-auto p-0">
               <Calendar
-                disabled={{ before: today }}
+                disabled={getDisabledDatesBeforeToday()}
                 mode="single"
                 onSelect={handleDateSelect}
                 selected={selectedDate}

@@ -5,6 +5,7 @@ import { Coins, Package } from "lucide-react";
 import { AmenityActions } from "@/app/features/admin/components/amenities/amenity-actions";
 import { TableHeaderCell } from "@/app/features/admin/components/meeting-rooms/table-header-cell";
 import type { AdminAmenity } from "@/app/features/amenities/actions/get-amenities";
+import { formatPrice } from "@/lib/format-price";
 import messages from "@/lib/messages.json";
 
 export const amenitiesColumns: ColumnDef<AdminAmenity>[] = [
@@ -28,7 +29,7 @@ export const amenitiesColumns: ColumnDef<AdminAmenity>[] = [
       if (price === null) {
         return messages.common.words.free;
       }
-      return `${price.toFixed(2)} ${messages.common.units.currency}`;
+      return `${formatPrice(price)} ${messages.common.units.currency}`;
     },
   },
   {

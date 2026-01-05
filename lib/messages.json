@@ -134,30 +134,30 @@
     },
     "ui": {
       "create": {
-        "title": "Book Meeting Room",
+        "title": "Book meeting room",
         "roomNameLabel": "Room",
         "roomCapacityLabel": "Capacity",
         "roomSizeLabel": "Size",
-        "roomPriceLabel": "Price per Hour",
+        "roomPriceLabel": "Price per hour",
         "dateLabel": "Booking Date",
         "datePlaceholder": "Select date",
-        "startTimeLabel": "Start Time",
+        "startTimeLabel": "Start time",
         "startTimePlaceholder": "Select start time",
-        "endTimeLabel": "End Time",
+        "endTimeLabel": "End time",
         "endTimePlaceholder": "Select end time",
-        "numberOfPeopleLabel": "Number of People",
+        "numberOfPeopleLabel": "Number of people",
         "numberOfPeoplePlaceholder": "Enter number of people",
-        "amenitiesLabel": "Additional Amenities",
+        "amenitiesLabel": "Additional amenities",
         "amenitiesHelper": "Select amenities to add to your booking",
-        "roomAmenitiesLabel": "Room Amenities",
+        "roomAmenitiesLabel": "Room amenities",
         "roomAmenitiesHelper": "These amenities are included with the room",
-        "totalPriceLabel": "Total Price",
+        "totalPriceLabel": "Total price",
         "totalPricePlaceholder": "0.00",
         "discountLabel": "Discount (%)",
         "discountPlaceholder": "0",
         "discountHelper": "Enter discount percentage",
-        "paymentStatusLabel": "Payment Status",
-        "submitButton": "Book Now",
+        "paymentStatusLabel": "Payment status",
+        "submitButton": "Book now",
         "submitButtonLoading": "Booking...",
         "stripeButton": "Pay with Stripe",
         "stripeButtonLoading": "Processing payment...",
@@ -165,22 +165,22 @@
         "endTimeHelper": "Minimum booking duration is 30 minutes. Last booking ends at 22:00."
       },
       "update": {
-        "title": "Edit Booking",
-        "dateLabel": "Booking Date",
+        "title": "Edit booking",
+        "dateLabel": "Booking date",
         "datePlaceholder": "Select date",
-        "startTimeLabel": "Start Time",
+        "startTimeLabel": "Start time",
         "startTimePlaceholder": "Select start time",
-        "endTimeLabel": "End Time",
+        "endTimeLabel": "End time",
         "endTimePlaceholder": "Select end time",
-        "numberOfPeopleLabel": "Number of People",
+        "numberOfPeopleLabel": "Number of people",
         "numberOfPeoplePlaceholder": "Enter number of people",
-        "totalPriceLabel": "Total Price",
+        "totalPriceLabel": "Total price",
         "totalPricePlaceholder": "0.00",
         "discountLabel": "Discount",
         "discountPlaceholder": "0.00",
         "discountHelper": "Enter discount amount",
-        "paymentStatusLabel": "Payment Status",
-        "submitButton": "Update Booking",
+        "paymentStatusLabel": "Payment status",
+        "submitButton": "Update booking",
         "submitButtonLoading": "Updating..."
       },
       "list": {
@@ -473,6 +473,9 @@
           "invalid": "One or more images are invalid. Please check the file type and size.",
           "maxCount": "You can upload at most 10 images for a meeting room."
         },
+        "description": {
+          "maxLength": "Description cannot exceed 2000 characters"
+        },
         "availability": {
           "startDate": {
             "required": "Please select a date range for the unavailability period",
@@ -490,7 +493,7 @@
       },
       "ui": {
         "carousel": {
-          "eyebrow": "Discover our",
+          "eyebrow": "Our",
           "title": "Meeting rooms",
           "errorTitle": "Failed to load rooms",
           "error": "Something went wrong while loading the meeting rooms. Please try again later.",
@@ -499,7 +502,8 @@
         },
         "card": {
           "originalPriceLabel": "Regular price",
-          "memberPriceLabel": "Your price"
+          "memberPriceLabel": "Your price",
+          "priceLabel": "Price"
         },
         "description": {
           "roomOf": "Room of",
@@ -519,6 +523,9 @@
           "pricePerHourPlaceholder": "e.g., 500",
           "sizeLabel": "Size (m²)",
           "sizePlaceholder": "e.g., 25",
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": "Enter a description for this meeting room...",
+          "descriptionHelper": "You can use multiple lines. Newlines will be preserved.",
           "amenitiesLabel": "Select amenities",
           "amenitiesHelper": "To add new amenities, go to the Amenities tab.",
           "imagesLabel": "Room images",
@@ -539,6 +546,9 @@
           "pricePerHourPlaceholder": "e.g., 500",
           "sizeLabel": "Size (m²)",
           "sizePlaceholder": "e.g., 25",
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": "Enter a description for this meeting room...",
+          "descriptionHelper": "You can use multiple lines. Newlines will be preserved.",
           "imagesLabel": "Room images",
           "imagesHelper": "JPG, PNG, or WebP. Max 5MB each, up to 10 images.",
           "amenitiesLabel": "Select amenities",
@@ -776,23 +786,25 @@
   },
   "profile": {
     "ui": {
+      "eyebrow": "Edit your",
+      "title": "Profile",
       "empty": "Unable to load your profile information.",
       "emptyTitle": "Profile not found",
       "update": {
-        "title": "Update Profile",
-        "companyNameLabel": "Company Name",
+        "title": "Update profile",
+        "companyNameLabel": "Company name",
         "companyNamePlaceholder": "Enter company name",
         "emailLabel": "Email",
         "emailPlaceholder": "Enter email",
         "emailHelper": "You'll need to confirm your new email address.",
         "passwordLabel": "Password",
-        "passwordHelper": "Click the button below to change your password.",
-        "changePasswordButton": "Change Password",
+        "passwordHelper": "Click the button above to change your password.",
+        "changePasswordButton": "Change password",
         "newPasswordLabel": "New Password",
         "newPasswordPlaceholder": "Enter new password",
-        "confirmPasswordLabel": "Confirm Password",
+        "confirmPasswordLabel": "Confirm password",
         "confirmPasswordPlaceholder": "Confirm new password",
-        "submitButton": "Update Profile",
+        "submitButton": "Update profile",
         "submitButtonLoading": "Updating..."
       }
     },
@@ -810,16 +822,63 @@
   },
   "header": {
     "ui": {
+      "title": "The Social House Booking",
       "menu": "Menu",
       "logoAlt": "The Social House Booking",
+      "rooms": "All rooms",
       "myBookings": "My bookings",
       "account": "Account",
+      "adminPanel": "Admin panel",
       "logOut": "Log out",
-      "signingOut": "Signing out..."
+      "signingOut": "Signing out...",
+      "search": {
+        "label": "Search rooms",
+        "dateLabel": "Date",
+        "datePlaceholder": "Select date",
+        "startTimeLabel": "Start time",
+        "startTimePlaceholder": "Start time",
+        "endTimeLabel": "End time",
+        "endTimePlaceholder": "End time",
+        "numberOfPeopleLabel": "People",
+        "numberOfPeoplePlaceholder": "Number of people",
+        "searchButton": "Search"
+      }
     },
     "messages": {
       "error": {
         "signOutFailed": "Failed to sign out. Please try again."
+      }
+    }
+  },
+  "rooms": {
+    "ui": {
+      "title": "All meeting rooms",
+      "searchedTitle": "Meeting rooms matching your search criteria",
+      "emptyTitle": "No rooms found",
+      "empty": "No meeting rooms match your search criteria. Try adjusting your filters.",
+      "errorTitle": "Failed to load rooms",
+      "error": "Something went wrong while loading the meeting rooms. Please try again later."
+    }
+  },
+  "auth": {
+    "ui": {
+      "login": {
+        "title": "Sign in",
+        "emailLabel": "Email",
+        "emailPlaceholder": "email@example.com",
+        "passwordLabel": "Password",
+        "submitButton": "Login",
+        "submitButtonLoading": "Signing in..."
+      }
+    },
+    "messages": {
+      "success": {
+        "signIn": "Signed in successfully"
+      },
+      "error": {
+        "signIn": {
+          "unknown": "Failed to sign in. Please check your credentials and try again."
+        }
       }
     }
   }

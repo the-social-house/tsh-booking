@@ -53,7 +53,7 @@ export function RoomsCarousel({
   const rooms = roomsResult.data;
   const subscriptionDiscountRate = hasData(userResult)
     ? userResult.data.subscription_discount_rate
-    : 0;
+    : null;
 
   return (
     <Carousel className="w-full space-y-10">
@@ -77,6 +77,7 @@ export function RoomsCarousel({
             key={room.meeting_room_id}
           >
             <RoomCard
+              imageAspectRatio="3/4"
               room={room}
               subscriptionDiscountRate={subscriptionDiscountRate}
             />
