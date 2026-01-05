@@ -45,6 +45,40 @@ export async function requireAuth(): Promise<AuthResult> {
     };
   }
 
+  const { data: activeUser, error: activeUserError } = await supabase
+    .from("users")
+    .select("user_id, user_status")
+    .eq("user_id", user.id)
+    .single();
+
+  if (activeUserError || !activeUser) {
+    return {
+      user: null,
+      supabase: null,
+      error: {
+        code: "USER_NOT_ACTIVE",
+        message: messages.common.messages.userNotFound,
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
+  if (activeUser.user_status !== "active") {
+    return {
+      user: null,
+      supabase: null,
+      error: {
+        code: "USER_NOT_ACTIVE",
+        message: messages.common.messages.userNotActive,
+        details: "",
+        hint: "",
+        name: "AuthError",
+      },
+    };
+  }
+
   return {
     user,
     supabase,

@@ -297,6 +297,7 @@
       "pleaseLogIn": "Please log in to view this page.",
       "adminRequired": "You must be an admin to perform this action",
       "userNotFound": "User not found",
+      "userNotActive": "User is not active",
       "userProfileNotSetUp": "Your account exists but user profile is not set up. Please contact an administrator.",
       "unableToLoadUserData": "Unable to load user data. Please try again.",
       "roomNotFound": "Room not found",
@@ -392,6 +393,47 @@
             "status": "Status",
             "banned": "Banned",
             "active": "Active"
+          },
+          "invite": {
+            "ui": {
+              "create": {
+                "button": "Invite user",
+                "title": "Invite new user",
+                "description": "Create an invite for a new user. They will receive an email to complete their signup.",
+                "emailLabel": "Email",
+                "emailPlaceholder": "Enter email address",
+                "emailHelper": "The user will receive an invite email at this address",
+                "companyNameLabel": "Company name",
+                "companyNamePlaceholder": "Enter company name",
+                "subscriptionLabel": "Subscription",
+                "subscriptionPlaceholder": "Select a subscription",
+                "subscriptionHelper": "Choose the subscription plan for this user",
+                "roleLabel": "Role",
+                "rolePlaceholder": "Select a role",
+                "roleHelper": "Choose the user's role",
+                "submitButton": "Send invite",
+                "submitButtonLoading": "Sending..."
+              }
+            },
+            "messages": {
+              "success": {
+                "create": "Invite sent successfully! The user will receive an email to complete their signup."
+              },
+              "error": {
+                "create": {
+                  "DUPLICATE_INVITE": "A pending invite already exists for this email address",
+                  "TOKEN_GENERATION_ERROR": "Failed to generate invite token. Please try again.",
+                  "USER_ALREADY_EXISTS": "A user with this email already exists.",
+                  "AUTH_ERROR": "Failed to create invite. Please check your configuration and try again.",
+                  "DATABASE_ERROR": "Failed to check for existing invites. Please try again.",
+                  "23505": "An invite with this email already exists. Please choose a different email.",
+                  "23503": "Unable to create invite. Please check that the subscription and role exist.",
+                  "23502": "Please fill in all required fields.",
+                  "23514": "The information you entered is invalid. Please check and try again.",
+                  "unknown": "Something went wrong while creating the invite. Please try again."
+                }
+              }
+            }
           },
           "actions": {
             "ban": "Ban user",
@@ -758,6 +800,66 @@
       }
     }
   },
+  "auth": {
+    "completeSignup": {
+      "messages": {
+        "paymentSuccess": "Payment successful! Your account is being activated..."
+      },
+      "ui": {
+        "title": "Complete Your Signup",
+        "description": "Set your password to complete your account setup.",
+        "emailLabel": "Email",
+        "emailHelper": "This email was provided by your administrator and cannot be changed.",
+        "companyNameLabel": "Company Name",
+        "companyNameHelper": "This company name was provided by your administrator and cannot be changed.",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "Enter your password",
+        "passwordHelper": "Password must be at least 8 characters long.",
+        "confirmPasswordLabel": "Confirm Password",
+        "confirmPasswordPlaceholder": "Confirm your password",
+        "submitButton": "Continue to Payment",
+        "submitButtonLoading": "Validating..."
+      },
+      "testCard": {
+        "title": "Test Mode",
+        "description": "This is a test environment. You can use the following test card to complete the payment:",
+        "cardLabel": "Card:",
+        "cardNumber": "4242 4242 4242 4242",
+        "expiryLabel": "Expiry:",
+        "expiryInstruction": "Any future date (e.g., 12/34)",
+        "cvcLabel": "CVC:",
+        "cvcInstruction": "Any 3 digits (e.g., 123)",
+        "documentationLink": "Read documentation for test mode.",
+        "documentationUrl": "https://docs.stripe.com/testing"
+      },
+      "error": {
+        "missingTokenTitle": "Invalid Invite Link",
+        "missingToken": "No invite token provided. Please use the link from your invitation email.",
+        "invalidTokenTitle": "Invalid or Expired Invite",
+        "invalidToken": "This invite link is invalid or has expired. Please contact your administrator for a new invite."
+      }
+    },
+    "ui": {
+      "login": {
+        "title": "Sign in",
+        "emailLabel": "Email",
+        "emailPlaceholder": "email@example.com",
+        "passwordLabel": "Password",
+        "submitButton": "Login",
+        "submitButtonLoading": "Signing in..."
+      }
+    },
+    "messages": {
+      "success": {
+        "signIn": "Signed in successfully"
+      },
+      "error": {
+        "signIn": {
+          "unknown": "Failed to sign in. Please check your credentials and try again."
+        }
+      }
+    }
+  },
   "users": {
     "validation": {
       "companyName": {
@@ -858,28 +960,6 @@
       "empty": "No meeting rooms match your search criteria. Try adjusting your filters.",
       "errorTitle": "Failed to load rooms",
       "error": "Something went wrong while loading the meeting rooms. Please try again later."
-    }
-  },
-  "auth": {
-    "ui": {
-      "login": {
-        "title": "Sign in",
-        "emailLabel": "Email",
-        "emailPlaceholder": "email@example.com",
-        "passwordLabel": "Password",
-        "submitButton": "Login",
-        "submitButtonLoading": "Signing in..."
-      }
-    },
-    "messages": {
-      "success": {
-        "signIn": "Signed in successfully"
-      },
-      "error": {
-        "signIn": {
-          "unknown": "Failed to sign in. Please check your credentials and try again."
-        }
-      }
     }
   }
 }

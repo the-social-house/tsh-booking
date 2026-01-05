@@ -6,5 +6,6 @@ create table users (
   user_role_id uuid not null references roles (role_id),
   user_subscription_id uuid not null references subscriptions (subscription_id),
   user_current_monthly_bookings int default 0,
-  user_is_banned boolean default false not null
+  user_is_banned boolean default false not null,
+  user_status text not null default 'pending' check (user_status in ('pending', 'active', 'banned'))
 );

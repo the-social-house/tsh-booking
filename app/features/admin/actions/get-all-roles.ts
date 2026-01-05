@@ -6,9 +6,10 @@ import { toSupabaseQueryResponse } from "@/lib/supabase-response";
 import type { Tables } from "@/supabase/types/database";
 
 /**
- * Fetches all subscriptions (admin only)
+ * Fetches all roles (admin only)
+ * Used for dropdowns in admin forms
  */
-export async function getAllSubscriptions() {
+export async function getAllRoles() {
   // Verify admin access
   const { error: authError } = await requireAdmin();
   if (authError) {
@@ -21,11 +22,9 @@ export async function getAllSubscriptions() {
   const supabase = await createClient();
 
   const result = await supabase
-    .from("subscriptions")
+    .from("roles")
     .select("*")
-    .not("subscription_stripe_product_id", "is", null)
-    .not("subscription_stripe_price_id", "is", null)
-    .order("subscription_monthly_price", { ascending: true });
+    .order("role_name", { ascending: true });
 
-  return toSupabaseQueryResponse<Tables<"subscriptions">[]>(result);
+  return toSupabaseQueryResponse<Tables<"roles">[]>(result);
 }
