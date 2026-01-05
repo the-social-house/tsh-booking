@@ -116,6 +116,7 @@ async function seedUsers() {
       user_role_id: role.role_id,
       user_subscription_id: subscription.subscription_id,
       user_current_monthly_bookings: 0,
+      user_status: "active",
     });
 
     if (userError) {

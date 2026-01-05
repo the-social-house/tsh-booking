@@ -226,3 +226,39 @@ export function getDeleteAmenityErrorMessage(
     errorMessages[errorCode] || messages.amenities.messages.error.delete.unknown
   );
 }
+
+/**
+ * Get user-friendly error message for CREATE invite operations
+ */
+export function getCreateInviteErrorMessage(
+  errorCode: string | undefined
+): string {
+  if (!errorCode) {
+    return messages.admin.ui.tabs.users.invite.messages.error.create.unknown;
+  }
+
+  const errorMessages: Record<string, string> = {
+    DUPLICATE_INVITE:
+      messages.admin.ui.tabs.users.invite.messages.error.create
+        .DUPLICATE_INVITE,
+    TOKEN_GENERATION_ERROR:
+      messages.admin.ui.tabs.users.invite.messages.error.create
+        .TOKEN_GENERATION_ERROR,
+    USER_ALREADY_EXISTS:
+      messages.admin.ui.tabs.users.invite.messages.error.create
+        .USER_ALREADY_EXISTS,
+    AUTH_ERROR:
+      messages.admin.ui.tabs.users.invite.messages.error.create.AUTH_ERROR,
+    DATABASE_ERROR:
+      messages.admin.ui.tabs.users.invite.messages.error.create.DATABASE_ERROR,
+    "23505": messages.admin.ui.tabs.users.invite.messages.error.create["23505"],
+    "23503": messages.admin.ui.tabs.users.invite.messages.error.create["23503"],
+    "23502": messages.admin.ui.tabs.users.invite.messages.error.create["23502"],
+    "23514": messages.admin.ui.tabs.users.invite.messages.error.create["23514"],
+  };
+
+  return (
+    errorMessages[errorCode] ||
+    messages.admin.ui.tabs.users.invite.messages.error.create.unknown
+  );
+}

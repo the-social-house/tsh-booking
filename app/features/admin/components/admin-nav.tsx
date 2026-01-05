@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import messages from "@/lib/messages.json";
 
 export function AdminNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure consistent initial render between server and client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     {
@@ -31,12 +38,21 @@ export function AdminNav() {
     },
   ];
 
+  // Use pathname only after mount to avoid hydration mismatch
+  // Default to first nav item for initial server render
+  const activeValue = mounted ? pathname : navItems[0]?.href || "";
+
   return (
     <nav className="mb-6">
-      <Tabs value={pathname}>
-        <TabsList>
+      <Tabs suppressHydrationWarning value={activeValue}>
+        <TabsList suppressHydrationWarning>
           {navItems.map((item) => (
-            <TabsTrigger asChild key={item.href} value={item.href}>
+            <TabsTrigger
+              asChild
+              key={item.href}
+              suppressHydrationWarning
+              value={item.href}
+            >
               <Link href={item.href}>{item.label}</Link>
             </TabsTrigger>
           ))}
