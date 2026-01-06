@@ -68,9 +68,11 @@ export function HeaderMenu({ isAdmin = false, user }: HeaderMenuProps) {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem>
-          <CalendarIcon className="mr-2 size-4" />
-          <span>{messages.header.ui.myBookings}</span>
+        <DropdownMenuItem asChild>
+          <Link href="/my-bookings">
+            <CalendarIcon className="mr-2 size-4" />
+            <span>{messages.header.ui.myBookings}</span>
+          </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
