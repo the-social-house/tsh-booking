@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { BookingDrawerWrapper } from "@/app/[room]/booking-drawer-wrapper";
 import { RoomContent } from "@/app/[room]/room-content";
@@ -93,18 +94,9 @@ async function RoomContentWrapper({
   // Await room first to get room ID for amenities
   const roomResult = await roomPromise;
 
-  // If room not found, return early
+  // If room not found, trigger 404 page
   if (hasError(roomResult) || !hasData(roomResult)) {
-    return (
-      <div className="container mx-auto">
-        <h1 className="font-bold text-2xl">
-          {messages.common.messages.roomNotFound}
-        </h1>
-        <p className="text-muted-foreground">
-          {messages.common.messages.roomDoesNotExist}
-        </p>
-      </div>
-    );
+    notFound();
   }
 
   const meetingRoom = roomResult.data;
