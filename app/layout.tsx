@@ -1,19 +1,20 @@
-import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
+import messages from "@/lib/messages.json";
+import { createPageMetadata } from "@/lib/metadata";
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "The Social House Booking",
-  description: "Book your meeting room at The Social House",
-};
+export const metadata = createPageMetadata(
+  messages.metadata.site.name,
+  messages.metadata.site.description
+);
 
 export default function RootLayout({
   children,

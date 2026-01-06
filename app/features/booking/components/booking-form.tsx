@@ -373,8 +373,15 @@ export default function BookingForm({
   const handlePaymentSuccess = () => {
     // Payment succeeded, booking is now confirmed
     toast.success(messages.bookings.messages.success.create);
-    router.refresh();
-    onSuccess?.();
+
+    // Redirect to success page with booking ID
+    if (pendingBookingId) {
+      router.push(`/success?bookingId=${pendingBookingId}`);
+    } else {
+      // Fallback: refresh and call onSuccess if no booking ID
+      router.refresh();
+      onSuccess?.();
+    }
 
     // Reset form
     formRef.current?.reset();

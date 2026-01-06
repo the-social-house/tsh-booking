@@ -35,7 +35,7 @@ export function RoomImage({
     >
       <Image
         alt={alt}
-        className={cn("absolute size-full object-cover", className)}
+        className={cn("absolute size-full rounded object-cover", className)}
         fill
         src={src}
       />

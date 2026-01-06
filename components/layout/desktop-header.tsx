@@ -14,7 +14,7 @@ export function DesktopHeader({ isAdmin = false, user }: DesktopHeaderProps) {
   }
 
   return (
-    <div className="max-md:hidden">
+    <div className="max-lg:hidden">
       <HeaderContent isAdmin={isAdmin} user={user} variant="desktop" />
     </div>
   );

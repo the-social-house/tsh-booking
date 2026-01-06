@@ -285,7 +285,8 @@ function BookingGrid({
   }
 
   const meetingRooms = meetingRoomsResult.data;
-  const timeSlots = generateTimeSlots();
+  // Generate time slots and add 22:00 for display (bookings can end at 22:00)
+  const timeSlots = [...generateTimeSlots(), "22:00"];
 
   return (
     <Card className="relative px-2 py-4 pb-5! md:px-6 md:py-0">
@@ -449,6 +450,30 @@ function BookingBlocks({
     (booking) => booking.booking_date === selectedDateKey
   );
 
+  // Separate buffers from regular bookings
+  const buffers = bookingsForSelectedDate.filter(
+    (booking) => booking.booking_is_type_of_booking === "buffer"
+  );
+  const regularBookings = bookingsForSelectedDate.filter(
+    (booking) => booking.booking_is_type_of_booking !== "buffer"
+  );
+
+  // Filter buffers to only include those with a corresponding paid booking
+  // A buffer should only render if there's a paid booking that ends at the buffer's start time
+  const validBuffers = buffers.filter((buffer) => {
+    // Find a paid booking in the same room, same date, where the booking's end time equals the buffer's start time
+    const hasPaidBooking = regularBookings.some(
+      (booking) =>
+        booking.booking_meeting_room_id === buffer.booking_meeting_room_id &&
+        booking.booking_payment_status === "paid" &&
+        booking.booking_end_time === buffer.booking_start_time
+    );
+    return hasPaidBooking;
+  });
+
+  // Combine regular bookings with valid buffers
+  const bookingsToRender = [...regularBookings, ...validBuffers];
+
   // Handle unavailabilities
   const unavailabilitiesForSelectedDate: Tables<"room_unavailabilities">[] = [];
   if (hasData(unavailabilitiesResult)) {
@@ -463,8 +488,8 @@ function BookingBlocks({
     );
   }
 
-  // Generate time slots once for all bookings
-  const timeSlots = generateTimeSlots();
+  // Generate time slots once for all bookings and add 22:00 for display (bookings can end at 22:00)
+  const timeSlots = [...generateTimeSlots(), "22:00"];
 
   // Calculate position for full-day unavailability (09:00 to 22:00)
   const fullDayPosition = calculateBookingPosition(
@@ -509,7 +534,7 @@ function BookingBlocks({
       })}
 
       {/* Render bookings */}
-      {bookingsForSelectedDate.map((booking) => {
+      {bookingsToRender.map((booking) => {
         const roomIndex = meetingRooms.findIndex(
           (room) => room.meeting_room_id === booking.booking_meeting_room_id
         );
@@ -534,7 +559,7 @@ function BookingBlocks({
         const is30Minutes = durationMinutes === 30;
 
         const bookingBlockClassName = isBuffer
-          ? "border border-foreground/10 bg-muted-foreground"
+          ? "outline outline-1 -outline-offset-1 outline-foreground/50 bg-muted"
           : "flex flex-col flex-wrap justify-between gap-1 bg-primary text-primary-foreground";
 
         // Wrap with tooltip if 30 minutes and not a buffer, otherwise return block directly
