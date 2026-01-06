@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatErrorForToast } from "@/lib/form-errors";
+import { formatPrice } from "@/lib/format-price";
 import messages from "@/lib/messages.json";
 import { hasData, hasError } from "@/lib/supabase-response";
 
@@ -148,7 +149,7 @@ export function UpdateSubscriptionDialog({
                   value={subscription.subscription_id}
                 >
                   {subscription.subscription_name} (
-                  {subscription.subscription_monthly_price.toFixed(2)}{" "}
+                  {formatPrice(subscription.subscription_monthly_price)}{" "}
                   {messages.common.units.currency}/mo)
                 </SelectItem>
               ))}

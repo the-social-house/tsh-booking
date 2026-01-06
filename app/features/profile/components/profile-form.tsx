@@ -9,6 +9,7 @@ import { updateUserPassword } from "@/app/features/users/actions/update-user-pas
 import { updateUserProfile } from "@/app/features/users/actions/update-user-profile";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { type FormState, formatErrorForToast } from "@/lib/form-errors";
 import messages from "@/lib/messages.json";
@@ -161,9 +162,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-semibold text-xl">
+      <Heading as="h2" size="h2">
         {messages.profile.ui.update.title}
-      </h2>
+      </Heading>
       <form action={formActionHandler} className="space-y-4" ref={formRef}>
         <Field>
           <FieldLabel htmlFor="profile-company-name">

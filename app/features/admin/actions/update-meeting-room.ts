@@ -8,6 +8,7 @@ import {
   updateMeetingRoomSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import { roomNameToSlug } from "@/app/features/meeting-rooms/lib/room-utils";
 import messages from "@/lib/messages.json";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
@@ -48,8 +49,13 @@ export async function updateMeetingRoom(
     };
   }
 
-  // 3. Perform database operation with validated data
+  // 3. Regenerate slug if name is being updated
   const validatedData = dataValidation.data;
+  if (validatedData.meeting_room_name && !validatedData.meeting_room_slug) {
+    validatedData.meeting_room_slug = roomNameToSlug(
+      validatedData.meeting_room_name
+    );
+  }
 
   const result = await supabaseAdmin
     .from("meeting_rooms")

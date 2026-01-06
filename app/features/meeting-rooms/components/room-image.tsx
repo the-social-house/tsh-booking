@@ -1,23 +1,7 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
-type RoomImageProps = {
-  /**
-   * Room ID or name to generate a consistent image seed
-   */
-  roomId: string;
-  /**
-   * Image width in pixels
-   * Defaults to 800
-   */
-  width?: number;
-  /**
-   * Image height in pixels
-   * Defaults to 600
-   */
-  height?: number;
-  /**
-   * Additional className for styling
-   */
+type RoomImageProps = Readonly<{
   className?: string;
   /**
    * Alt text for accessibility
@@ -27,29 +11,33 @@ type RoomImageProps = {
    * Image source URL
    */
   src: string;
-};
+  /**
+   * Image aspect ratio
+   * Defaults to "3/4"
+   */
+  imageAspectRatio: string;
+}>;
 
 /**
  * Room image component using Picsum Photos for placeholder images.
  * Uses room ID as seed to ensure consistent images per room.
  */
 export function RoomImage({
-  width = 800,
-  height = 600,
   className,
   alt = "Meeting room",
   src,
+  imageAspectRatio = "3/4",
 }: RoomImageProps) {
-  // Use room ID as seed for consistent images
-
   return (
-    <div className={className}>
+    <div
+      className={cn("relative", className)}
+      style={{ aspectRatio: imageAspectRatio }}
+    >
       <Image
         alt={alt}
-        className="h-full w-full rounded-lg object-cover"
-        height={height}
+        className={cn("absolute size-full object-cover", className)}
+        fill
         src={src}
-        width={width}
       />
     </div>
   );

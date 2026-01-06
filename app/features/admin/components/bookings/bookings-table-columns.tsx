@@ -15,6 +15,7 @@ import { BookingActions } from "@/app/features/admin/components/bookings/booking
 import { TableHeaderCell } from "@/app/features/admin/components/meeting-rooms/table-header-cell";
 import { Badge } from "@/components/ui/badge";
 import { formatBookingTimeRange, formatDate } from "@/lib/format-date-time";
+import { formatPrice } from "@/lib/format-price";
 import messages from "@/lib/messages.json";
 
 // Type definitions for nested booking data
@@ -189,7 +190,7 @@ export const bookingsColumns: ColumnDef<AdminBooking>[] = [
         typeof discount === "number" && discount > 0
           ? ` (${discount}% off)`
           : "";
-      return `${price.toFixed(2)} ${messages.common.units.currency}${discountText}`;
+      return `${formatPrice(price)} ${messages.common.units.currency}${discountText}`;
     },
   },
   {

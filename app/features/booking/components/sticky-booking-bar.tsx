@@ -1,14 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { formatPrice } from "@/lib/format-price";
+import messages from "@/lib/messages.json";
 import { cn } from "@/lib/utils";
 
-type StickyBookingBarProps = {
+type StickyBookingBarProps = Readonly<{
   roomName: string;
   hourlyRate: number;
   onBookClick: () => void;
   className?: string;
-};
+}>;
 
 export function StickyBookingBar({
   roomName,
@@ -27,7 +29,7 @@ export function StickyBookingBar({
         <div className="flex-1">
           <h3 className="font-semibold text-lg">{roomName}</h3>
           <p className="text-muted-foreground text-sm">
-            ${hourlyRate.toFixed(2)}/hour
+            {formatPrice(hourlyRate)} {messages.common.units.hourlyRate}
           </p>
         </div>
         <Button onClick={onBookClick} size="lg">

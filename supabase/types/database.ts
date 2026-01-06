@@ -148,6 +148,57 @@ export type Database = {
           },
         ];
       };
+      invites: {
+        Row: {
+          invite_auth_user_id: string;
+          invite_company_name: string;
+          invite_completed_at: string | null;
+          invite_created_at: string;
+          invite_email: string;
+          invite_id: string;
+          invite_role_id: string;
+          invite_status: string;
+          invite_subscription_id: string;
+        };
+        Insert: {
+          invite_auth_user_id: string;
+          invite_company_name: string;
+          invite_completed_at?: string | null;
+          invite_created_at?: string;
+          invite_email: string;
+          invite_id?: string;
+          invite_role_id: string;
+          invite_status?: string;
+          invite_subscription_id: string;
+        };
+        Update: {
+          invite_auth_user_id?: string;
+          invite_company_name?: string;
+          invite_completed_at?: string | null;
+          invite_created_at?: string;
+          invite_email?: string;
+          invite_id?: string;
+          invite_role_id?: string;
+          invite_status?: string;
+          invite_subscription_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invites_invite_role_id_fkey";
+            columns: ["invite_role_id"];
+            isOneToOne: false;
+            referencedRelation: "roles";
+            referencedColumns: ["role_id"];
+          },
+          {
+            foreignKeyName: "invites_invite_subscription_id_fkey";
+            columns: ["invite_subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "subscriptions";
+            referencedColumns: ["subscription_id"];
+          },
+        ];
+      };
       meeting_room_amenities: {
         Row: {
           amenity_id: string;
@@ -181,27 +232,33 @@ export type Database = {
       meeting_rooms: {
         Row: {
           meeting_room_capacity: number;
+          meeting_room_description: string | null;
           meeting_room_id: string;
           meeting_room_images: string[] | null;
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
           meeting_room_size: number;
+          meeting_room_slug: string;
         };
         Insert: {
           meeting_room_capacity: number;
+          meeting_room_description?: string | null;
           meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name: string;
           meeting_room_price_per_hour: number;
           meeting_room_size: number;
+          meeting_room_slug: string;
         };
         Update: {
           meeting_room_capacity?: number;
+          meeting_room_description?: string | null;
           meeting_room_id?: string;
           meeting_room_images?: string[] | null;
           meeting_room_name?: string;
           meeting_room_price_per_hour?: number;
           meeting_room_size?: number;
+          meeting_room_slug?: string;
         };
         Relationships: [];
       };
@@ -259,6 +316,8 @@ export type Database = {
           subscription_max_monthly_bookings: number | null;
           subscription_monthly_price: number;
           subscription_name: string;
+          subscription_stripe_price_id: string | null;
+          subscription_stripe_product_id: string | null;
         };
         Insert: {
           subscription_discount_rate: number;
@@ -266,6 +325,8 @@ export type Database = {
           subscription_max_monthly_bookings?: number | null;
           subscription_monthly_price: number;
           subscription_name: string;
+          subscription_stripe_price_id?: string | null;
+          subscription_stripe_product_id?: string | null;
         };
         Update: {
           subscription_discount_rate?: number;
@@ -273,6 +334,8 @@ export type Database = {
           subscription_max_monthly_bookings?: number | null;
           subscription_monthly_price?: number;
           subscription_name?: string;
+          subscription_stripe_price_id?: string | null;
+          subscription_stripe_product_id?: string | null;
         };
         Relationships: [];
       };
@@ -285,6 +348,7 @@ export type Database = {
           user_id: string;
           user_is_banned: boolean;
           user_role_id: string;
+          user_status: string;
           user_subscription_id: string;
         };
         Insert: {
@@ -295,6 +359,7 @@ export type Database = {
           user_id: string;
           user_is_banned?: boolean;
           user_role_id: string;
+          user_status?: string;
           user_subscription_id: string;
         };
         Update: {
@@ -305,6 +370,7 @@ export type Database = {
           user_id?: string;
           user_is_banned?: boolean;
           user_role_id?: string;
+          user_status?: string;
           user_subscription_id?: string;
         };
         Relationships: [

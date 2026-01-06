@@ -23,6 +23,8 @@ export async function getAllSubscriptions() {
   const result = await supabase
     .from("subscriptions")
     .select("*")
+    .not("subscription_stripe_product_id", "is", null)
+    .not("subscription_stripe_price_id", "is", null)
     .order("subscription_monthly_price", { ascending: true });
 
   return toSupabaseQueryResponse<Tables<"subscriptions">[]>(result);

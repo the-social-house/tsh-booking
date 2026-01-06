@@ -1,9 +1,10 @@
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
-type TableHeaderCellProps = {
+type TableHeaderCellProps = Readonly<{
   icon: LucideIcon;
-  children: React.ReactNode;
-};
+  children: ReactNode;
+}>;
 
 export function TableHeaderCell({
   icon: Icon,

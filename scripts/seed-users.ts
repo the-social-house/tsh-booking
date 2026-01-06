@@ -36,8 +36,6 @@ const users = [
 ];
 
 async function applyRLSPolicies() {
-  console.log("🔒 Applying RLS policies...\n");
-
   const rlsPath = resolve(process.cwd(), "supabase", "rls_policies.sql");
   const rlsSQL = readFileSync(rlsPath, "utf-8");
 
@@ -52,7 +50,6 @@ async function applyRLSPolicies() {
   try {
     // Execute the SQL file
     await sql.unsafe(rlsSQL);
-    console.log("✅ RLS policies applied successfully!\n");
   } catch (error) {
     console.error("❌ Failed to apply RLS policies:", error);
     throw error;
@@ -61,79 +58,141 @@ async function applyRLSPolicies() {
   }
 }
 
-async function seedUsers() {
-  console.log("🌱 Seeding users...\n");
+async function getRoleId(roleName: string) {
+  const { data: role, error: roleError } = await supabaseAdmin
+    .from("roles")
+    .select("role_id")
+    .eq("role_name", roleName)
+    .single();
 
-  for (const user of users) {
-    // 1. Fetch role ID by name
-    const { data: role, error: roleError } = await supabaseAdmin
-      .from("roles")
-      .select("role_id")
-      .eq("role_name", user.roleName)
-      .single();
-
-    if (roleError || !role) {
-      console.error(`❌ Failed to find role '${user.roleName}':`, roleError);
-      continue;
-    }
-
-    // 2. Fetch subscription ID by name
-    const { data: subscription, error: subscriptionError } = await supabaseAdmin
-      .from("subscriptions")
-      .select("subscription_id")
-      .eq("subscription_name", user.subscriptionName)
-      .single();
-
-    if (subscriptionError || !subscription) {
-      console.error(
-        `❌ Failed to find subscription '${user.subscriptionName}':`,
-        subscriptionError
-      );
-      continue;
-    }
-
-    // 3. Create user in auth.users via Admin API
-    const { data: authData, error: authError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email: user.email,
-        password: user.password,
-        email_confirm: true,
-      });
-
-    if (authError || !authData.user) {
-      console.error(
-        `❌ Failed to create auth user '${user.email}':`,
-        authError
-      );
-      continue;
-    }
-
-    // 4. Create corresponding entry in public.users
-    const { error: userError } = await supabaseAdmin.from("users").insert({
-      user_id: authData.user.id,
-      user_email: user.email,
-      user_company_name: user.companyName,
-      user_role_id: role.role_id,
-      user_subscription_id: subscription.subscription_id,
-      user_current_monthly_bookings: 0,
-    });
-
-    if (userError) {
-      console.error(
-        `❌ Failed to create public user '${user.email}':`,
-        userError
-      );
-      // Rollback: delete auth user if public.users insert fails
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      continue;
-    }
-
-    console.log(
-      `✅ Created user: ${user.email} (${user.roleName}, ${user.subscriptionName})`
-    );
+  if (roleError || !role) {
+    console.error(`  ❌ Failed to find role '${roleName}':`, roleError);
+    return null;
   }
 
-  console.log("\n🌱 User seeding complete!");
+  return role.role_id;
+}
+
+async function getSubscriptionId(subscriptionName: string) {
+  const { data: subscription, error: subscriptionError } = await supabaseAdmin
+    .from("subscriptions")
+    .select("subscription_id")
+    .eq("subscription_name", subscriptionName)
+    .single();
+
+  if (subscriptionError || !subscription) {
+    console.error(
+      `  ❌ Failed to find subscription '${subscriptionName}':`,
+      subscriptionError
+    );
+    return null;
+  }
+
+  return subscription.subscription_id;
+}
+
+async function createAuthUser(email: string, password: string) {
+  const createUserResult = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+
+  const authData = createUserResult.data;
+  const authError = createUserResult.error;
+
+  if (authError) {
+    console.error("  ❌ Auth API call failed:");
+    console.error(`     Status: ${authError.status}`);
+    console.error(`     Code: ${authError.code || "undefined"}`);
+    console.error(`     Message: ${authError.message || "No message"}`);
+    console.error("     Full error:", JSON.stringify(authError, null, 2));
+    return null;
+  }
+
+  if (!authData?.user) {
+    console.error("  ❌ Auth user creation returned no data and no error");
+    return null;
+  }
+
+  return authData.user;
+}
+
+async function checkPublicUserExists(email: string) {
+  const { data: existingPublicUser, error: checkError } = await supabaseAdmin
+    .from("users")
+    .select("user_id")
+    .eq("user_email", email)
+    .maybeSingle();
+
+  if (checkError && checkError.code !== "PGRST116") {
+    console.error("  ⚠️  Error checking for existing user:", checkError);
+  }
+
+  return !!existingPublicUser;
+}
+
+async function createPublicUser(params: {
+  userId: string;
+  email: string;
+  companyName: string;
+  roleId: string;
+  subscriptionId: string;
+}) {
+  const { error: userError } = await supabaseAdmin.from("users").insert({
+    user_id: params.userId,
+    user_email: params.email,
+    user_company_name: params.companyName,
+    user_role_id: params.roleId,
+    user_subscription_id: params.subscriptionId,
+    user_current_monthly_bookings: 0,
+    user_status: "active",
+  });
+
+  if (userError) {
+    console.error(`  ❌ Failed to create public user '${params.email}':`);
+    console.error("     Error:", userError);
+    console.error("     Full error:", JSON.stringify(userError, null, 2));
+    return false;
+  }
+
+  return true;
+}
+
+async function seedUsers() {
+  for (const user of users) {
+    const roleId = await getRoleId(user.roleName);
+    if (!roleId) {
+      continue;
+    }
+
+    const subscriptionId = await getSubscriptionId(user.subscriptionName);
+    if (!subscriptionId) {
+      continue;
+    }
+
+    const authUser = await createAuthUser(user.email, user.password);
+    if (!authUser) {
+      continue;
+    }
+
+    const publicUserExists = await checkPublicUserExists(user.email);
+    if (publicUserExists) {
+      continue;
+    }
+
+    const success = await createPublicUser({
+      userId: authUser.id,
+      email: user.email,
+      companyName: user.companyName,
+      roleId,
+      subscriptionId,
+    });
+
+    if (!success) {
+      await supabaseAdmin.auth.admin.deleteUser(authUser.id);
+    }
+  }
 }
 
 async function main() {

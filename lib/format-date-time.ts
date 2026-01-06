@@ -69,3 +69,10 @@ export function formatBookingTimeRange(
 ): string {
   return `${formatTime(bookingStartTime)} - ${formatTime(bookingEndTime)}`;
 }
+
+// Get disabled dates configuration for Calendar component
+// Disables all dates before today in Danish timezone
+export function getDisabledDatesBeforeToday() {
+  const today = getTodayDK();
+  return { before: today };
+}

@@ -11,6 +11,11 @@ export const createMeetingRoomSchema = z.object({
     .min(2, messages.admin.meetingRooms.validation.name.minLength)
     .max(100, messages.admin.meetingRooms.validation.name.maxLength)
     .trim(),
+  meeting_room_slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(100, "Slug is too long")
+    .optional(),
   meeting_room_capacity: z
     .number()
     .int(messages.admin.meetingRooms.validation.capacity.integer)
@@ -30,6 +35,11 @@ export const createMeetingRoomSchema = z.object({
     .max(10, messages.admin.meetingRooms.validation.images.maxCount)
     .default([])
     .optional(),
+  meeting_room_description: z
+    .string()
+    .max(2000, messages.admin.meetingRooms.validation.description.maxLength)
+    .nullable()
+    .optional(),
 });
 
 /**
@@ -37,6 +47,7 @@ export const createMeetingRoomSchema = z.object({
  */
 export const updateMeetingRoomSchema = z.object({
   meeting_room_name: createMeetingRoomSchema.shape.meeting_room_name.optional(),
+  meeting_room_slug: createMeetingRoomSchema.shape.meeting_room_slug.optional(),
   meeting_room_capacity:
     createMeetingRoomSchema.shape.meeting_room_capacity.optional(),
   meeting_room_price_per_hour:
@@ -46,6 +57,8 @@ export const updateMeetingRoomSchema = z.object({
     .array(z.url())
     .max(10, messages.admin.meetingRooms.validation.images.maxCount)
     .optional(),
+  meeting_room_description:
+    createMeetingRoomSchema.shape.meeting_room_description.optional(),
 });
 
 /**

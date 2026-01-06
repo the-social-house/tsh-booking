@@ -21,13 +21,35 @@ const headingVariants = cva("font-thin leading-tight tracking-tight", {
 type HeadingProps = ComponentProps<"h1"> &
   VariantProps<typeof headingVariants> & {
     as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+    eyebrow?: string;
   };
 
-function Heading({ className, size, as, ...props }: HeadingProps) {
+function Heading({
+  className,
+  size,
+  as,
+  eyebrow,
+  children,
+  ...props
+}: HeadingProps) {
   const Comp = as ?? "h2";
 
   return (
-    <Comp className={cn(headingVariants({ size }), className)} {...props} />
+    <Comp
+      className={cn(
+        headingVariants({ size }),
+        Boolean(eyebrow) && "flex flex-col",
+        className
+      )}
+      {...props}
+    >
+      {Boolean(eyebrow) && (
+        <span className="font-normal text-muted-foreground text-xs uppercase tracking-wider">
+          {eyebrow}
+        </span>
+      )}
+      {children}
+    </Comp>
   );
 }
 

@@ -6,6 +6,7 @@ import {
   createMeetingRoomSchema,
 } from "@/app/features/admin/lib/meeting-room.schema";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
+import { roomNameToSlug } from "@/app/features/meeting-rooms/lib/room-utils";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toSupabaseMutationResponse } from "@/lib/supabase-response";
 import { createValidationError } from "@/lib/validation";
@@ -150,6 +151,8 @@ function prepareRoomData(
 ): CreateMeetingRoomInput {
   return {
     ...data,
+    meeting_room_slug:
+      data.meeting_room_slug ?? roomNameToSlug(data.meeting_room_name),
     meeting_room_images:
       uploadedImageUrls.length > 0
         ? uploadedImageUrls
