@@ -44,6 +44,7 @@ import messages from "@/lib/messages.json";
 import type { SupabaseResponse } from "@/lib/supabase-response";
 import { hasData, hasError } from "@/lib/supabase-response";
 import type { Tables } from "@/supabase/types/database";
+import "./booking-grid.css";
 
 type BookingOverviewProps = Readonly<{
   bookingsPromise: Promise<SupabaseResponse<BookingWithUser[]>>;
@@ -292,24 +293,25 @@ function BookingGrid({
     <Card className="relative px-2 py-4 pb-5! md:px-6 md:py-0">
       <div className="relative">
         <div
-          className="scroll-shadow-x grid overflow-x-auto"
-          style={{
-            gridTemplateColumns: `52px repeat(${meetingRooms.length}, minmax(120px, 1fr))`,
-            // Exclude the last time slot (22:00) from having its own row
-            // It will be displayed as a label on the bottom border of the last row
-            // Header row uses fixed height for consistent time label positioning
-            gridTemplateRows: `${ROOM_HEADER_HEIGHT}px repeat(${timeSlots.length - 1}, 28px)`,
-          }}
+          className="booking-grid-container scroll-shadow-x grid overflow-x-auto"
+          style={
+            {
+              "--grid-template-columns": `52px repeat(${meetingRooms.length}, minmax(120px, 1fr))`,
+              "--grid-template-rows": `${ROOM_HEADER_HEIGHT}px repeat(${timeSlots.length - 1}, 28px)`,
+            } as React.CSSProperties
+          }
         >
           {/* Header Row */}
           <div className="sticky left-0 bg-card" />
           {meetingRooms.map((room) => (
             <div
-              className="z-10 line-clamp-2 flex items-center justify-center border-b px-2 text-center font-medium text-sm"
+              className="booking-room-header z-10 line-clamp-2 flex items-center justify-center border-b px-2 text-center font-medium text-sm"
               key={room.meeting_room_id}
-              style={{
-                height: `${ROOM_HEADER_HEIGHT}px`,
-              }}
+              style={
+                {
+                  "--room-header-height": `${ROOM_HEADER_HEIGHT}px`,
+                } as React.CSSProperties
+              }
             >
               {room.meeting_room_name}
             </div>
@@ -319,14 +321,16 @@ function BookingGrid({
           {timeSlots.slice(0, -1).map((time, index) =>
             meetingRooms.map((room, roomIndex) => (
               <div
-                className={`relative border-b ${
+                className={`booking-grid-item relative border-b ${
                   roomIndex === meetingRooms.length - 1 ? "" : "border-r"
                 }`}
                 key={`${room.meeting_room_id}-${time}`}
-                style={{
-                  gridColumn: roomIndex + 2,
-                  gridRow: index + 2,
-                }}
+                style={
+                  {
+                    "--grid-column": roomIndex + 2,
+                    "--grid-row": index + 2,
+                  } as React.CSSProperties
+                }
               />
             ))
           )}
@@ -335,13 +339,15 @@ function BookingGrid({
           <Suspense
             fallback={meetingRooms.map((room, index) => (
               <Skeleton
-                className="m-0.5 rounded-md"
+                className="booking-skeleton m-0.5 rounded-md"
                 key={`loading-booking-${room.meeting_room_id}`}
-                style={{
-                  gridColumn: index + 2,
-                  gridRowStart: 2,
-                  gridRowEnd: 19,
-                }}
+                style={
+                  {
+                    "--skeleton-grid-column": index + 2,
+                    "--skeleton-grid-row-start": 2,
+                    "--skeleton-grid-row-end": 19,
+                  } as React.CSSProperties
+                }
               />
             ))}
           >
@@ -370,17 +376,16 @@ function BookingGrid({
               : ROOM_HEADER_HEIGHT + index * 28; // Top border of row
             return (
               <div
-                className="sticky left-0 z-20 flex w-[52px] items-center justify-center text-muted-foreground text-sm"
+                className="booking-time-label sticky left-0 z-20 flex w-[52px] items-center justify-center text-muted-foreground text-sm"
                 key={`time-${time}`}
-                style={{
-                  position: "absolute",
-                  top: `${topPosition}px`,
-                  left: 0,
-                  height: "1px",
-                  transform: isLastSlot
-                    ? "translateY(-50%)"
-                    : "translateY(-1px)",
-                }}
+                style={
+                  {
+                    "--time-label-top": `${topPosition}px`,
+                    "--time-label-transform": isLastSlot
+                      ? "translateY(-50%)"
+                      : "translateY(-1px)",
+                  } as React.CSSProperties
+                }
               >
                 <span>{time}</span>
               </div>
@@ -413,14 +418,16 @@ function BookingBlocks({
   if (hasError(bookingsResult)) {
     return (
       <div
-        className="relative flex flex-col items-center justify-center bg-muted p-6"
-        style={{
-          gridColumn: 5,
-          gridRowStart: 2,
-          gridRowEnd: 19,
-          gridColumnStart: "2",
-          gridColumnEnd: "-1",
-        }}
+        className="booking-error-container relative flex flex-col items-center justify-center bg-muted p-6"
+        style={
+          {
+            "--error-grid-column": 5,
+            "--error-grid-row-start": 2,
+            "--error-grid-row-end": 19,
+            "--error-grid-column-start": "2",
+            "--error-grid-column-end": "-1",
+          } as React.CSSProperties
+        }
       >
         <Empty>
           <EmptyHeader>
@@ -512,13 +519,15 @@ function BookingBlocks({
 
         return (
           <div
-            className="relative z-0 m-0.5 flex flex-col flex-wrap justify-between gap-1 overflow-hidden rounded-md border border-foreground/10 bg-muted-foreground p-1 text-muted text-xs"
+            className="booking-grid-item-spanned relative z-0 m-0.5 flex flex-col flex-wrap justify-between gap-1 overflow-hidden rounded-md border border-foreground/10 bg-muted-foreground p-1 text-muted text-xs"
             key={unavailability.unavailability_id}
-            style={{
-              gridColumn: roomIndex + 2,
-              gridRowStart: fullDayPosition.gridRowStart,
-              gridRowEnd: fullDayPosition.gridRowEnd,
-            }}
+            style={
+              {
+                "--grid-column": roomIndex + 2,
+                "--grid-row-start": fullDayPosition.gridRowStart,
+                "--grid-row-end": fullDayPosition.gridRowEnd,
+              } as React.CSSProperties
+            }
           >
             <div className="line-clamp-2 font-medium">
               {messages.bookings.ui.overview.roomUnavailable}
@@ -568,12 +577,14 @@ function BookingBlocks({
           <Tooltip key={booking.booking_id}>
             <TooltipTrigger asChild>
               <div
-                className={`relative z-10 m-0.5 overflow-hidden rounded-md p-1 ${bookingBlockClassName}`}
-                style={{
-                  gridColumn: roomIndex + 2,
-                  gridRowStart: position.gridRowStart,
-                  gridRowEnd: position.gridRowEnd,
-                }}
+                className={`booking-grid-item-spanned relative z-10 m-0.5 overflow-hidden rounded-md p-1 ${bookingBlockClassName}`}
+                style={
+                  {
+                    "--grid-column": roomIndex + 2,
+                    "--grid-row-start": position.gridRowStart,
+                    "--grid-row-end": position.gridRowEnd,
+                  } as React.CSSProperties
+                }
               >
                 {!isBuffer && (
                   <>
@@ -602,13 +613,15 @@ function BookingBlocks({
           </Tooltip>
         ) : (
           <div
-            className={`relative z-10 m-0.5 overflow-hidden rounded-md p-1 ${bookingBlockClassName}`}
+            className={`booking-grid-item-spanned relative z-10 m-0.5 overflow-hidden rounded-md p-1 ${bookingBlockClassName}`}
             key={booking.booking_id}
-            style={{
-              gridColumn: roomIndex + 2,
-              gridRowStart: position.gridRowStart,
-              gridRowEnd: position.gridRowEnd,
-            }}
+            style={
+              {
+                "--grid-column": roomIndex + 2,
+                "--grid-row-start": position.gridRowStart,
+                "--grid-row-end": position.gridRowEnd,
+              } as React.CSSProperties
+            }
           >
             {!isBuffer && (
               <>

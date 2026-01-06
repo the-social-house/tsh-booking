@@ -1,0 +1,53 @@
+/* Booking Grid Styles using CSS Custom Properties for dynamic values */
+
+/* Grid container with dynamic columns and rows */
+.booking-grid-container {
+  display: grid;
+  grid-template-columns: var(
+      --grid-template-columns,
+      52px repeat(1, minmax(120px, 1fr))
+    );
+  grid-template-rows: var(--grid-template-rows, 80px repeat(1, 28px));
+}
+
+/* Grid items using custom properties */
+.booking-grid-item {
+  grid-column: var(--grid-column);
+  grid-row: var(--grid-row);
+}
+
+.booking-grid-item-spanned {
+  grid-column: var(--grid-column);
+  grid-row-start: var(--grid-row-start);
+  grid-row-end: var(--grid-row-end);
+}
+
+/* Room header with dynamic height */
+.booking-room-header {
+  height: var(--room-header-height, 80px);
+}
+
+/* Time label positioning */
+.booking-time-label {
+  position: absolute;
+  top: var(--time-label-top, 0px);
+  left: 0;
+  height: 1px;
+  transform: var(--time-label-transform, translateY(-1px));
+}
+
+/* Error state grid positioning */
+.booking-error-container {
+  grid-column: var(--error-grid-column, 5);
+  grid-row-start: var(--error-grid-row-start, 2);
+  grid-row-end: var(--error-grid-row-end, 19);
+  grid-column-start: var(--error-grid-column-start, 2);
+  grid-column-end: var(--error-grid-column-end, -1);
+}
+
+/* Skeleton loading state */
+.booking-skeleton {
+  grid-column: var(--skeleton-grid-column);
+  grid-row-start: var(--skeleton-grid-row-start, 2);
+  grid-row-end: var(--skeleton-grid-row-end, 19);
+}

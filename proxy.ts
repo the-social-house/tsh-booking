@@ -16,13 +16,10 @@ export async function proxy(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
 
   // Content Security Policy with nonce support
-  // Note: 'unsafe-inline' is needed for inline style attributes (not just style tags)
-  // Nonces work for <style> tags but not for style="" attributes in React components
-  // Stripe requirements: https://stripe.com/docs/security/guide#content-security-policy
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""} https://connect-js.stripe.com https://*.js.stripe.com https://js.stripe.com https://maps.googleapis.com https://*.sentry.io https://*.ingest.de.sentry.io;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com sha256-0hAheEzaMe6uXIKV4EehS9pu1am1lj/KnnzrOYqckXk=;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.stripe.com https://*.supabase.co https://picsum.photos ${isDev ? "http://127.0.0.1:*" : ""};
     font-src 'self' https://fonts.gstatic.com data:;
     connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.stripe.com https://maps.googleapis.com https://*.sentry.io https://*.ingest.de.sentry.io wss://*.stripe.com;
@@ -70,7 +67,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+    "camera=(), microphone=(), geolocation=()"
   );
 
   return response;
