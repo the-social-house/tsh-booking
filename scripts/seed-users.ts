@@ -10,28 +10,28 @@ const users = [
     password: "password",
     companyName: "Admin Company",
     roleName: "admin",
-    subscriptionName: "Enterprise",
+    subscriptionName: "The Social House",
   },
   {
     email: "user@test.com",
     password: "password",
     companyName: "User Company",
     roleName: "user",
-    subscriptionName: "Basic",
+    subscriptionName: "Entry",
   },
   {
     email: "premium@test.com",
     password: "password",
     companyName: "Premium Company",
     roleName: "user",
-    subscriptionName: "Premium",
+    subscriptionName: "The Social House",
   },
   {
     email: "enterprise@test.com",
     password: "password",
     companyName: "Enterprise Company",
     roleName: "user",
-    subscriptionName: "Enterprise",
+    subscriptionName: "Entry",
   },
 ];
 
