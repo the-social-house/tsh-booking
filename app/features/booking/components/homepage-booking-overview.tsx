@@ -285,7 +285,8 @@ function BookingGrid({
   }
 
   const meetingRooms = meetingRoomsResult.data;
-  const timeSlots = generateTimeSlots();
+  // Generate time slots and add 22:00 for display (bookings can end at 22:00)
+  const timeSlots = [...generateTimeSlots(), "22:00"];
 
   return (
     <Card className="relative px-2 py-4 pb-5! md:px-6 md:py-0">
@@ -463,8 +464,8 @@ function BookingBlocks({
     );
   }
 
-  // Generate time slots once for all bookings
-  const timeSlots = generateTimeSlots();
+  // Generate time slots once for all bookings and add 22:00 for display (bookings can end at 22:00)
+  const timeSlots = [...generateTimeSlots(), "22:00"];
 
   // Calculate position for full-day unavailability (09:00 to 22:00)
   const fullDayPosition = calculateBookingPosition(

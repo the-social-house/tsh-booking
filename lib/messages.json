@@ -134,6 +134,8 @@
     },
     "ui": {
       "create": {
+        "stripePaymentTitle": "Complete payment",
+        "stripePaymentDescription": "Enter your payment details to confirm your booking",
         "title": "Book meeting room",
         "roomNameLabel": "Room",
         "roomCapacityLabel": "Capacity",
@@ -821,8 +823,8 @@
         "submitButtonLoading": "Validating..."
       },
       "testCard": {
-        "title": "Test Mode",
-        "description": "This is a test environment. You can use the following test card to complete the payment:",
+        "title": "Test mode",
+        "description": "This is a Stripe test environment. You can use the following test card to complete the payment. No real money is charged from any credit card.",
         "cardLabel": "Card:",
         "cardNumber": "4242 4242 4242 4242",
         "expiryLabel": "Expiry:",
