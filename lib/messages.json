@@ -190,6 +190,24 @@
         "empty": "No bookings available",
         "error": "Failed to load bookings"
       },
+      "success": {
+        "eyebrow": "Booking confirmed",
+        "title": "Your booking has been successfully created",
+        "emailNotice": "A confirmation email with your invoice has been sent to",
+        "detailsTitle": "Booking details",
+        "amenitiesTitle": "Amenities",
+        "bookingIdLabel": "Booking ID",
+        "backToHome": "Back to home",
+        "viewBookings": "View your bookings",
+        "labels": {
+          "room": "Room",
+          "date": "Date",
+          "time": "Time",
+          "numberOfPeople": "Number of people",
+          "totalPrice": "Total price",
+          "discountApplied": "Discount applied"
+        }
+      },
       "overview": {
         "title": "Booking overview",
         "eyebrow": "The daily",
@@ -315,7 +333,8 @@
       "squareMeters": "m²",
       "hourlyRate": "DKK/hr",
       "dkk": "DKK",
-      "currency": "DKK"
+      "currency": "DKK",
+      "percent": "%"
     }
   },
   "admin": {
@@ -994,6 +1013,10 @@
     "roomDetails": {
       "title": "Room details",
       "description": "View details and availability for this meeting room and complete your booking."
+    },
+    "success": {
+      "title": "Booking Successful",
+      "description": "Your booking has been confirmed"
     },
     "admin": {
       "root": {
