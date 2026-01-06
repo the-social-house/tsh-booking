@@ -4,6 +4,7 @@ import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import { cancelBooking } from "@/app/features/booking/actions/cancel-booking";
 import messages from "@/lib/messages.json";
 import type { SupabaseResponse } from "@/lib/supabase-response";
+import type { Tables } from "@/supabase/types/database";
 
 /**
  * Cancel a booking (admin only)
@@ -11,7 +12,7 @@ import type { SupabaseResponse } from "@/lib/supabase-response";
  */
 export async function cancelBookingAdmin(
   bookingId: string
-): Promise<SupabaseResponse<{ success: boolean }>> {
+): Promise<SupabaseResponse<Tables<"bookings">>> {
   // Verify admin access
   const adminResult = await requireAdmin();
   if (adminResult.error || !adminResult.user) {

@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { cancelBooking } from "@/app/features/booking/actions/cancel-booking";
 import { createBooking } from "@/app/features/booking/actions/create-booking";
 import { createBookingAmenities } from "@/app/features/booking/actions/create-booking-amenities";
 import {
@@ -399,10 +398,14 @@ export default function BookingForm({
   };
 
   const handlePaymentCancel = async () => {
-    // User cancelled payment - cancel the pending booking
+    // User cancelled payment - delete the pending booking entirely
+    // Since payment was never completed, we should delete the booking record
     if (pendingBookingId) {
-      const cancelResult = await cancelBooking(pendingBookingId);
-      if (hasError(cancelResult)) {
+      const rollbackResult = await rollbackBooking(
+        pendingBookingId,
+        user.user_id
+      );
+      if (hasError(rollbackResult)) {
         toast.error("Failed to cancel booking. Please contact support.");
       } else {
         toast.info("Booking cancelled");
