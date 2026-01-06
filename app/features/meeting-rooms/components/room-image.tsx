@@ -30,8 +30,12 @@ export function RoomImage({
 }: RoomImageProps) {
   return (
     <div
-      className={cn("relative", className)}
-      style={{ aspectRatio: imageAspectRatio }}
+      className={cn("room-image-container relative", className)}
+      style={
+        {
+          "--image-aspect-ratio": imageAspectRatio,
+        } as React.CSSProperties
+      }
     >
       <Image
         alt={alt}

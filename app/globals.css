@@ -253,6 +253,24 @@
   background-attachment: local, local, scroll, scroll;
 }
 
+/* Sonner toaster styles using CSS custom properties */
+.toaster {
+  --normal-bg: var(--popover);
+  --normal-text: var(--popover-foreground);
+  --normal-border: var(--border);
+  --border-radius: var(--radius);
+}
+
+/* Table scroll shadow using CSS custom properties */
+.table-container {
+  --scroll-shadow-color: var(--background);
+}
+
+/* Room image aspect ratio using CSS custom properties */
+.room-image-container {
+  aspect-ratio: var(--image-aspect-ratio, 3 / 4);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
