@@ -535,7 +535,7 @@ function BookingBlocks({
         const is30Minutes = durationMinutes === 30;
 
         const bookingBlockClassName = isBuffer
-          ? "border border-foreground/10 bg-muted-foreground"
+          ? "outline outline-1 -outline-offset-1 outline-foreground/50 bg-muted"
           : "flex flex-col flex-wrap justify-between gap-1 bg-primary text-primary-foreground";
 
         // Wrap with tooltip if 30 minutes and not a buffer, otherwise return block directly
