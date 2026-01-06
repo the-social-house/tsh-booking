@@ -12,12 +12,13 @@ export async function proxy(request: NextRequest) {
   // Nonces work for <style> tags but not for style="" attributes in React components
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""} https://js.stripe.com https://*.sentry.io https://*.ingest.de.sentry.io;
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""} https://js.stripe.com https://*.stripe.com https://*.sentry.io https://*.ingest.de.sentry.io;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co https://picsum.photos ${isDev ? "http://127.0.0.1:*" : ""};
     font-src 'self' https://fonts.gstatic.com data:;
-    connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.stripe.com https://*.sentry.io https://*.ingest.de.sentry.io;
+    connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.stripe.com https://*.sentry.io https://*.ingest.de.sentry.io wss://*.stripe.com;
     frame-src https://js.stripe.com https://hooks.stripe.com https://*.stripe.com;
+    worker-src 'self' blob:;
     form-action 'self';
     base-uri 'self';
     object-src 'none';
