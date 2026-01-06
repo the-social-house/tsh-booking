@@ -226,16 +226,18 @@ async function getAllActiveStripeProductIds(): Promise<{
 
 /**
  * Delete orphaned subscriptions that no longer exist in Stripe
+ * Also deletes subscriptions without any Stripe IDs
  */
 async function deleteOrphanedSubscriptions(
   activeStripeProductIds: Set<string>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Fetch all subscriptions with Stripe IDs from database
+    // Fetch all subscriptions from database
     const { data: dbSubscriptions, error: fetchError } = await supabaseAdmin
       .from("subscriptions")
-      .select("subscription_id, subscription_stripe_product_id")
-      .not("subscription_stripe_product_id", "is", null);
+      .select(
+        "subscription_id, subscription_stripe_product_id, subscription_stripe_price_id"
+      );
 
     if (fetchError) {
       return { success: false, error: fetchError.message };
@@ -245,13 +247,23 @@ async function deleteOrphanedSubscriptions(
       return { success: true };
     }
 
-    // Find subscriptions whose Stripe products no longer exist
+    // Find subscriptions that should be deleted:
+    // 1. Subscriptions without any Stripe IDs (NULL product_id or price_id)
+    // 2. Subscriptions whose Stripe products no longer exist in Stripe
     const orphanedIds = dbSubscriptions
-      .filter(
-        (sub) =>
-          sub.subscription_stripe_product_id &&
-          !activeStripeProductIds.has(sub.subscription_stripe_product_id)
-      )
+      .filter((sub) => {
+        // Delete if no Stripe IDs at all
+        if (
+          !(
+            sub.subscription_stripe_product_id &&
+            sub.subscription_stripe_price_id
+          )
+        ) {
+          return true;
+        }
+        // Delete if Stripe product doesn't exist anymore
+        return !activeStripeProductIds.has(sub.subscription_stripe_product_id);
+      })
       .map((sub) => sub.subscription_id);
 
     if (orphanedIds.length === 0) {
