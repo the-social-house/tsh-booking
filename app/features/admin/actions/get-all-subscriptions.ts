@@ -252,17 +252,23 @@ async function deleteOrphanedSubscriptions(
     // 2. Subscriptions whose Stripe products no longer exist in Stripe
     const orphanedIds = dbSubscriptions
       .filter((sub) => {
-        // Delete if no Stripe IDs at all
-        if (
-          !(
-            sub.subscription_stripe_product_id &&
-            sub.subscription_stripe_price_id
-          )
-        ) {
+        const hasProductId =
+          sub.subscription_stripe_product_id !== null &&
+          sub.subscription_stripe_product_id !== undefined;
+        const hasPriceId =
+          sub.subscription_stripe_price_id !== null &&
+          sub.subscription_stripe_price_id !== undefined;
+
+        // Delete if missing either Stripe ID
+        if (!(hasProductId && hasPriceId)) {
           return true;
         }
+
         // Delete if Stripe product doesn't exist anymore
-        return !activeStripeProductIds.has(sub.subscription_stripe_product_id);
+        // TypeScript guard: we know product_id is not null here due to check above
+        return !activeStripeProductIds.has(
+          sub.subscription_stripe_product_id as string
+        );
       })
       .map((sub) => sub.subscription_id);
 
@@ -366,20 +372,17 @@ export async function getAllSubscriptions() {
   }
 
   // Delete orphaned subscriptions that no longer exist in Stripe
+  // Note: We log errors but don't fail the entire operation if deletion fails
+  // This ensures subscriptions can still be loaded even if cleanup fails
   const deleteResult = await deleteOrphanedSubscriptions(
     productIdsResult.productIds
   );
   if (!deleteResult.success) {
-    return {
-      data: null,
-      error: {
-        code: "STRIPE_SYNC_ERROR",
-        message: "Failed to delete orphaned subscriptions",
-        details: deleteResult.error || "",
-        hint: "",
-        name: "StripeSyncError",
-      },
-    };
+    // Log the error but continue - deletion failures shouldn't prevent loading subscriptions
+    console.error(
+      "Failed to delete orphaned subscriptions:",
+      deleteResult.error
+    );
   }
 
   // Fetch all subscriptions from database
