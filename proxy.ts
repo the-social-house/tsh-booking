@@ -18,7 +18,7 @@ export async function proxy(request: NextRequest) {
     img-src 'self' blob: data: https://*.stripe.com https://*.supabase.co https://picsum.photos ${isDev ? "http://127.0.0.1:*" : ""};
     font-src 'self' https://fonts.gstatic.com data:;
     connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.stripe.com https://maps.googleapis.com https://*.sentry.io https://*.ingest.de.sentry.io wss://*.stripe.com;
-    frame-src https://connect-js.stripe.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com;
+    frame-src https://connect-js.stripe.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com https://vercel.live;
     worker-src 'self' blob:;
     form-action 'self';
     base-uri 'self';
@@ -61,7 +61,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=()"
+    "camera=(), microphone=(), geolocation=(), browsing-topics=()"
   );
 
   return response;
@@ -75,9 +75,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - Static files in public folder (.svg, .webp, .png, .jpg, etc.)
      */
     {
-      source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+      source: String.raw`/((?!api|_next/static|_next/image|favicon.ico|.*\.(?:svg|webp|png|jpg|jpeg|gif|ico|css|js|woff|woff2|ttf|eot)$).*)`,
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

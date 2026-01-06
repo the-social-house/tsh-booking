@@ -77,6 +77,7 @@ export function LoginForm() {
           <div className="space-y-4">
             <Image
               alt="The Social House Logo"
+              className="object-cover"
               height={200}
               src="/tsh-logo.svg"
               width={250}
