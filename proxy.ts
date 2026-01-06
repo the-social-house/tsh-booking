@@ -23,7 +23,6 @@ export async function proxy(request: NextRequest) {
     form-action 'self';
     base-uri 'self';
     object-src 'none';
-    frame-ancestors 'none';
     ${process.env.NODE_ENV === "production" ? "upgrade-insecure-requests;" : ""}
   `
     .replace(/\s{2,}/g, " ")
