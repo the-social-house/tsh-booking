@@ -18,14 +18,15 @@ export async function proxy(request: NextRequest) {
   // Content Security Policy with nonce support
   // We use CSS custom properties (CSS variables) in style attributes instead of direct inline styles
   // CSS custom properties are safer as they only set variables, not direct styles
-  // Note: CSS custom properties in style attributes still require 'unsafe-inline', but the risk is
+  // Note: CSS custom properties in style attributes require 'unsafe-inline', but the risk is
   // significantly reduced compared to direct inline styles since variables cannot execute code
-  // Nonce support is included for <style> tags for additional security
+  // We cannot use nonce in style-src alongside 'unsafe-inline' as browsers ignore 'unsafe-inline'
+  // when nonce is present, which would block our CSS custom properties
   // Stripe requirements: https://stripe.com/docs/security/guide#content-security-policy
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""} https://connect-js.stripe.com https://*.js.stripe.com https://js.stripe.com https://maps.googleapis.com https://*.sentry.io https://*.ingest.de.sentry.io;
-    style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com sha256-0hAheEzaMe6uXIKV4EehS9pu1am1lj/KnnzrOYqckXk=;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com sha256-0hAheEzaMe6uXIKV4EehS9pu1am1lj/KnnzrOYqckXk=;
     img-src 'self' blob: data: https://*.stripe.com https://*.supabase.co https://picsum.photos ${isDev ? "http://127.0.0.1:*" : ""};
     font-src 'self' https://fonts.gstatic.com data:;
     connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.stripe.com https://maps.googleapis.com https://*.sentry.io https://*.ingest.de.sentry.io wss://*.stripe.com;
@@ -73,7 +74,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+    "camera=(), microphone=(), geolocation=()"
   );
 
   return response;
