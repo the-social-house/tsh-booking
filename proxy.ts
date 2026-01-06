@@ -3,6 +3,14 @@ import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
+  // Skip prefetch requests
+  if (
+    request.headers.get("next-router-prefetch") ||
+    request.headers.get("purpose") === "prefetch"
+  ) {
+    return NextResponse.next();
+  }
+
   // Generate a unique nonce for this request
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
@@ -23,6 +31,7 @@ export async function proxy(request: NextRequest) {
     form-action 'self';
     base-uri 'self';
     object-src 'none';
+    frame-ancestors 'none';
     ${process.env.NODE_ENV === "production" ? "upgrade-insecure-requests;" : ""}
   `
     .replace(/\s{2,}/g, " ")
@@ -71,18 +80,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - Static files in public folder (.svg, .webp, .png, .jpg, etc.)
+     * Feel free to modify this pattern to include more paths.
      */
-    {
-      source: String.raw`/((?!api|_next/static|_next/image|favicon.ico|.*\.(?:svg|webp|png|jpg|jpeg|gif|ico|css|js|woff|woff2|ttf|eot)$).*)`,
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
