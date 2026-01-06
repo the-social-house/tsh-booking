@@ -8,14 +8,16 @@ export async function proxy(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
 
   // Content Security Policy with nonce support
+  // Note: 'unsafe-inline' is needed for inline style attributes (not just style tags)
+  // Nonces work for <style> tags but not for style="" attributes in React components
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDev ? "'unsafe-eval'" : ""} https://js.stripe.com https://*.sentry.io https://*.ingest.de.sentry.io;
-    style-src 'self' ${isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`} https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://*.supabase.co https://picsum.photos;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src 'self' blob: data: https://*.supabase.co https://picsum.photos ${isDev ? "http://127.0.0.1:*" : ""};
     font-src 'self' https://fonts.gstatic.com data:;
     connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.stripe.com https://*.sentry.io https://*.ingest.de.sentry.io;
-    frame-src https://js.stripe.com https://hooks.stripe.com;
+    frame-src https://js.stripe.com https://hooks.stripe.com https://*.stripe.com;
     form-action 'self';
     base-uri 'self';
     object-src 'none';
