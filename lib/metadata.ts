@@ -15,6 +15,9 @@ export function createPageMetadata(
   return {
     title: fullTitle,
     description: finalDescription,
+    appleWebApp: {
+      title: siteName,
+    },
     openGraph: {
       title: fullTitle,
       description: finalDescription,
