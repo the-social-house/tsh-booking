@@ -118,110 +118,26 @@ function logSummary(created: number, skipped: number, errors: number): void {
 }
 
 /**
- * Default subscriptions to create if they don't exist in Stripe
+ * Delete dummy subscriptions that are no longer used
  */
-const DEFAULT_SUBSCRIPTIONS = [
-  {
-    name: "Basic",
-    monthlyPrice: 0.0,
-    maxMonthlyBookings: 5,
-    discountRate: 0.0,
-  },
-  {
-    name: "Premium",
-    monthlyPrice: 29.99,
-    maxMonthlyBookings: 20,
-    discountRate: 10.0,
-  },
-  {
-    name: "Enterprise",
-    monthlyPrice: 99.99,
-    maxMonthlyBookings: null,
-    discountRate: 20.0,
-  },
-] as const;
+async function deleteDummySubscriptions(): Promise<void> {
+  console.log("🗑️  Deleting dummy subscriptions...\n");
 
-/**
- * Find Stripe product and price IDs for a subscription name
- */
-async function findStripeIds(
-  name: string
-): Promise<{ productId: string | null; priceId: string | null }> {
-  const products = await stripe.products.list({
-    limit: 100,
-    active: true,
-  });
-  const stripeProduct = products.data.find((p) => p.name === name);
+  const dummySubscriptionNames = ["Basic", "Premium", "Enterprise"];
 
-  if (!stripeProduct) {
-    return { productId: null, priceId: null };
-  }
+  for (const name of dummySubscriptionNames) {
+    const { error: deleteError } = await supabaseAdmin
+      .from("subscriptions")
+      .delete()
+      .eq("subscription_name", name);
 
-  const monthlyPrice = await findMonthlyPrice(stripeProduct.id);
-  return {
-    productId: stripeProduct.id,
-    priceId: monthlyPrice?.id ?? null,
-  };
-}
-
-/**
- * Create a default subscription in the database
- */
-async function createDefaultSubscription(
-  sub: (typeof DEFAULT_SUBSCRIPTIONS)[number]
-): Promise<boolean> {
-  const { productId, priceId } = await findStripeIds(sub.name);
-
-  const { error: insertError } = await supabaseAdmin
-    .from("subscriptions")
-    .insert({
-      subscription_name: sub.name,
-      subscription_monthly_price: sub.monthlyPrice,
-      subscription_max_monthly_bookings: sub.maxMonthlyBookings,
-      subscription_discount_rate: sub.discountRate,
-      subscription_stripe_product_id: productId,
-      subscription_stripe_price_id: priceId,
-    });
-
-  if (insertError) {
-    console.error(
-      `❌ Failed to create subscription "${sub.name}":`,
-      insertError.message
-    );
-    return false;
-  }
-
-  if (productId) {
-    console.log(`✅ Created subscription "${sub.name}" with Stripe IDs`);
-  } else {
-    console.log(
-      `✅ Created subscription "${sub.name}" without Stripe IDs (no Stripe product found)`
-    );
-  }
-
-  return true;
-}
-
-/**
- * Create default subscriptions in database if they don't exist
- * These are created without Stripe IDs (NULL) if no Stripe product exists
- */
-async function ensureDefaultSubscriptions(): Promise<void> {
-  console.log("🔍 Ensuring default subscriptions exist in database...\n");
-
-  for (const sub of DEFAULT_SUBSCRIPTIONS) {
-    if (await subscriptionExists(sub.name)) {
-      console.log(`✓ Subscription "${sub.name}" already exists in database`);
-      continue;
-    }
-
-    try {
-      await createDefaultSubscription(sub);
-    } catch (error) {
+    if (deleteError) {
       console.error(
-        `❌ Error creating subscription "${sub.name}":`,
-        error instanceof Error ? error.message : String(error)
+        `❌ Failed to delete subscription "${name}":`,
+        deleteError.message
       );
+    } else {
+      console.log(`✅ Deleted subscription "${name}"`);
     }
   }
 
@@ -237,8 +153,8 @@ async function ensureDefaultSubscriptions(): Promise<void> {
 async function seedSubscriptions() {
   console.log("🌱 Seeding subscriptions from Stripe...\n");
 
-  // Ensure default subscriptions exist in database (with or without Stripe IDs)
-  await ensureDefaultSubscriptions();
+  // Delete dummy subscriptions that are no longer used
+  await deleteDummySubscriptions();
 
   try {
     const products = await stripe.products.list({ limit: 100, active: true });
