@@ -961,5 +961,63 @@
       "errorTitle": "Failed to load rooms",
       "error": "Something went wrong while loading the meeting rooms. Please try again later."
     }
+  },
+  "metadata": {
+    "site": {
+      "name": "The Social House Booking",
+      "description": "Book your meeting room at The Social House."
+    },
+    "home": {
+      "title": "Dashboard",
+      "description": "View your upcoming bookings and explore meeting rooms at The Social House."
+    },
+    "rooms": {
+      "title": "All meeting rooms",
+      "description": "Browse and book meeting rooms that match your needs at The Social House."
+    },
+    "auth": {
+      "login": {
+        "title": "Sign in",
+        "description": "Sign in to manage your bookings and access your account at The Social House."
+      },
+      "completeSignup": {
+        "title": "Complete signup",
+        "description": "Complete your signup, choose your password, and finalize your account for The Social House."
+      }
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "View and update your profile, company details, and account information."
+    },
+    "roomDetails": {
+      "title": "Room details",
+      "description": "View details and availability for this meeting room and complete your booking."
+    },
+    "admin": {
+      "root": {
+        "title": "Admin panel",
+        "description": "Access the admin panel to manage rooms, bookings, users, and subscriptions."
+      },
+      "rooms": {
+        "title": "Admin rooms",
+        "description": "Manage meeting rooms, pricing, amenities, and availability."
+      },
+      "bookings": {
+        "title": "Admin bookings",
+        "description": "Review and manage all bookings across The Social House."
+      },
+      "amenities": {
+        "title": "Admin amenities",
+        "description": "Create and manage amenities available for meeting rooms."
+      },
+      "subscriptions": {
+        "title": "Admin subscriptions",
+        "description": "Configure and manage subscription models and limits."
+      },
+      "users": {
+        "title": "Admin users",
+        "description": "Manage users, invitations, subscriptions, and access."
+      }
+    }
   }
 }

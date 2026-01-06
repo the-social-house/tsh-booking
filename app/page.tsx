@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getBookingSlotsWithUser } from "@/app/features/booking/actions/get-booking-slots-with-user";
 import { getRoomUnavailabilitiesOverview } from "@/app/features/booking/actions/get-room-unavailabilities-overview";
 import { getUserUpcomingBookings } from "@/app/features/booking/actions/get-user-upcoming-bookings";
@@ -9,7 +10,13 @@ import { getCurrentUserData } from "@/app/features/users/actions/get-current-use
 import { TwoColumnLayout } from "@/components/layout/two-column-layout";
 import Heading from "@/components/ui/heading";
 import messages from "@/lib/messages.json";
+import { createPageMetadata } from "@/lib/metadata";
 import { hasData } from "@/lib/supabase-response";
+
+export const metadata: Metadata = createPageMetadata(
+  messages.metadata.home.title,
+  messages.metadata.home.description
+);
 
 export default async function Home() {
   const bookingsPromise = getBookingSlotsWithUser();

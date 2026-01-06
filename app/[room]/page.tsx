@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BookingDrawerWrapper } from "@/app/[room]/booking-drawer-wrapper";
 import { RoomContent } from "@/app/[room]/room-content";
@@ -6,7 +7,31 @@ import { getMeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting
 import { getRoomAmenities } from "@/app/features/meeting-rooms/actions/get-room-amenities";
 import { getCurrentUserData } from "@/app/features/users/actions/get-current-user-data";
 import messages from "@/lib/messages.json";
+import { createPageMetadata } from "@/lib/metadata";
 import { hasData, hasError } from "@/lib/supabase-response";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ room: string }>;
+}): Promise<Metadata> {
+  const { room } = await params;
+  const roomResult = await getMeetingRoom(room);
+
+  // If room not found, use fallback title
+  if (hasError(roomResult) || !hasData(roomResult)) {
+    return createPageMetadata(
+      messages.metadata.roomDetails.title,
+      messages.metadata.roomDetails.description
+    );
+  }
+
+  // Use the actual room name in the title
+  return createPageMetadata(
+    roomResult.data.meeting_room_name,
+    messages.metadata.roomDetails.description
+  );
+}
 
 export default async function BookingPage({
   params,
