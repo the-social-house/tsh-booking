@@ -71,22 +71,23 @@ export function LoginForm() {
   }, [state?.success]);
 
   return (
-    <section className="-my-10 grid h-svh grid-cols-1 items-center overflow-hidden md:grid-cols-2">
+    <section className="-my-10 grid h-svh grid-cols-1 items-center overflow-hidden xl:grid-cols-2">
       <div className="px-6">
-        <div className="grid h-fit w-full grid-cols-1 grid-rows-[auto_auto] items-center gap-6 px-6 md:grid-cols-[max-content_auto_1fr]">
+        <div className="grid h-fit w-full grid-cols-1 grid-rows-[auto_auto] items-center gap-6 px-6 xl:grid-cols-[max-content_auto_1fr]">
           <div className="space-y-4">
-            <Image
-              alt="The Social House Logo"
-              className="object-cover"
-              height={200}
-              src="/tsh-logo.svg"
-              width={250}
-            />
+            <div className="relative size-full h-20 w-64">
+              <Image
+                alt="The Social House Logo"
+                className="object-contain"
+                fill
+                src="/tsh-logo.svg"
+              />
+            </div>
             <Heading as="h1" size="h1">
               {messages.auth.ui.login.title}
             </Heading>
           </div>
-          <Separator className="hidden md:block" orientation="vertical" />
+          <Separator className="hidden xl:block" orientation="vertical" />
           <form
             action={formActionHandler}
             className="w-full space-y-4"
@@ -131,8 +132,13 @@ export function LoginForm() {
           </form>
         </div>
       </div>
-      <div className="relative hidden aspect-3/4 size-full md:block">
-        <Image alt="The Social House" fill src="/login-hero.webp" />
+      <div className="relative hidden aspect-3/4 size-full xl:block">
+        <Image
+          alt="The Social House"
+          className="object-cover"
+          fill
+          src="/login-hero.webp"
+        />
       </div>
     </section>
   );
