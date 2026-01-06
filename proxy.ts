@@ -17,7 +17,7 @@ export async function proxy(request: NextRequest) {
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com sha256-0hAheEzaMe6uXIKV4EehS9pu1am1lj/KnnzrOYqckXk=;
     img-src 'self' blob: data: https://*.stripe.com https://*.supabase.co https://picsum.photos ${isDev ? "http://127.0.0.1:*" : ""};
     font-src 'self' https://fonts.gstatic.com data:;
-    connect-src 'self' https://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://*.sentry.io https://*.ingest.de.sentry.io wss://*.stripe.com;
+    connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.stripe.com https://maps.googleapis.com https://*.sentry.io https://*.ingest.de.sentry.io wss://*.stripe.com;
     frame-src https://connect-js.stripe.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com;
     worker-src 'self' blob:;
     form-action 'self';
