@@ -35,10 +35,9 @@ ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Roles are viewable by everyone" ON public.roles;
 DROP POLICY IF EXISTS "Only service role can modify roles" ON public.roles;
 
--- Everyone can read roles (needed for dropdowns, etc.)
 CREATE POLICY "Roles are viewable by everyone"
 ON public.roles FOR SELECT
-TO authenticated, anon
+TO authenticated
 USING (true);
 
 -- Only service role can modify roles
@@ -60,7 +59,7 @@ DROP POLICY IF EXISTS "Only service role can modify subscriptions" ON public.sub
 -- Everyone can read subscriptions
 CREATE POLICY "Subscriptions are viewable by everyone"
 ON public.subscriptions FOR SELECT
-TO authenticated, anon
+TO authenticated
 USING (true);
 
 -- Only service role can modify subscriptions
@@ -117,6 +116,21 @@ USING ((select auth.uid()) = user_id)
 WITH CHECK ((select auth.uid()) = user_id);
 
 -- ============================================================================
+-- 3b. INVITES TABLE
+-- ============================================================================
+
+ALTER TABLE public.invites ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Only service role can modify invites" ON public.invites;
+
+-- Only service role can read and modify invites
+CREATE POLICY "Only service role can modify invites"
+ON public.invites FOR ALL
+TO service_role
+USING (true)
+WITH CHECK (true);
+
+-- ============================================================================
 -- 4. AMENITIES TABLE
 -- ============================================================================
 
@@ -128,7 +142,7 @@ DROP POLICY IF EXISTS "Only service role can modify amenities" ON public.ameniti
 -- Everyone can read amenities
 CREATE POLICY "Amenities are viewable by everyone"
 ON public.amenities FOR SELECT
-TO authenticated, anon
+TO authenticated
 USING (true);
 
 -- Only service role can modify amenities
@@ -150,7 +164,7 @@ DROP POLICY IF EXISTS "Only service role can modify meeting rooms" ON public.mee
 -- Everyone can read meeting rooms
 CREATE POLICY "Meeting rooms are viewable by everyone"
 ON public.meeting_rooms FOR SELECT
-TO authenticated, anon
+TO authenticated
 USING (true);
 
 -- Only service role can modify meeting rooms
@@ -288,7 +302,7 @@ DROP POLICY IF EXISTS "Only service role can modify meeting room amenities" ON p
 -- Everyone can read meeting room amenities
 CREATE POLICY "Meeting room amenities are viewable by everyone"
 ON public.meeting_room_amenities FOR SELECT
-TO authenticated, anon
+TO authenticated
 USING (true);
 
 -- Only service role can modify meeting room amenities
@@ -310,7 +324,7 @@ DROP POLICY IF EXISTS "Only service role can modify room unavailabilities" ON pu
 -- Everyone can read room unavailabilities (needed for calendar/availability display)
 CREATE POLICY "Room unavailabilities are viewable by everyone"
 ON public.room_unavailabilities FOR SELECT
-TO authenticated, anon
+TO authenticated
 USING (true);
 
 -- Only service role can modify room unavailabilities
