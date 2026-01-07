@@ -376,8 +376,10 @@ async function calculateBookingPrice(
 /**
  * Creates a 30-minute buffer slot after a booking to prevent back-to-back bookings.
  * Buffer slots are marked with booking_is_type_of_booking = 'buffer'.
+ *
+ * NOTE: This should only be called AFTER payment is confirmed, not during initial booking creation.
  */
-async function createBufferSlot(
+export async function createBufferSlot(
   supabase: TypedSupabaseClient,
   params: {
     roomId: string;
@@ -735,30 +737,8 @@ export async function createBooking(
       // In production, you might want to rollback or retry
     }
 
-    // 7. Create 30-minute buffer slot after the booking
-    // This prevents back-to-back bookings and ensures room availability
-    // Use the ACTUAL booking end time from the database to ensure accuracy
-    const BookingEndTime = new Date(result.data.booking_end_time);
-    const BookingStartTime = new Date(result.data.booking_start_time);
-
-    // Safety check: Verify the end time is actually after the start time
-    if (BookingEndTime <= BookingStartTime) {
-      // Invalid booking times, skip buffer creation
-      return toSupabaseMutationResponse<Tables<"bookings">>(result);
-    }
-
-    const bufferResult = await createBufferSlot(supabase, {
-      roomId: validatedData.booking_meeting_room_id,
-      userId,
-      bookingEndTime: BookingEndTime, // Use database value for accuracy
-      bookingId: result.data.booking_id,
-    });
-
-    if (!bufferResult.success && bufferResult.error) {
-      // Don't fail the booking creation if buffer creation fails
-      // Log the error but continue - the booking is still valid
-      // In production, you might want to handle this more gracefully
-    }
+    // NOTE: Buffer slot creation is now handled in confirm-payment.ts
+    // after payment succeeds. This prevents creating buffers for unpaid bookings.
   }
 
   return toSupabaseMutationResponse<Tables<"bookings">>(result);

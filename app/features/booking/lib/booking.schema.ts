@@ -97,3 +97,12 @@ export const getBookingsSchema = z.object({
 });
 
 export type GetBookingsInput = z.infer<typeof getBookingsSchema>;
+
+/**
+ * Schema for validating booking ID (used for cancel/update operations)
+ */
+export const bookingIdSchema = z.object({
+  bookingId: z.string().uuid("Invalid booking ID"),
+});
+
+export type BookingIdInput = z.infer<typeof bookingIdSchema>;

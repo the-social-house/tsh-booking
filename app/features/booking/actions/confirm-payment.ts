@@ -1,9 +1,15 @@
 "use server";
 
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import type Stripe from "stripe";
 import { requireAuth } from "@/app/features/auth/lib/require-auth";
 import messages from "@/lib/messages.json";
 import { stripe } from "@/lib/stripe";
 import type { SupabaseResponse } from "@/lib/supabase-response";
+import type { Database } from "@/supabase/types/database";
+import { createBufferSlot } from "./create-booking";
+
+type TypedSupabaseClient = SupabaseClient<Database>;
 
 export type ConfirmPaymentInput = {
   /**
@@ -17,6 +23,92 @@ export type ConfirmPaymentInput = {
 };
 
 /**
+ * Get receipt URL from Stripe charge if available
+ */
+async function getReceiptUrl(
+  paymentIntent: Stripe.PaymentIntent
+): Promise<string | null> {
+  if (!paymentIntent.latest_charge) {
+    return null;
+  }
+
+  const charge = await stripe.charges.retrieve(
+    paymentIntent.latest_charge as string
+  );
+  return charge.receipt_url;
+}
+
+/**
+ * Create error response for payment confirmation failures
+ */
+function createPaymentError(code: string, message: string): PostgrestError {
+  return {
+    name: "PostgrestError",
+    code,
+    message,
+    details: "",
+    hint: "",
+  } as PostgrestError;
+}
+
+/**
+ * Update booking with payment information
+ */
+async function updateBookingWithPayment(
+  supabase: TypedSupabaseClient,
+  bookingId: string,
+  paymentIntentId: string,
+  receiptUrl: string | null
+) {
+  return await supabase
+    .from("bookings")
+    .update({
+      booking_payment_status: "paid",
+      booking_stripe_transaction_id: paymentIntentId,
+      booking_receipt_url: receiptUrl,
+    })
+    .eq("booking_id", bookingId)
+    .select()
+    .single();
+}
+
+/**
+ * Create buffer slot for confirmed booking
+ */
+async function createBufferForBooking(
+  supabase: TypedSupabaseClient,
+  bookingData: {
+    booking_id: string;
+    booking_user_id: string;
+    booking_meeting_room_id: string;
+    booking_start_time: string;
+    booking_end_time: string;
+  }
+): Promise<void> {
+  const bookingEndTime = new Date(bookingData.booking_end_time);
+  const bookingStartTime = new Date(bookingData.booking_start_time);
+
+  // Safety check: Verify the end time is actually after the start time
+  if (bookingEndTime <= bookingStartTime) {
+    return;
+  }
+
+  const bufferResult = await createBufferSlot(supabase, {
+    roomId: bookingData.booking_meeting_room_id,
+    userId: bookingData.booking_user_id,
+    bookingEndTime,
+    bookingId: bookingData.booking_id,
+  });
+
+  // Buffer creation failed, but payment succeeded
+  // Log the error but don't fail the payment confirmation
+  // The booking is still valid without the buffer
+  if (!bufferResult.success && bufferResult.error) {
+    // In production, you might want to handle this more gracefully
+  }
+}
+
+/**
  * Confirm payment and update booking with Stripe transaction details
  */
 export async function confirmPayment(
@@ -27,13 +119,12 @@ export async function confirmPayment(
   if (authError || !supabase) {
     return {
       data: null,
-      error: authError || {
-        code: "UNAUTHENTICATED",
-        message: "You must be logged in to confirm payment",
-        details: "",
-        hint: "",
-        name: "AuthError",
-      },
+      error:
+        authError ||
+        createPaymentError(
+          "UNAUTHENTICATED",
+          "You must be logged in to confirm payment"
+        ),
     };
   }
 
@@ -47,72 +138,31 @@ export async function confirmPayment(
     if (paymentIntent.status !== "succeeded") {
       return {
         data: null,
-        error: {
-          name: "PostgrestError",
-          code: "PAYMENT_NOT_SUCCEEDED",
-          message: messages.bookings.messages.error.payment.notSucceeded,
-          details: "",
-          hint: "",
-        },
+        error: createPaymentError(
+          "PAYMENT_NOT_SUCCEEDED",
+          messages.bookings.messages.error.payment.notSucceeded
+        ),
       };
     }
 
     // Get receipt URL from charge if available
-    let receiptUrl: string | null = null;
-    if (paymentIntent.latest_charge) {
-      const charge = await stripe.charges.retrieve(
-        paymentIntent.latest_charge as string
-      );
-      receiptUrl = charge.receipt_url;
-    }
+    const receiptUrl = await getReceiptUrl(paymentIntent);
 
     // Update booking with payment information
-    // Use .single() as per Supabase best practices - it will throw an error if no rows match
-    const updateResult = await supabase
-      .from("bookings")
-      .update({
-        booking_payment_status: "paid",
-        booking_stripe_transaction_id: paymentIntent.id,
-        booking_receipt_url: receiptUrl,
-      })
-      .eq("booking_id", data.bookingId)
-      .select()
-      .single();
+    const updateResult = await updateBookingWithPayment(
+      supabase,
+      data.bookingId,
+      paymentIntent.id,
+      receiptUrl
+    );
 
     if (updateResult.error) {
-      // Payment succeeded but we couldn't update the booking
-      // This is a critical error - we need to rollback
-      // Get the user ID from the booking before rolling back
-      const bookingCheck = await supabase
-        .from("bookings")
-        .select("booking_user_id")
-        .eq("booking_id", data.bookingId)
-        .single();
-
-      if (bookingCheck.data) {
-        // Import and call rollback (will be handled by caller)
-        // Return error with rollback flag
-        return {
-          data: null,
-          error: {
-            name: "PostgrestError",
-            code: updateResult.error.code || "UPDATE_FAILED",
-            message: messages.bookings.messages.error.payment.updateFailed,
-            details: "",
-            hint: "",
-          },
-        };
-      }
-
       return {
         data: null,
-        error: {
-          name: "PostgrestError",
-          code: updateResult.error.code || "UPDATE_FAILED",
-          message: messages.bookings.messages.error.payment.updateFailed,
-          details: "",
-          hint: "",
-        },
+        error: createPaymentError(
+          updateResult.error.code || "UPDATE_FAILED",
+          messages.bookings.messages.error.payment.updateFailed
+        ),
       };
     }
 
@@ -120,15 +170,16 @@ export async function confirmPayment(
     if (!updateResult.data) {
       return {
         data: null,
-        error: {
-          name: "PostgrestError",
-          code: "PGRST116",
-          message: messages.bookings.messages.error.payment.bookingNotFound,
-          details: "",
-          hint: "",
-        },
+        error: createPaymentError(
+          "PGRST116",
+          messages.bookings.messages.error.payment.bookingNotFound
+        ),
       };
     }
+
+    // Create buffer slot after payment is confirmed
+    // This ensures buffers are only created for paid bookings
+    await createBufferForBooking(supabase, updateResult.data);
 
     return {
       data: { success: true },
@@ -137,13 +188,10 @@ export async function confirmPayment(
   } catch {
     return {
       data: null,
-      error: {
-        name: "PostgrestError",
-        code: "CONFIRM_PAYMENT_ERROR",
-        message: messages.bookings.messages.error.payment.confirmFailed,
-        details: "",
-        hint: "",
-      },
+      error: createPaymentError(
+        "CONFIRM_PAYMENT_ERROR",
+        messages.bookings.messages.error.payment.confirmFailed
+      ),
     };
   }
 }

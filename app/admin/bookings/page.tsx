@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAllBookings } from "@/app/features/admin/actions/get-all-bookings-admin";
 import { AdminNav } from "@/app/features/admin/components/admin-nav";
 import { BookingsTable } from "@/app/features/admin/components/bookings/bookings-table";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import { TwoColumnLayout } from "@/components/layout/two-column-layout";
+import messages from "@/lib/messages.json";
+import { createPageMetadata } from "@/lib/metadata";
+
+export const metadata: Metadata = createPageMetadata(
+  messages.metadata.admin.bookings.title,
+  messages.metadata.admin.bookings.description
+);
 
 async function AdminBookingsPage() {
   // Verify admin access

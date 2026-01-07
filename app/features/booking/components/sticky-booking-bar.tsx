@@ -33,7 +33,7 @@ export function StickyBookingBar({
           </p>
         </div>
         <Button onClick={onBookClick} size="lg">
-          Book Now
+          {messages.bookings.ui.create.submitButton}
         </Button>
       </div>
     </div>

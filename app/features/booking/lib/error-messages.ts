@@ -18,3 +18,17 @@ export function getCreateErrorMessage(errorCode: string | undefined): string {
     errorMessages[errorCode] || messages.bookings.messages.error.create.unknown
   );
 }
+
+export function getCancelErrorMessage(errorCode: string | undefined): string {
+  if (!errorCode) {
+    return messages.bookings.messages.error.cancel.failed;
+  }
+
+  const errorMessages: Record<string, string> = {
+    PGRST116: messages.bookings.messages.error.cancel.failed, // Not found
+  };
+
+  return (
+    errorMessages[errorCode] || messages.bookings.messages.error.cancel.failed
+  );
+}

@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAllSubscriptions } from "@/app/features/admin/actions/get-all-subscriptions";
 import { AdminNav } from "@/app/features/admin/components/admin-nav";
 import { SubscriptionsTable } from "@/app/features/admin/components/subscriptions/subscriptions-table";
 import { requireAdmin } from "@/app/features/auth/lib/require-admin";
 import { TwoColumnLayout } from "@/components/layout/two-column-layout";
+import messages from "@/lib/messages.json";
+import { createPageMetadata } from "@/lib/metadata";
+
+export const metadata: Metadata = createPageMetadata(
+  messages.metadata.admin.subscriptions.title,
+  messages.metadata.admin.subscriptions.description
+);
 
 async function AdminSubscriptionsPage() {
   // Verify admin access

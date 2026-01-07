@@ -4,6 +4,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { TestCardNotice } from "@/app/features/auth/components/test-card-notice";
 import { confirmPayment } from "@/app/features/booking/actions/confirm-payment";
 import { rollbackBooking } from "@/app/features/booking/actions/rollback-booking";
 import {
@@ -20,7 +21,7 @@ import { PaymentForm } from "./payment-form";
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.STRIPE_PUBLISHABLE_KEY || "");
 
-type StripePaymentModalProps = {
+type StripePaymentModalProps = Readonly<{
   /**
    * Whether the modal is open
    */
@@ -49,7 +50,7 @@ type StripePaymentModalProps = {
    * Callback when payment succeeds
    */
   onSuccess?: () => void;
-};
+}>;
 
 /**
  * Stripe payment modal component
@@ -179,11 +180,14 @@ export function StripePaymentModal({
     <Dialog onOpenChange={handleClose} open={isOpen}>
       <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Complete Payment</DialogTitle>
+          <DialogTitle>
+            {messages.bookings.ui.create.stripePaymentTitle}
+          </DialogTitle>
           <DialogDescription>
-            Enter your payment details to confirm your booking
+            {messages.bookings.ui.create.stripePaymentDescription}
           </DialogDescription>
         </DialogHeader>
+        <TestCardNotice />
         <div className="overflow-y-auto">
           <Elements
             options={{

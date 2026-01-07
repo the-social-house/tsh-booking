@@ -7,13 +7,8 @@ import { cn } from "@/lib/utils";
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
-      className="scroll-shadow-x relative w-full overflow-x-auto rounded border"
+      className="table-container scroll-shadow-x relative w-full overflow-x-auto rounded border"
       data-slot="table-container"
-      style={
-        {
-          "--scroll-shadow-color": "var(--background)",
-        } as React.CSSProperties
-      }
     >
       <table
         className={cn("w-full caption-bottom text-sm", className)}
