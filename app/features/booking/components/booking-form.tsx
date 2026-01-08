@@ -200,7 +200,8 @@ export default function BookingForm({
 
   // Helper: Create booking with validation
   async function createBookingWithValidation(
-    data: CreateBookingInput
+    data: CreateBookingInput,
+    amenityIds: string[]
   ): Promise<{
     success: boolean;
     bookingId?: string;
@@ -208,7 +209,7 @@ export default function BookingForm({
     fieldErrors?: FieldErrors;
   }> {
     const result = await createBooking(data, {
-      amenityIds: selectedAmenities.length > 0 ? selectedAmenities : undefined,
+      amenityIds: amenityIds.length > 0 ? amenityIds : undefined,
     });
 
     if (hasError(result)) {
@@ -232,15 +233,16 @@ export default function BookingForm({
 
   // Helper: Create amenities for a booking with rollback on error
   async function createAmenitiesForBooking(
-    bookingId: string
+    bookingId: string,
+    amenityIds: string[]
   ): Promise<{ success: boolean; error?: string }> {
-    if (selectedAmenities.length === 0) {
+    if (amenityIds.length === 0) {
       return { success: true };
     }
 
     const amenitiesResult = await createBookingAmenities({
       booking_id: bookingId,
-      amenity_ids: selectedAmenities,
+      amenity_ids: amenityIds,
     });
 
     if (hasError(amenitiesResult)) {
@@ -301,6 +303,9 @@ export default function BookingForm({
     _previousState: BookingFormState | null,
     _formData: FormData
   ): Promise<BookingFormState> {
+    // Capture current amenities state at the start of the action
+    const currentAmenityIds = [...selectedAmenities];
+
     const data = buildBookingData();
     if (!data) {
       toast.error("Please select date and times");
@@ -311,7 +316,10 @@ export default function BookingForm({
     }
 
     // Step 1: Create booking
-    const bookingResult = await createBookingWithValidation(data);
+    const bookingResult = await createBookingWithValidation(
+      data,
+      currentAmenityIds
+    );
     if (!bookingResult.success) {
       return {
         error:
@@ -332,7 +340,10 @@ export default function BookingForm({
     const bookingId = bookingResult.bookingId;
 
     // Step 2: Create booking amenities if any selected
-    const amenitiesResult = await createAmenitiesForBooking(bookingId);
+    const amenitiesResult = await createAmenitiesForBooking(
+      bookingId,
+      currentAmenityIds
+    );
     if (!amenitiesResult.success) {
       return {
         error:
@@ -424,7 +435,8 @@ export default function BookingForm({
   useEffect(() => {
     // Only reset form on success if payment was not involved
     // (Payment success is handled in handlePaymentSuccess)
-    if (state?.success && !isPaymentModalOpen) {
+    // Don't reset when payment modal is open - preserve state until payment completes
+    if (state?.success && !isPaymentModalOpen && !pendingBookingId) {
       formRef.current?.reset();
       setSelectedDate(getTodayDanishDate());
       setStartTime("");
@@ -432,9 +444,13 @@ export default function BookingForm({
       setNumberOfPeople("");
       setSelectedAmenities([]);
     }
-  }, [state?.success, isPaymentModalOpen]);
+  }, [state?.success, isPaymentModalOpen, pendingBookingId]);
 
   const toggleAmenity = (amenityId: string) => {
+    // Don't allow toggling amenities when payment is pending
+    if (isPending || isPaymentModalOpen) {
+      return;
+    }
     setSelectedAmenities((prev) =>
       prev.includes(amenityId)
         ? prev.filter((id) => id !== amenityId)
