@@ -31,7 +31,15 @@ export function RoomDescription({
   room,
   className,
 }: RoomDescriptionProps) {
-  const meetingRoomOf = room.meeting_room_name.split(" of ")[1];
+  const hasRoomOf = room.meeting_room_name.includes(" of ");
+  const meetingRoomOf = hasRoomOf
+    ? room.meeting_room_name.split(" of ")[1]
+    : room.meeting_room_name;
+  const headingProps = hasRoomOf
+    ? {
+        eyebrow: messages.admin.meetingRooms.ui.description.roomOf,
+      }
+    : {};
   const specifications = [
     {
       label: messages.admin.meetingRooms.ui.description.size,
@@ -49,11 +57,7 @@ export function RoomDescription({
   return (
     <div className={cn(className, "flex flex-col gap-8")}>
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
-        <Heading
-          as="h1"
-          eyebrow={messages.admin.meetingRooms.ui.description.roomOf}
-          size="h1"
-        >
+        <Heading as="h1" {...headingProps} size="h1">
           {meetingRoomOf}
         </Heading>
         <div className="flex flex-row flex-wrap gap-2 md:flex-col md:items-end md:justify-end">
