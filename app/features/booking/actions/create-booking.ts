@@ -113,7 +113,8 @@ function validateNotInPast(
 async function validateAndCalculateAmenities(
   supabase: TypedSupabaseClient,
   amenityIds: string[],
-  roomId: string
+  roomId: string,
+  numberOfPeople: number
 ): Promise<{ total: number; error?: PostgrestError }> {
   // Fetch room amenities to verify they belong to this room
   const roomAmenitiesResult = await supabase
@@ -168,11 +169,13 @@ async function validateAndCalculateAmenities(
   }
 
   // Calculate total amenity price
-  const total =
+  const baseAmenitiesPrice =
     amenitiesResult.data?.reduce(
       (sum, amenity) => sum + Number(amenity.amenity_price || 0),
       0
-    ) || 0;
+    ) ?? 0;
+
+  const total = baseAmenitiesPrice * Number(numberOfPeople);
 
   return { total };
 }
@@ -649,7 +652,8 @@ export async function createBooking(
     const amenitiesResult = await validateAndCalculateAmenities(
       supabase,
       options.amenityIds,
-      validatedData.booking_meeting_room_id
+      validatedData.booking_meeting_room_id,
+      validatedData.booking_number_of_people
     );
 
     if (amenitiesResult.error) {
