@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/app/features/auth/actions/get-current-user";
+import LoginDetailsInfo from "@/app/features/auth/components/login-details-info";
 import { LoginForm } from "@/app/features/auth/components/login-form";
 import messages from "@/lib/messages.json";
 import { createPageMetadata } from "@/lib/metadata";
@@ -17,5 +18,10 @@ export default async function LoginPage() {
     redirect("/");
   }
 
-  return <LoginForm />;
+  return (
+    <div>
+      <LoginForm />
+      <LoginDetailsInfo />
+    </div>
+  );
 }
