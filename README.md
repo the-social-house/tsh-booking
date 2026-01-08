@@ -11,27 +11,28 @@ This project is submitted as a zipped exam product for review by a lecturer and 
 
 ### Getting started
 
-1. **Rename the `env` file to `.env`
+1. **Rename the `env` file to `.env`**
+   
 
-2. **Install dependencies**:
+3. **Install dependencies**:
 
    ```bash
    npm install
    ```
 
-3. **Start the local Supabase database** (runs on `127.0.0.1:54323`):
+4. **Start the local Supabase database** (runs on `127.0.0.1:54323`):
 
    ```bash
    npx supabase start
    ```
 
-4. **Seed the database**:
+5. **Seed the database**:
 
    ```bash
    npm run seed
    ```
 
-5. **Start the development server**:
+6. **Start the development server**:
    ```bash
    npm run dev
    ```
