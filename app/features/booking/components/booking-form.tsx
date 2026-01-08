@@ -147,11 +147,12 @@ export default function BookingForm({
     // Room price
     const roomPrice = meetingRoom.meeting_room_price_per_hour * hours;
 
-    // Selected amenities price
-    const amenitiesPrice = selectedAmenities.reduce((acc, amenityId) => {
+    // Selected amenities price (multiplied by number of people)
+    const amenitiesBasePrice = selectedAmenities.reduce((acc, amenityId) => {
       const amenity = roomAmenities.find((a) => a.amenity_id === amenityId);
       return acc + (amenity?.amenity_price || 0);
     }, 0);
+    const amenitiesPrice = amenitiesBasePrice * Number(numberOfPeople || 0);
 
     const priceSubtotal = roomPrice + amenitiesPrice;
     const discountAmount = (priceSubtotal * subscriptionDiscount) / 100;
