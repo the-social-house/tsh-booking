@@ -589,7 +589,7 @@ function BookingBlocks({
                 {!isBuffer && (
                   <>
                     <div className="line-clamp-2 font-medium text-xs">
-                      {booking.users.user_company_name}
+                      {booking.users?.user_company_name || "-"}
                     </div>
                     <div className="text-xs">
                       {formatTime(booking.booking_start_time)} -{" "}
@@ -602,7 +602,7 @@ function BookingBlocks({
             <TooltipContent>
               <div className="space-y-1">
                 <div className="font-medium">
-                  {booking.users.user_company_name}
+                  {booking.users?.user_company_name || "-"}
                 </div>
                 <div className="text-xs">
                   {formatTime(booking.booking_start_time)} -{" "}
@@ -626,7 +626,7 @@ function BookingBlocks({
             {!isBuffer && (
               <>
                 <div className="line-clamp-2 font-medium text-xs">
-                  {booking.users.user_company_name}
+                  {booking.users?.user_company_name || "-"}
                 </div>
                 <div className="text-xs">
                   {formatTime(booking.booking_start_time)} -{" "}
