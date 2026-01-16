@@ -2,6 +2,7 @@ import { Ruler, Users } from "lucide-react";
 import Link from "next/link";
 import type { MeetingRoom } from "@/app/features/meeting-rooms/actions/get-meeting-rooms";
 import { RoomImage } from "@/app/features/meeting-rooms/components/room-image";
+import { RoomPrice } from "@/app/features/meeting-rooms/components/room-price";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -17,12 +18,19 @@ import messages from "@/lib/messages.json";
 
 type RoomCardProps = Readonly<{
   room: MeetingRoom;
+  searchParams: {
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    people?: string;
+  };
   subscriptionDiscountRate: number | null;
   imageAspectRatio: string;
 }>;
 
 export function RoomCard({
   room,
+  searchParams,
   subscriptionDiscountRate,
   imageAspectRatio = "3/4",
 }: RoomCardProps) {
@@ -65,7 +73,9 @@ export function RoomCard({
               )}
             </div>
           )}
-          <Link href={`/${room.meeting_room_slug}`}>
+          <Link
+            href={`/${room.meeting_room_slug}?${new URLSearchParams(searchParams).toString()}`}
+          >
             <div className="space-y-4 p-3">
               <div className="space-y-1">
                 {/* Room Name */}
@@ -90,14 +100,14 @@ export function RoomCard({
               <div className="flex items-end justify-between gap-4">
                 {hasDiscount ? (
                   <>
-                    <Price
+                    <RoomPrice
                       label={
                         messages.admin.meetingRooms.ui.card.originalPriceLabel
                       }
                       original
                       price={formatPrice(originalPrice)}
                     />
-                    <Price
+                    <RoomPrice
                       label={
                         messages.admin.meetingRooms.ui.card.memberPriceLabel
                       }
@@ -105,7 +115,7 @@ export function RoomCard({
                     />
                   </>
                 ) : (
-                  <Price
+                  <RoomPrice
                     label={messages.admin.meetingRooms.ui.card.priceLabel}
                     price={formatPrice(originalPrice)}
                   />
@@ -116,30 +126,5 @@ export function RoomCard({
         </CardContent>
       </Carousel>
     </Card>
-  );
-}
-
-type PriceProps = Readonly<{
-  label: string;
-  price: string;
-  original?: boolean;
-}>;
-
-function Price({ label, price, original }: PriceProps) {
-  return (
-    <div className="grid">
-      <span className="text-xs">{label}</span>
-      <div className="text-sm">
-        {original ? (
-          <del className="text-muted-foreground/50">
-            {price} {messages.common.units.hourlyRate}
-          </del>
-        ) : (
-          <span className="font-medium text-base">
-            {price} {messages.common.units.hourlyRate}
-          </span>
-        )}
-      </div>
-    </div>
   );
 }
