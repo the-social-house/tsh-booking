@@ -26,12 +26,19 @@ type BookingDrawerWrapperProps = {
   meetingRoom: MeetingRoom;
   roomAmenities: RoomAmenity[];
   user: BookingUser;
+  searchParams: {
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    people?: string;
+  };
 };
 
 export function BookingDrawerWrapper({
   meetingRoom,
   roomAmenities,
   user,
+  searchParams,
 }: BookingDrawerWrapperProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -41,6 +48,7 @@ export function BookingDrawerWrapper({
         hourlyRate={meetingRoom.meeting_room_price_per_hour}
         onBookClick={() => setDrawerOpen(true)}
         roomName={meetingRoom.meeting_room_name}
+        user={user}
       />
       <Drawer onOpenChange={setDrawerOpen} open={drawerOpen}>
         <DrawerContent className="mx-auto max-h-[95vh]! max-w-[95vw]">
@@ -58,6 +66,7 @@ export function BookingDrawerWrapper({
               meetingRoom={meetingRoom}
               onSuccess={() => setDrawerOpen(false)}
               roomAmenities={roomAmenities}
+              searchParams={searchParams}
               user={user}
             />
           </div>

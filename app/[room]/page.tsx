@@ -36,8 +36,15 @@ export async function generateMetadata({
 
 export default async function BookingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ room: string }>;
+  searchParams: Promise<{
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    people?: string;
+  }>;
 }) {
   const { room } = await params;
 
@@ -49,7 +56,11 @@ export default async function BookingPage({
 
   return (
     <Suspense fallback={<RoomContentSkeleton />}>
-      <RoomContentWrapper roomPromise={roomPromise} userPromise={userPromise} />
+      <RoomContentWrapper
+        roomPromise={roomPromise}
+        searchParams={searchParams}
+        userPromise={userPromise}
+      />
     </Suspense>
   );
 }
@@ -58,10 +69,19 @@ export default async function BookingPage({
 async function RoomContentWrapper({
   roomPromise,
   userPromise,
+  searchParams,
 }: {
   roomPromise: ReturnType<typeof getMeetingRoom>;
   userPromise: ReturnType<typeof getCurrentUserData>;
+  searchParams: Promise<{
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    people?: string;
+  }>;
 }) {
+  const searchParamsResult = await searchParams;
+
   // Await user first (needed for BookingDrawerWrapper)
   const userResult = await userPromise;
 
@@ -119,6 +139,7 @@ async function RoomContentWrapper({
       <BookingDrawerWrapper
         meetingRoom={meetingRoom}
         roomAmenities={roomAmenities}
+        searchParams={searchParamsResult}
         user={{
           user_id: user.user_id,
           user_email: user.user_email,
