@@ -46,6 +46,12 @@ type BookingFormProps = {
   meetingRoom: MeetingRoom;
   roomAmenities: RoomAmenity[]; // Amenities available for this room
   user: BookingUser;
+  searchParams: {
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    people?: string;
+  };
   isOpen?: boolean; // Whether the drawer/form is open (triggers booking fetch)
   onSuccess?: () => void;
 };
@@ -71,6 +77,7 @@ const getTodayDanishDate = (): Date => {
 export default function BookingForm({
   meetingRoom,
   roomAmenities,
+  searchParams,
   user,
   isOpen = false,
   onSuccess,
@@ -79,11 +86,15 @@ export default function BookingForm({
   const formRef = useRef<HTMLFormElement>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    getTodayDanishDate()
+    searchParams.date ? new Date(searchParams.date) : getTodayDanishDate()
   );
-  const [startTime, setStartTime] = useState<string>("");
-  const [endTime, setEndTime] = useState<string>("");
-  const [numberOfPeople, setNumberOfPeople] = useState<string>("");
+  const [startTime, setStartTime] = useState<string>(
+    searchParams.startTime || ""
+  );
+  const [endTime, setEndTime] = useState<string>(searchParams.endTime || "");
+  const [numberOfPeople, setNumberOfPeople] = useState<string>(
+    searchParams.people || ""
+  );
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [existingBookings, setExistingBookings] = useState<BookingSlot[]>([]);
 

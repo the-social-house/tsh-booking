@@ -189,6 +189,7 @@ export function RoomsContent({
             imageAspectRatio="16/9"
             key={room.meeting_room_id}
             room={room}
+            searchParams={searchParams}
             subscriptionDiscountRate={subscriptionDiscountRate}
           />
         ))}
