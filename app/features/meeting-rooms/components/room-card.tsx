@@ -18,7 +18,7 @@ import messages from "@/lib/messages.json";
 
 type RoomCardProps = Readonly<{
   room: MeetingRoom;
-  searchParams: {
+  searchParams?: {
     date?: string;
     startTime?: string;
     endTime?: string;
